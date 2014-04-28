@@ -56,12 +56,21 @@ SIZE_NOTSET = 0xffffffffffffffff  # 64bit "-1"
 
 
 def _repr_nt(nt):
+    MAX_VLEN = 30
+    ELLPS = '...'
+
     name = nt.__class__.__name__
     fld_reprs = []
     for fld in nt._fields:
         value = repr(getattr(nt, fld))
-        if len(value) > 20:
-            value = ''.join((value[:15], '...', value[-2:]))
+
+        if len(value) > MAX_VLEN:
+            # We want to cut in two parts of (MAX_VLEN-3)/2 length
+            vl = MAX_VLEN - len(ELLPS)
+            p1l = (vl // 2) + (vl % 2)
+            p2l = vl // 2
+            value = ''.join((value[:p1l], ELLPS, value[-p2l:]))
+
         fld_reprs.append((fld, value))
     return '{0}({1})'.format(name, ', '.join('='.join(kv) for kv in fld_reprs))
 
@@ -119,6 +128,10 @@ class PCAPNG_Reader(object):
         # -------------------------------------------
 
         blk = self._read_block_generic()
+
+        # todo: here, we need to set _latest_section / _latest_interface
+        #       if we need to do so..
+
         return self._parse_block(blk)
 
     def _read_block_generic(self):
@@ -136,7 +149,7 @@ class PCAPNG_Reader(object):
         _payload_len = _totlen - _fldlen
         if _payload_len < 0:
             raise ValueError("Invalid block size!")
-        _payload = self._fp.read(_payload_len)
+        _payload = self._padded_read(_payload_len)
         logger.debug("    payload length: {0}".format(_payload_len))
 
         # Check size at block end
@@ -151,6 +164,9 @@ class PCAPNG_Reader(object):
             block_body=_payload)
 
     def _read_section_header(self):
+        # todo: we should make things simpler here and pass execution
+        #       to _parse_block() ASAP..
+
         # (4 bytes: block type) [already read]
         # 4 bytes: total length
         # 4 bytes: byte_order_magic
@@ -160,7 +176,7 @@ class PCAPNG_Reader(object):
         # 4 bytes: total length (again)
 
         # todo: we need to recompose stuff a bit and pass to
-        #       _parse_section_header()
+        #       _parse_block_section_header()
 
         logger.debug('Reading SECTION HEADER block')
 
@@ -254,7 +270,7 @@ class PCAPNG_Reader(object):
             return self._parse_block_enhanced_packet(blk)
 
         if _type == BLK_SECTION_HEADER:
-            return self._parse_section_header(blk)
+            return self._parse_block_section_header(blk)
 
         return blk
 
@@ -281,12 +297,33 @@ class PCAPNG_Reader(object):
         return blk
 
     def _parse_block_name_resolution(self, blk):
+        logger.debug('Reading a name resolution block')
         return blk
 
     def _parse_block_interface_stats(self, blk):
+        logger.debug('Reading an interface stats block')
         return blk
 
-    def _parse_section_header(self, blk):
+    def _parse_block_section_header(self, blk):
+        logger.debug('Reading a section header block')
+
+        # ------------------------------------------------------------
+        # We need to parse the block first, determine the endianness,
+        # then normally parse the block with the new endianness.
+        # ------------------------------------------------------------
+
+        # Fields
+        # ------
+
+        # (4 bytes: block type) [already read]
+        # 4 bytes: total length
+        # 4 bytes: byte_order_magic
+        # 2 bytes: major version; 2 bytes: minor version
+        # 8 bytes: section length (for traversing) (-1 for "unknown")
+        # ...options for the remaining length...
+        # 4 bytes: total length (again)
+
+
         return blk
 
     def _parse_options(self, data):
@@ -309,23 +346,44 @@ class PCAPNG_Reader(object):
             return unpacked[0]
         return unpacked
 
-    def _read(self, fmt, size):
+    def _padded_read(self, size):
+        """
+        Read up to size bytes from fp; read and ignore bytes
+        necessary to align to 32bit blocks..
+        """
+
+        logger.debug(">>> reading {0} bytes".format(size))
+        data = self._fp.read(size)
+
+        _padding = (4 - size % 4) % 4
+        if _padding > 0:
+            logger.debug("    padding bytes: {0}".format(_padding))
+            self._fp.read(_padding)
+
+        if self._fp.tell() % 4 != 0:
+            raise RuntimeError(
+                "Somehow we got on an invalid position in the file "
+                "(not multiple of four). Something is broken.")
+
+        return data
+
+    def _read_packed(self, fmt, size):
         return self._unpack(fmt, self._fp.read(size))
 
     def _read_i16(self):
-        return self._read('h', 2)
+        return self._read_packed('h', 2)
 
     def _read_u16(self):
-        return self._read('H', 2)
+        return self._read_packed('H', 2)
 
     def _read_i32(self):
-        return self._read('i', 4)
+        return self._read_packed('i', 4)
 
     def _read_u32(self):
-        return self._read('I', 4)
+        return self._read_packed('I', 4)
 
     def _read_i64(self):
-        return self._read('q', 8)
+        return self._read_packed('q', 8)
 
     def _read_u64(self):
-        return self._read('Q', 8)
+        return self._read_packed('Q', 8)
