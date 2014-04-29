@@ -16,6 +16,8 @@ logger.addHandler(handler)
 if __name__ == '__main__':
     import sys
     rdr = PCAPNG_Reader(sys.stdin)
-    while True:
-        packet = rdr.read_block()
+    for packet in rdr:
         print(repr(packet))
+    # while True:
+    #     packet = rdr.read_block()
+    #     print(repr(packet))

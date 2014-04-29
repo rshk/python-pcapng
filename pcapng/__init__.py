@@ -1,13 +1,16 @@
+# ----------------------------------------------------------------------
 # Library to parse pcap-ng file format
+#
 # See: http://www.winpcap.org/ntar/draft/PCAP-DumpFileFormat.html
+# ----------------------------------------------------------------------
 
 from __future__ import print_function
 
+from collections import namedtuple
 import binascii
+import io
 import logging
 import struct
-from collections import namedtuple
-
 
 logger = logging.getLogger(__name__)
 
@@ -49,11 +52,16 @@ BLK_RESERVED_CORRUPTED = [
 ]
 
 # Byte order magic numbers
+# ----------------------------------------
+
 ORDER_MAGIC_LE = 0x1a2b3c4d
 ORDER_MAGIC_BE = 0x4d3c2b1a
 
 SIZE_NOTSET = 0xffffffffffffffff  # 64bit "-1"
 
+
+# Actual code :)
+# ----------------------------------------
 
 def _repr_nt(nt):
     MAX_VLEN = 30
@@ -97,6 +105,14 @@ class Interface(namedtuple(
         return _repr_nt(self)
 
 
+class EnhancedPacket(namedtuple(
+        'Interface',
+        'block_type,block_size,block_body,'
+        'interface_id,timestamp,captured_len,packet_len,packet_data,options')):
+    def __repr__(self):
+        return _repr_nt(self)
+
+
 class PCAPNG_Reader(object):
     _endianness = None
     _current_section = None
@@ -104,6 +120,13 @@ class PCAPNG_Reader(object):
 
     def __init__(self, fp):
         self._fp = fp
+
+    def __iter__(self):
+        try:
+            while True:
+                yield self.read_block()
+        except EOFError:
+            return
 
     def read_block(self):
         raw_blk = self._read_next_block()
@@ -276,24 +299,56 @@ class PCAPNG_Reader(object):
             *blk, link_type=_lnktype, snaplen=_snaplen, options=_options)
 
     def _parse_block_packet(self, blk):
+        logger.debug('Parsing a packet block')
         return blk
 
     def _parse_block_packet_simple(self, blk):
+        logger.debug('Parsing a simple packet block')
         return blk
 
     def _parse_block_enhanced_packet(self, blk):
-        return blk
+        logger.debug('Parsing an enhanced packet block')
+        # ------------------------------------------------------------
+        # 4 bytes: interface id
+        # 4 bytes: timestamp (high)
+        # 4 bytes: timestamp (low)
+        # 4 bytes: captured len (in the file)
+        # 4 bytes: packet len (real one on the wire)
+        # ...packet data... (captured-len-sized)
+        # ...options...
+        # ------------------------------------------------------------
+
+        interface_id = self._unpack('I', blk.block_body[:4])
+
+        # Cannot parse as 64bit long, as the endianness of the
+        # two words is always big endian..
+        ts_high = self._unpack('I', blk.block_body[4:8])
+        ts_low = self._unpack('I', blk.block_body[8:12])
+        timestamp = ts_high * (256 ** 4) + ts_low
+
+        captured_len = self._unpack('I', blk.block_body[12:16])
+        packet_len = self._unpack('I', blk.block_body[16:20])
+
+        packet_data = blk.block_body[20:20 + captured_len]
+        opt_start = 20 + self._padded(captured_len, 4)
+
+        options = self._parse_options(blk.block_body[opt_start:])
+
+        return EnhancedPacket(
+            *blk, interface_id=interface_id, timestamp=timestamp,
+            captured_len=captured_len, packet_len=packet_len,
+            packet_data=packet_data, options=options)
 
     def _parse_block_name_resolution(self, blk):
-        logger.debug('Reading a name resolution block')
+        logger.debug('Parsing a name resolution block')
         return blk
 
     def _parse_block_interface_stats(self, blk):
-        logger.debug('Reading an interface stats block')
+        logger.debug('Parsing an interface stats block')
         return blk
 
     def _parse_block_section_header(self, blk):
-        logger.debug('Reading a section header block')
+        logger.debug('Parsing a section header block')
 
         # 4 bytes: byte_order_magic
         # 2 bytes: major version; 2 bytes: minor version
@@ -313,8 +368,25 @@ class PCAPNG_Reader(object):
             *blk, byte_order_magic=bo_magic, version=(major, minor),
             section_length=section_length, options=options)
 
-    def _parse_options(self, data):
-        return data
+    def _parse_options(self, data, optset=None):
+        # 2 bytes: option type
+        # 2 bytes: option length
+        # ...option value...
+
+        _input = io.BytesIO(data)
+        options = []
+
+        while True:
+            hdr = _input.read(4)
+            if len(hdr) < 4:  # EOF
+                break
+            op_type, op_length = self._unpack('HH', hdr)
+            # if op_type == 0:  # End of options??
+            #     break
+            op_value = self._padded_read(op_length, _input)
+            options.append((op_type, op_value))
+
+        return options
 
     # ------------------------------------------------------------
     #   Struct parsing stuff
@@ -335,21 +407,27 @@ class PCAPNG_Reader(object):
             return unpacked[0]
         return unpacked
 
-    def _padded_read(self, size):
+    def _padded(self, n, to):
+        return n + ((to - (n % to)) % to)
+
+    def _padded_read(self, size, fp=None):
         """
         Read up to size bytes from fp; read and ignore bytes
         necessary to align to 32bit blocks..
         """
 
+        if fp is None:
+            fp = self._fp
+
         logger.debug(">>> reading {0} bytes".format(size))
-        data = self._fp.read(size)
+        data = fp.read(size)
 
         _padding = (4 - size % 4) % 4
         if _padding > 0:
             logger.debug("    padding bytes: {0}".format(_padding))
-            self._fp.read(_padding)
+            fp.read(_padding)
 
-        if self._fp.tell() % 4 != 0:
+        if fp.tell() % 4 != 0:
             raise RuntimeError(
                 "Somehow we got on an invalid position in the file "
                 "(not multiple of four). Something is broken.")
@@ -357,7 +435,10 @@ class PCAPNG_Reader(object):
         return data
 
     def _read_packed(self, fmt, size):
-        return self._unpack(fmt, self._fp.read(size))
+        data = self._fp.read(size)
+        if len(data) < size:
+            raise EOFError("We reached end of file!")
+        return self._unpack(fmt, data)
 
     def _read_i16(self):
         return self._read_packed('h', 2)
