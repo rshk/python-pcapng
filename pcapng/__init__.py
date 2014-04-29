@@ -76,73 +76,82 @@ def _repr_nt(nt):
 
 
 class GenericBlock(namedtuple(
-        'GenericBlock', "block_type,block_size,block_body")):
+        'GenericBlock', 'block_type,block_size,block_body')):
     def __repr__(self):
         return _repr_nt(self)
 
 
 class SectionHeader(namedtuple(
         'SectionHeader',
-        'block_size,endianness,version,section_length,options')):
+        'block_type,block_size,block_body,'
+        'byte_order_magic,version,section_length,options')):
     def __repr__(self):
         return _repr_nt(self)
 
 
 class Interface(namedtuple(
         'Interface',
-        'block_type,block_size,block_body,link_type,snaplen,options')):
+        'block_type,block_size,block_body,'
+        'link_type,snaplen,options')):
     def __repr__(self):
         return _repr_nt(self)
 
 
 class PCAPNG_Reader(object):
     _endianness = None
-    _latest_section = None
-    _latest_interface = None
+    _current_section = None
+    _current_interfaces = None
 
     def __init__(self, fp):
         self._fp = fp
 
     def read_block(self):
-        """Read a block from the file"""
+        raw_blk = self._read_next_block()
+        blk = self._parse_block(raw_blk)
 
-        logger.debug("Reading next block from input.")
+        if isinstance(blk, SectionHeader):
+            # Keep away the latest (current) section
+            self._current_section = blk
+            self._current_interfaces = []
+
+        elif isinstance(blk, Interface):
+            # Keep interfaces for this section
+            self._current_interfaces.append(blk)
+
+        if type(blk) == GenericBlock:
+            logger.warning("Unrecognised block type 0x{0:08x} was not parsed"
+                           .format(blk.block_type))
+
+        return blk
+
+    def _read_next_block(self):
+        logger.debug("---- Reading next block from input ----")
+
+        assert self._fp.tell() % 4 == 0   # !
+
+        # todo: handle EOF properly!
+
+        block_type = self._read_u32()
+
+        if block_type == BLK_SECTION_HEADER:
+            # We are going to treat this one in a custom way
+            # as section headers change endianness..
+            return self._read_block_section_header(block_type)
+
+        # We are going to treat this one the usual way
+        return self._read_block_generic(block_type)
+
+    def _read_block_generic(self, block_type):
+        logger.debug("*** Reading a generic block")
 
         if self._endianness is None:
-            logger.debug("Expecting a section header to get endianness from")
-
-            # We are at the beginning of the file.
-            # The next block we are going to read is a
-            # section header.
-            _type = self._fp.read(4)
-            _type = struct.unpack('<I', _type)[0]
-            if _type != BLK_SECTION_HEADER:
-                raise ValueError(
-                    "Invalid file: expected section header 0x{0:08x}, "
-                    "got 0x{1:08x}".format(BLK_SECTION_HEADER, _type))
-
-            # Read the actual section header
-            return self._read_section_header()
-
-        # Check the block type and dispatch parsing
-        # -------------------------------------------
-
-        blk = self._read_block_generic()
-
-        # todo: here, we need to set _latest_section / _latest_interface
-        #       if we need to do so..
-
-        return self._parse_block(blk)
-
-    def _read_block_generic(self):
-        """Read a complete block, including its type"""
-
-        logger.debug("Reading a generic block")
+            raise ValueError(
+                "Cannot read a generic block with no endianness set. "
+                "Was expecting a section header block!")
 
         _fldlen = 12
-        _blk_type = self._read_u32()
         _totlen = self._read_u32()
-        logger.debug("    block type: 0x{0:08x}".format(_blk_type))
+        logger.debug("    block type: 0x{0:08x}".format(block_type))
         logger.debug("    block length: {0} (0x{0:08x})".format(_totlen))
 
         # Read payload
@@ -159,14 +168,12 @@ class PCAPNG_Reader(object):
                              "end is {1}".format(_totlen, _totlen2))
 
         return GenericBlock(
-            block_type=_blk_type,
+            block_type=block_type,
             block_size=_totlen,
             block_body=_payload)
 
-    def _read_section_header(self):
-        # todo: we should make things simpler here and pass execution
-        #       to _parse_block() ASAP..
-
+    def _read_block_section_header(self, block_type):
+        # ------------------------------------------------------------
         # (4 bytes: block type) [already read]
         # 4 bytes: total length
         # 4 bytes: byte_order_magic
@@ -174,77 +181,58 @@ class PCAPNG_Reader(object):
         # 8 bytes: section length (for traversing) (-1 for "unknown")
         # ...options for the remaining length...
         # 4 bytes: total length (again)
+        # ------------------------------------------------------------
 
-        # todo: we need to recompose stuff a bit and pass to
-        #       _parse_block_section_header()
+        logger.debug('*** Reading a section header')
 
-        logger.debug('Reading SECTION HEADER block')
-
-        _fixed_fields_size = sum((4, 4, 4, 2, 2, 8, 4))
-
-        _totlen = self._fp.read(4)
+        _totlen_raw = self._fp.read(4)  # keep this away for later
         logger.debug('    raw block length: {0}'
-                     .format(binascii.hexlify(_totlen)))
+                     .format(binascii.hexlify(_totlen_raw)))
 
-        _bo_magic = struct.unpack('<I', self._fp.read(4))[0]
+        # Read the magic number and use to determine the byte order
+        # ------------------------------------------------------------
+
+        _bo_magic_raw = self._fp.read(4)
+        _bo_magic = struct.unpack('<I', _bo_magic_raw)[0]  # assume LE
         logger.debug('    magic number: 0x{0:08x}'.format(_bo_magic))
 
-        if _bo_magic == ORDER_MAGIC_LE:
+        if _bo_magic == ORDER_MAGIC_LE:  # yes, it was LE!
             logger.debug('    -> section is Little Endian')
             self._endianness = LITTLE_ENDIAN
-        elif _bo_magic == ORDER_MAGIC_BE:
+
+        elif _bo_magic == ORDER_MAGIC_BE:  # nope, was BE!
             logger.debug('    -> section is Big Endian')
             self._endianness = BIG_ENDIAN
-        else:
-            raise ValueError("Invalid byte order magic: expected 0x{0:08x} "
-                             "(or 0x{1:08x}, got 0x{2:08x})"
-                             .format(ORDER_MAGIC_LE, ORDER_MAGIC_BE,
-                                     _bo_magic))
 
-        # Now that we know the endianness..
-        _totlen = self._unpack('I', _totlen)
+        else:
+            raise ValueError(
+                "Invalid byte order magic: expected 0x{0:08x} "
+                "(or 0x{1:08x}, got 0x{2:08x})"
+                .format(ORDER_MAGIC_LE, ORDER_MAGIC_BE, _bo_magic))
+
+        # Now that we know the endianness we can proceed as usual
+        # ------------------------------------------------------------
+
+        _totlen = self._unpack('I', _totlen_raw)
         logger.debug('    block length: {0}'.format(_totlen))
 
-        # Check that size is ok..
-        if _totlen < _fixed_fields_size:
-            raise ValueError("Section length is too small!")
+        # Ok, we can read the block etc. as usual..
+        _payload_offset = 4 + 4 + 4  # We already read type, length, byteorder
+        _payload_length = _totlen - _payload_offset - 4  # trailing TL
+        logger.debug("    payload length: {0}".format(_payload_length))
 
-        # Read version number
-        _major = self._unpack('H', self._fp.read(2))
-        _minor = self._unpack('H', self._fp.read(2))
-        logger.debug('    section version: {0}.{1}'.format(_major, _minor))
+        _payload = _bo_magic_raw + self._padded_read(_payload_length)
 
-        # Read section length
-        _section_length = self._read_i64()
-        logger.debug('    total section length: {0}'.format(_section_length))
-
-        # Time to read the options
-        _options_size = _totlen - _fixed_fields_size
-        logger.debug('    will read {0} bytes of options'
-                     .format(_options_size))
-        _options_data = self._fp.read(_options_size)
-
-        # Check the closing size
+        # Check size at block end
         _totlen2 = self._read_u32()
         if _totlen2 != _totlen:
-            # logger.debug("Something nasty happened")
-            # logger.debug("Options text was: {0!r}".format(_options_data))
-            # logger.debug("Following stuff: {0!r}".format(self._fp.read(16)))
             raise ValueError("Mismatching block size: start was {0}, "
                              "end is {1}".format(_totlen, _totlen2))
 
-        # Prepare the block object to be returned
-        sh = SectionHeader(
+        return GenericBlock(
+            block_type=block_type,
             block_size=_totlen,
-            endianness=self._endianness,
-            version=(_major, _minor),
-            section_length=_section_length,
-            options=self._parse_options(_options_data))
-
-        self._latest_section = sh  # just in case..
-        self._latest_interface = None  # interfaces are per-section!
-
-        return sh
+            block_body=_payload)
 
     def _parse_block(self, blk):
         """Convert a generic block in something else, if possible"""
@@ -307,24 +295,23 @@ class PCAPNG_Reader(object):
     def _parse_block_section_header(self, blk):
         logger.debug('Reading a section header block')
 
-        # ------------------------------------------------------------
-        # We need to parse the block first, determine the endianness,
-        # then normally parse the block with the new endianness.
-        # ------------------------------------------------------------
-
-        # Fields
-        # ------
-
-        # (4 bytes: block type) [already read]
-        # 4 bytes: total length
         # 4 bytes: byte_order_magic
         # 2 bytes: major version; 2 bytes: minor version
         # 8 bytes: section length (for traversing) (-1 for "unknown")
         # ...options for the remaining length...
-        # 4 bytes: total length (again)
 
+        bo_magic = self._unpack('I', blk.block_body[:4])
+        assert bo_magic == ORDER_MAGIC_LE  # should be fixed by now!
+        major, minor = self._unpack('HH', blk.block_body[4:8])
 
-        return blk
+        section_length = self._unpack('q', blk.block_body[8:16])
+
+        options_data = blk.block_body[16:]
+        options = self._parse_options(options_data)
+
+        return SectionHeader(
+            *blk, byte_order_magic=bo_magic, version=(major, minor),
+            section_length=section_length, options=options)
 
     def _parse_options(self, data):
         return data
@@ -339,7 +326,9 @@ class PCAPNG_Reader(object):
         elif self._endianness == BIG_ENDIAN:
             fmt = '>' + fmt
         else:
-            raise ValueError("Unspecified endianness!")
+            # raise ValueError("Unspecified endianness!")
+            fmt = '=' + fmt  # todo: should we warn the user?
+
         unpacked = struct.unpack(fmt, data)
         if len(unpacked) == 1:
             assert len(fmt) == 2  # The user knew!
