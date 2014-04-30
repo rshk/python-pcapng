@@ -32,3 +32,16 @@ def test_read_sample_section_le():
 
     assert se.pack(endianness=1) == EXAMPLE_SECTION_LE[8:-4]
     assert se.pack(endianness=2) == EXAMPLE_SECTION_BE[8:-4]
+
+
+def test_read_sample_section_be():
+    se = SectionHeader.unpack(EXAMPLE_SECTION_BE[8:-4], endianness=2)
+
+    assert se.block_type == 0x0a0d0d0a
+    assert se.byte_order_magic == 0x1a2b3c4d
+    assert se.version == (1, 0)
+    assert se.section_length == -1
+    assert len(se.options) == 0
+
+    assert se.pack(endianness=1) == EXAMPLE_SECTION_LE[8:-4]
+    assert se.pack(endianness=2) == EXAMPLE_SECTION_BE[8:-4]

@@ -92,19 +92,33 @@ class GenericBlock(BaseBlock):
 
 
 class SectionHeader(BaseBlock):
+    # ------------------------------------------------------------
+    # 4 bytes: Byte order magic
+    # 2 bytes: major version
+    # 2 bytes: minor version
+    # 8 bytes: section length (for traversing) (-1 for "unknown")
+    # ...options...
+    # ------------------------------------------------------------
+
     block_type = BLK_SECTION_HEADER
     byte_order_magic = None  # Always 0x1a2b3c4d
     version = None  # (major, minor)
     section_length = None
     options = None  # {key: [values]}
 
-    _options_names = {}
-
-    # 4 bytes: byte_order_magic
-    # 2 bytes: major version
-    # 2 bytes: minor version
-    # 8 bytes: section length (for traversing) (-1 for "unknown")
-    # ...options for the remaining length...
+    _options_names = {
+        'opt_endofopt': 0,
+        'opt_comment': 1,
+        # An UTF-8 string containing the description of the hardware
+        # used to create this section.
+        'shb_hardware': 2,
+        # An UTF-8 string containing the name of the operating system
+        # used to create this section.
+        'shb_os': 3,
+        # An UTF-8 string containing the name of the application used
+        # to create this section.
+        'shb_userappl': 4,
+    }
 
     @classmethod
     def unpack(cls, data, endianness=0):
@@ -139,16 +153,55 @@ class SectionHeader(BaseBlock):
 
 
 class Interface(BaseBlock):
+    # ------------------------------------------------------------
+    # 2 bytes: link type
+    # 2 bytes: reserved
+    # 4 bytes: snapshot length
+    # ...options...
+    # ------------------------------------------------------------
+
     block_type = BLK_INTERFACE
     link_type = None
     snaplen = None
     options = None
 
     _section = None
+    _options_names = {
+        'opt_endofopt': 0,
+        'opt_comment': 1,
+        'if_name': 2,
+        'if_description': 3,
+        'if_IPv4addr': 4,
+        'if_IPv6addr': 5,
+        'if_MACaddr': 6,
+        'if_EUIaddr': 7,
+        'if_speed': 8,
+        'if_tsresol': 9,
+        'if_tzone': 10,
+        'if_filter': 11,
+        'if_os': 12,
+        'if_fcslen': 13,
+        'if_tsoffset': 14,
+    }
 
     @classmethod
     def unpack(cls, data, endianness=0):
         unpacker = Unpacker(endianness)
+        (link_type, res, snaplen) = unpacker.unpack('HHI', data[:8])
+
+        obj = cls()
+        obj.link_type = link_type
+        obj.snaplen = snaplen
+        obj.options = Options.unpack(
+            data[8:], names=cls._options_names,
+            endianness=endianness)
+        return obj
+
+    def pack(self, endianness=0):
+        packer = Packer(endianness)
+        packed = packer.pack('HHI', self.link_type, 0, self.snaplen)
+        packed_opts = self.options.pack(endianness=endianness)
+        return ''.join((packed, packed_opts))
 
 
 class Packet(BaseBlock):
@@ -244,7 +297,7 @@ class Options(MutableMapping):
         """
         packer = Packer(endianness)
         stream = BytesIO()
-        for key, values in self._data.iteritems():
+        for key, values in sorted(self._data.iteritems()):
             for value in values:
                 stream.write(packer.pack('HH', key, len(value)))
                 aligned_write(stream, value)
