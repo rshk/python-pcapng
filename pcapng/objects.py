@@ -112,10 +112,12 @@ class SectionHeader(BaseBlock):
         (bo_magic, major, minor, section_length
          ) = unpacker.unpack('IHHq', data[:16])
 
-        if bo_magic != 0x4d3c2b1a:
+        if bo_magic == 0x4d3c2b1a:
             raise ValueError("Wrong endianness!")
         if bo_magic != 0x1a2b3c4d:
-            raise ValueError("Invalid byte order magic!")
+            raise ValueError(
+                "Invalid byte order magic! "
+                "Got: 0x{0:08x}".format(bo_magic))
 
         obj = cls()
         obj.byte_order_magic = bo_magic
@@ -128,9 +130,10 @@ class SectionHeader(BaseBlock):
 
     def pack(self, endianness=0):
         packer = Packer(endianness)
-        packed = packer.pack('IHHq', (
+        packed = packer.pack(
+            'IHHq',
             self.byte_order_magic, self.version[0], self.version[1],
-            self.section_length))
+            self.section_length)
         packed_opts = self.options.pack(endianness=endianness)
         return ''.join((packed, packed_opts))
 
