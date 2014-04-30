@@ -1,7 +1,9 @@
 import logging
 import sys
 
-from pcapng import PCAPNG_Reader
+from scapy.all import Ether
+
+from pcapng import PCAPNG_Reader, EnhancedPacket
 
 
 logger = logging.getLogger('pcapng')
@@ -16,8 +18,12 @@ logger.addHandler(handler)
 if __name__ == '__main__':
     import sys
     rdr = PCAPNG_Reader(sys.stdin)
-    for packet in rdr:
-        print(repr(packet))
+    for block in rdr:
+        print(repr(block))
+
+        if isinstance(block, EnhancedPacket):
+            print(repr(Ether(block.packet_data)))
+
     # while True:
     #     packet = rdr.read_block()
     #     print(repr(packet))
