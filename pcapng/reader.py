@@ -68,7 +68,8 @@ class PcapngReader(object):
     def _read_next_block(self):
         logger.debug("---- Reading next block from input ----")
 
-        assert self._fp.tell() % 4 == 0   # !
+        # Cannot seek streams!!
+        # assert self._fp.tell() % 4 == 0   # !
 
         block_type = self._read_u32()
 
