@@ -47,14 +47,14 @@ if __name__ == '__main__':
                 if TCP in packet:
                     # TCP packet
                     _tcp_com = (packet[IP].src, packet[TCP].sport,
-                                packet[IP].dst. packet[TCP].dport)
+                                packet[IP].dst, packet[TCP].dport)
                     counters['TCP Communications (count)'][_tcp_com] += 1
                     counters['TCP Communications (size)'][_tcp_com] += _pksize
 
                 elif UDP in packet:
                     # UDP packet
                     _udp_com = (packet[IP].src, packet[UDP].sport,
-                                packet[IP].dst. packet[UDP].dport)
+                                packet[IP].dst, packet[UDP].dport)
                     counters['UDP Communications (count)'][_udp_com] += 1
                     counters['UDP Communications (size)'][_udp_com] += _pksize
 
