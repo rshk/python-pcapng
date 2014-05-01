@@ -53,8 +53,8 @@ class BaseBlock(object):
                 raise AttributeError(key)
             setattr(self, key, val)
 
-    def __repr__(self):
-        return _repr_nt(self)
+    # def __repr__(self):
+    #     return _repr_nt(self)
 
 
 class Packer(object):

@@ -1,11 +1,12 @@
 from __future__ import print_function
 
 import binascii
-import io
 import logging
 import struct
 
-from .objects import (GenericBlock, SectionHeader, Interface, EnhancedPacket)
+from .objects import (
+    RawBlock, SectionHeader, Interface, Packet, SimplePacket,
+    EnhancedPacket, NameResolution, InterfaceStatistics)
 from .constants import (
     ENDIAN_LITTLE, ENDIAN_BIG, ORDER_MAGIC_BE, ORDER_MAGIC_LE)
 from .constants.block_types import (
@@ -57,7 +58,7 @@ class PcapngReader(object):
                 except IndexError:
                     pass
 
-        if type(blk) == GenericBlock:
+        if type(blk) == RawBlock:
             logger.warning(
                 "Unrecognised block type 0x{0:08x} was not parsed"
                 .format(blk.block_type))
@@ -68,8 +69,6 @@ class PcapngReader(object):
         logger.debug("---- Reading next block from input ----")
 
         assert self._fp.tell() % 4 == 0   # !
-
-        # todo: handle EOF properly!
 
         block_type = self._read_u32()
 
@@ -107,10 +106,9 @@ class PcapngReader(object):
             raise ValueError("Mismatching block size: start was {0}, "
                              "end is {1}".format(_totlen, _totlen2))
 
-        return GenericBlock(
+        return RawBlock(
             block_type=block_type,
-            block_size=_totlen,
-            block_body=_payload)
+            contents=_payload)
 
     def _read_block_section_header(self, block_type):
         """
@@ -183,124 +181,44 @@ class PcapngReader(object):
             raise ValueError("Mismatching block size: start was {0}, "
                              "end is {1}".format(_totlen, _totlen2))
 
-        return GenericBlock(
+        return RawBlock(
             block_type=block_type,
-            block_size=_totlen,
-            block_body=_payload)
+            contents=_payload)
 
     def _parse_block(self, blk):
         """Convert a generic block in something else, if possible"""
 
         _type = blk.block_type
 
+        if _type == BLK_SECTION_HEADER:
+            logger.debug('Parsing a section header block')
+            return SectionHeader.unpack(blk.contents, self._endianness)
+
         if _type == BLK_INTERFACE:
-            return self._parse_block_interface(blk)
+            logger.debug("Parsing an interface block")
+            return Interface.unpack(blk.contents, self._endianness)
 
         if _type == BLK_PACKET:
-            return self._parse_block_packet(blk)
+            logger.debug('Parsing a packet block')
+            return Packet.unpack(blk.contents, self._endianness)
 
         if _type == BLK_PACKET_SIMPLE:
-            return self._parse_block_packet_simple(blk)
-
-        if _type == BLK_NAME_RESOLUTION:
-            return self._parse_block_name_resolution(blk)
-
-        if _type == BLK_INTERFACE_STATS:
-            return self._parse_block_interface_stats(blk)
+            logger.debug('Parsing a simple packet block')
+            return SimplePacket.unpack(blk.contents, self._endianness)
 
         if _type == BLK_ENHANCED_PACKET:
-            return self._parse_block_enhanced_packet(blk)
+            logger.debug('Parsing an enhanced packet block')
+            return EnhancedPacket.unpack(blk.contents, self._endianness)
 
-        if _type == BLK_SECTION_HEADER:
-            return self._parse_block_section_header(blk)
+        if _type == BLK_NAME_RESOLUTION:
+            logger.debug('Parsing a name resolution block')
+            return NameResolution.unpack(blk.contents, self._endianness)
+
+        if _type == BLK_INTERFACE_STATS:
+            logger.debug('Parsing an interface stats block')
+            return InterfaceStatistics.unpack(blk.contents, self._endianness)
 
         return blk
-
-    def _parse_block_interface(self, blk):
-        logger.debug("Parsing an interface block")
-
-        _lnktype = self._unpack('H', blk.block_body[:2])
-        logger.debug('    link type: 0x{0:08x}'.format(_lnktype))
-        # ignore [2:4] -> reserved block
-        _snaplen = self._unpack('I', blk.block_body[4:8])
-        _options_raw = blk.block_body[8:]
-        _options = self._parse_options(_options_raw)
-
-        return Interface(
-            *blk, link_type=_lnktype, snaplen=_snaplen, options=_options)
-
-    def _parse_block_packet(self, blk):
-        logger.debug('Parsing a packet block')
-        return blk
-
-    def _parse_block_packet_simple(self, blk):
-        logger.debug('Parsing a simple packet block')
-        return blk
-
-    def _parse_block_enhanced_packet(self, blk):
-        logger.debug('Parsing an enhanced packet block')
-
-        # ------------------------------------------------------------
-        # 4 bytes: interface id
-        # 4 bytes: timestamp (high)
-        # 4 bytes: timestamp (low)
-        # 4 bytes: captured len (in the file)
-        # 4 bytes: packet len (real one on the wire)
-        # ...packet data... (captured-len-sized)
-        # ...options...
-        # ------------------------------------------------------------
-
-        (interface_id, ts_high, ts_low, captured_len, packet_len
-         ) = self._unpack('IIIII', blk.block_body[:20])
-
-        # Cannot parse as 64bit long, as the endianness of the
-        # two words is fixed (big endian)
-        timestamp = ts_high * (1 << 32) + ts_low
-
-        captured_len = self._unpack('I', blk.block_body[12:16])
-        packet_len = self._unpack('I', blk.block_body[16:20])
-
-        packet_data = blk.block_body[20:20 + captured_len]
-        opt_start = 20 + self._padded(captured_len, 4)
-
-        options = self._parse_options(blk.block_body[opt_start:])
-
-        return EnhancedPacket(
-            *blk, interface_id=interface_id, timestamp=timestamp,
-            captured_len=captured_len, packet_len=packet_len,
-            packet_data=packet_data, options=options)
-
-    def _parse_block_name_resolution(self, blk):
-        logger.debug('Parsing a name resolution block')
-        return blk
-
-    def _parse_block_interface_stats(self, blk):
-        logger.debug('Parsing an interface stats block')
-        return blk
-
-    def _parse_block_section_header(self, blk):
-        logger.debug('Parsing a section header block')
-        return SectionHeader.unpack(blk.contents, self._endianness)
-
-    def _parse_options(self, data, optset=None):
-        # 2 bytes: option type
-        # 2 bytes: option length
-        # ...option value...
-
-        _input = io.BytesIO(data)
-        options = []
-
-        while True:
-            hdr = _input.read(4)
-            if len(hdr) < 4:  # EOF
-                break
-            op_type, op_length = self._unpack('HH', hdr)
-            # if op_type == 0:  # End of options??
-            #     break
-            op_value = self._padded_read(op_length, _input)
-            options.append((op_type, op_value))
-
-        return options
 
     # ------------------------------------------------------------
     #   Struct parsing stuff
