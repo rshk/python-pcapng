@@ -65,8 +65,8 @@ if __name__ == '__main__':
                 pass
 
             else:
-                counters['Non-IP packets (size)'] += block.packet_len
-                counters['Non-IP packets (count)'] += 1
+                counters['Non-IP packets (size)']['total'] += _pksize
+                counters['Non-IP packets (count)']['total'] += 1
 
     # Print report
     # ------------------------------------------------------------
