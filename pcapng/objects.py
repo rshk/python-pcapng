@@ -11,7 +11,8 @@ from .constants.block_types import (
     BLK_INTERFACE, BLK_INTERFACE_STATS, BLK_NAME_RESOLUTION)
 from .constants import ENDIAN_NATIVE, ENDIAN_LITTLE, ENDIAN_BIG
 from .constants.options import OPT_ENDOFOPT
-from .utils import aligned_read, aligned_write
+from .utils import (
+    aligned_read, aligned_write, timestamp_pack, timestamp_unpack)
 
 
 def _repr_nt(nt):
@@ -227,16 +228,73 @@ class SimplePacket(BaseBlock):
 
 
 class EnhancedPacket(BaseBlock):
+    # ------------------------------------------------------------
+    # 4 bytes: interface id
+    # 4 bytes: timestamp (high)
+    # 4 bytes: timestamp (low)
+    # 4 bytes: captured len (in the file)
+    # 4 bytes: packet len (real one on the wire)
+    # ...packet data... (captured-len-sized)
+    # ...options...
+    # ------------------------------------------------------------
+
     block_type = BLK_ENHANCED_PACKET
     interface_id = None
-    timestamp = None
+    timestamp_raw = None
     captured_len = None
     packet_len = None
     packet_data = None
     options = None
 
+    # todo: add a timestamp property to allow manipulating in seconds
+
     _section = None
     _interface = None
+    _options_names = {
+        # A flags word containing link-layer information.
+        'epb_flags': 2,
+        # This option contains a hash of the packet.
+        'epb_hash': 3,
+        # A 64bit integer value specifying the number of packets lost
+        # (by the interface and the operating system) between this
+        # packet and the preceding one.
+        'epb_dropcount': 4,
+    }
+
+    @classmethod
+    def unpack(cls, data, endianness=0):
+        stream = BytesIO(data)
+        unpacker = Unpacker(endianness)
+
+        obj = cls()
+        (obj.interface_id, ts_high, ts_low, obj.captured_len, obj.packet_len
+         ) = unpacker.unpack('IIIII', stream.read(20))
+
+        obj.timestamp_raw = timestamp_unpack(ts_high, ts_low)
+
+        obj.packet_data = aligned_read(stream, obj.packet_len)
+
+        obj.options = Options.unpack(
+            stream.read(), names=cls._options_names,
+            endianness=endianness)
+
+        return obj
+
+    def pack(self, endianness=0):
+        stream = BytesIO()
+        packer = Packer(endianness)
+
+        ts_high, ts_low = timestamp_pack(self.timestamp_raw)
+        packed = packer.pack('IIIII', self.interface_id, ts_high, ts_low,
+                             self.captured_len, len(self.packet_data))
+        stream.write(packed)
+
+        aligned_write(stream, self.packet_data)
+
+        packed_opts = self.options.pack(endianness=endianness)
+        aligned_write(stream, packed_opts)
+
+        return stream.getvalue()
 
 
 class NameResolution(BaseBlock):
