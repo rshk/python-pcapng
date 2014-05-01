@@ -61,8 +61,8 @@ if __name__ == '__main__':
                 else:
                     # Generic IP packet
                     _ip_com = (packet[IP].src, packet[IP].dst)
-                    pass
-                pass
+                    counters['Other IP Communications (count)'][_ip_com] += 1
+                    counters['Other IP Communications (size)'][_ip_com] += _pksize  # noqa
 
             else:
                 counters['Non-IP packets (size)']['total'] += _pksize
@@ -71,7 +71,7 @@ if __name__ == '__main__':
     # Print report
     # ------------------------------------------------------------
 
-    for counter_name, items in counters.iteritems():
+    for counter_name, items in sorted(counters.iteritems()):
         print(counter_name)
         print('-' * 60)
         sorted_items = sorted(items.iteritems(), key=lambda x: x[1],
