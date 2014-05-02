@@ -15,6 +15,7 @@ import sys
 import json
 
 from scapy.layers.l2 import Ether
+from scapy.packet import Raw
 
 from pcapng import PcapngReader
 from pcapng.objects import EnhancedPacket
@@ -71,6 +72,9 @@ if __name__ == '__main__':
             }
 
             for pkt in _find_layers(packet):
+                if isinstance(pkt, Raw):
+                    # Ignore raw packet contents!
+                    continue
                 packet_record[pkt.name] = pkt.fields
 
             print(json.dumps({'index': {
