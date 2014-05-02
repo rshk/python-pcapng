@@ -4,7 +4,24 @@ in elasticsearch.
 
 Example:
 
+
+curl -XPUT localhost:9200/net-traffic -d '{"packet": {
+    "properties": {
+        "@tymestamp": {"type": "date"},
+    },
+    "dynamic_templates": [{
+        "packet_fields_as_string": {
+            "path_match": "*.*",
+            "mapping": {
+                "type": "string",
+                "index": "not_analyzed",
+            }
+        }
+    }]
+}}'
+
 ./pcapng_to_elasticsearch.py < capture.pcapng > capture.json
+
 curl -XPUT localhost:9200/net-traffic/_bulk --data-binary @capture.json
 """
 
@@ -67,7 +84,7 @@ if __name__ == '__main__':
                         .format(packet_id, repr(packet)[:200]))
 
             packet_record = {
-                '@timestamp': block.timestamp,
+                '@timestamp': block.timestamp * 1000,  # in milliseconds
                 'packet_size': block.packet_len,
                 # todo: add information about interface, etc?
             }
