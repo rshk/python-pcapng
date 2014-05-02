@@ -40,6 +40,13 @@ from pcapng import PcapngReader
 from pcapng.objects import EnhancedPacket
 
 
+class SaferJsonEncoder(json.JSONEncoder):
+    def default(self, obj):
+        try:
+            return json.JSONEncoder.default(self, obj)
+        except TypeError:
+            return repr(obj)
+
 pcapng_logger = logging.getLogger('pcapng')
 pcapng_logger.setLevel(logging.INFO)
 
@@ -100,7 +107,14 @@ if __name__ == '__main__':
                     continue
                 packet_record[pkt.name] = pkt.fields
 
-            print(json.dumps({'index': {
-                '_type': 'packet',
-                '_id': packet_id}}))
-            print(json.dumps(packet_record))
+            try:
+                _pkt_json = json.dumps(packet_record, cls=SaferJsonEncoder)
+
+            except:
+                logger.exception("Unable to serialize json packet")
+
+            else:
+                print(json.dumps({'index': {
+                    '_type': 'packet',
+                    '_id': packet_id}}))
+                print(_pkt_json)
