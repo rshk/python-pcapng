@@ -58,9 +58,6 @@ if __name__ == '__main__':
     import sys
     rdr = PcapngReader(sys.stdin)
 
-    # counters = defaultdict(Counter)
-    packet_id = 0
-
     def _find_layers(pkt):
         # Iterating pkt is quite a confused thing..
         # Another options would be getting layers as pkt[id]
@@ -77,8 +74,15 @@ if __name__ == '__main__':
             # We expect only ethernet packets in this dump
             assert block._interface.link_type == 1
 
+            # We need to figure out a unique id for this packet,
+            # in a deterministic way (in case we re-import the
+            # same batch..)
+            # Hopefully, this will be unique..
+            packet_id = hashlib.sha1(
+                str(block.timestamp) + block.packet_data
+                ).hexdigest()
+
             packet = Ether(block.packet_data)  # Decode packet data
-            packet_id += 1  # We only count packets!
 
             logger.info("Processing packet {0}: {1}"
                         .format(packet_id, repr(packet)[:200]))
