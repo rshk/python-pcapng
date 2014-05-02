@@ -62,8 +62,8 @@ if __name__ == '__main__':
             packet = Ether(block.packet_data)  # Decode packet data
             packet_id += 1  # We only count packets!
 
-            logger.info("Processing packet {0}: {1!r}"
-                        .format(packet_id, packet))
+            logger.info("Processing packet {0}: {1}"
+                        .format(packet_id, repr(packet)[:200]))
 
             packet_record = {
                 '@timestamp': block.timestamp,
