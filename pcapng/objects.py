@@ -246,7 +246,11 @@ class EnhancedPacket(BaseBlock):
     packet_data = None
     options = None
 
-    # todo: add a timestamp property to allow manipulating in seconds
+    @property
+    def timestamp(self):
+        # todo: check the interface ts_resol option for proper timestamp
+        #       conversion..
+        return self.timestamp_raw / 1e6
 
     _section = None
     _interface = None
