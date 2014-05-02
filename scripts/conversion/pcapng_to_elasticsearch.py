@@ -30,6 +30,7 @@ from __future__ import print_function, division
 import logging
 import sys
 import json
+import hashlib
 
 from scapy.layers.l2 import Ether
 from scapy.layers.all import *  # Needed for decode!  # noqa
