@@ -7,14 +7,14 @@ Example:
 
 curl -XPUT localhost:9200/net-traffic -d '{"packet": {
     "properties": {
-        "@tymestamp": {"type": "date"},
+        "@tymestamp": {"type": "date"}
     },
     "dynamic_templates": [{
         "packet_fields_as_string": {
             "path_match": "*.*",
             "mapping": {
                 "type": "string",
-                "index": "not_analyzed",
+                "index": "not_analyzed"
             }
         }
     }]
