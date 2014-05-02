@@ -65,7 +65,9 @@ if __name__ == '__main__':
                         .format(packet_id, packet))
 
             packet_record = {
-                '@timestamp': block.timestamp / 1e6,
+                '@timestamp': block.timestamp,
+                'packet_size': block.packet_len,
+                # todo: add information about interface, etc?
             }
 
             for pkt in _find_layers(packet):
