@@ -15,6 +15,7 @@ import sys
 import json
 
 from scapy.layers.l2 import Ether
+from scapy.layers.all import *  # Needed for decode!  # noqa
 from scapy.packet import Raw
 
 from pcapng import PcapngReader
@@ -78,6 +79,6 @@ if __name__ == '__main__':
                 packet_record[pkt.name] = pkt.fields
 
             print(json.dumps({'index': {
-                '_type': 'packet-' + pkt.name,
+                '_type': 'packet',
                 '_id': packet_id}}))
             print(json.dumps(packet_record))
