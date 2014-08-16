@@ -31,7 +31,7 @@ but I'm much better at Python than C.
 But I need to get things done, and CPU time is not that expensive :)
 
 (Maybe I'll give a try porting the thing to Cython to speed it up, but
-anyways, pure-Python libraries are always useful, eg. for PyPxy).
+anyways, pure-Python libraries are always useful, eg. for PyPy).
 
 
 ## How do I use it?
