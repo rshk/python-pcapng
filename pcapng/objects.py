@@ -302,11 +302,37 @@ class EnhancedPacket(BaseBlock):
 
 
 class NameResolution(BaseBlock):
+    # ------------------------------------------------------------
+    # 2 bytes: record type
+    # 2 bytes: record length
+    # x bytes: record value
+    # x bytes: options
+    # ...options...
+    # ------------------------------------------------------------
     block_type = BLK_NAME_RESOLUTION
     records = None  # [(type, value)]
     options = None
 
     _section = None
+
+    @classmethod
+    def unpack(cls, data, endianness=0):
+        stream = BytesIO(data)
+        unpacker = Unpacker(endianness)
+
+        obj = cls()
+
+        # TODO: parse records and options
+
+        return obj
+
+    def pack(self, endianness=0):
+        stream = BytesIO()
+        packer = Packer(endianness)
+
+        # TODO: pack records and options
+
+        return stream.getvalue()
 
 
 class InterfaceStatistics(BaseBlock):
@@ -317,6 +343,29 @@ class InterfaceStatistics(BaseBlock):
 
     _section = None
     _interface = None
+
+    @classmethod
+    def unpack(cls, data, endianness=0):
+        stream = BytesIO(data)
+        unpacker = Unpacker(endianness)
+
+        obj = cls()
+        obj.interface_id = unpacker.unpack('I', stream.read(4))[0]
+
+        # TODO: parse timestamp and options
+
+        return obj
+
+    def pack(self, endianness=0):
+        stream = BytesIO()
+        packer = Packer(endianness)
+
+        packed = packer.pack('I', self.interface_id)
+        stream.write(packed)
+
+        # TODO: pack timestamp and options
+
+        return stream.getvalue()
 
 
 class Options(MutableMapping):
