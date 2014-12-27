@@ -1,0 +1,12 @@
+[run]
+parallel = False
+
+[report]
+exclude_lines =
+    pragma: no cover
+    pass
+    raise AssertionError
+    raise NotImplementedError
+source = pcapng
+show_missing = True
+omit = .venv*

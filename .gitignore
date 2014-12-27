@@ -6,5 +6,6 @@
 *.egg
 *.egg-info
 .coverage
+.coverage.*
 /.cache
 *.pcapng
