@@ -132,7 +132,7 @@ class StructField(object):
 
     @abc.abstractmethod
     def load(self, stream, endianness):
-        pass  # pragma: no-cover
+        pass
 
 
 class RawBytes(StructField):
