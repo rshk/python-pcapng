@@ -115,7 +115,7 @@ class EnhancedPacket(SectionMemberBlock):
     def interface(self):
         # We need to get the correct interface from the section
         # by looking up the interface_id
-        pass
+        return self.section.interfaces[self.interface_id]
 
 
 @register_block

@@ -2,7 +2,6 @@ import io
 
 from pcapng.blocks import SectionHeader, InterfaceDescription
 from pcapng.scanner import FileScanner
-from pcapng.structs import Options
 
 
 def test_read_block_interface_bigendian():
