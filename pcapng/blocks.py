@@ -33,6 +33,14 @@ class Block(object):
         except KeyError:
             raise AttributeError(name)
 
+    def __repr__(self):
+        args = []
+        for item in self.schema:
+            name = item[0]
+            args.append('{0}={1!r}'.format(name, getattr(self, name)))
+        return '{0}({1})'.format(self.__class__.__name__,
+                                 ', '.join(args))
+
 
 class SectionMemberBlock(Block):
     def __init__(self, raw, section):
