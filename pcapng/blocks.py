@@ -170,8 +170,11 @@ class NameResolution(Block):
     ]
 
 
-@register_block
 class UnknownBlock(Block):
     def __init__(self, block_type, data):
         self.block_type = block_type
         self.data = data
+
+    def __repr__(self):
+        return ('UnknownBlock(0x{0:08X}, {1!r})'
+                .format(self.block_type, self.data))

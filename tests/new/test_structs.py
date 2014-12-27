@@ -57,7 +57,7 @@ def test_read_int_truncated_stream():
 
 def test_read_section_header_big_endian():
     data = io.BytesIO(
-        '\x0a\x0d\x0d\x0a'  # magic number
+        # '\x0a\x0d\x0d\x0a'  # magic number has already been read..
         '\x00\x00\x00\x1c'  # block length (28 bytes)
         '\x1a\x2b\x3c\x4d'  # byte order magic [it's big endian!]
         '\x00\x01\x00\x00'  # version 1.0
@@ -70,12 +70,12 @@ def test_read_section_header_big_endian():
     assert block['block_length'] == 28
     assert block['version'] == (1, 0)
     assert block['section_length'] == -1
-    assert block['options_raw'] == ''
+    assert block['options_raw'] == []
 
 
 def test_read_section_header_little_endian():
     data = io.BytesIO(
-        '\x0a\x0d\x0d\x0a'  # magic number
+        # '\x0a\x0d\x0d\x0a'  # magic number
         '\x1c\x00\x00\x00'  # block length (28 bytes)
         '\x4d\x3c\x2b\x1a'  # byte order magic [it's big endian!]
         '\x01\x00\x00\x00'  # version 1.0
@@ -88,21 +88,12 @@ def test_read_section_header_little_endian():
     assert block['block_length'] == 28
     assert block['version'] == (1, 0)
     assert block['section_length'] == -1
-    assert block['options_raw'] == ''
-
-
-def test_read_section_header_bad_magic():
-    data = io.BytesIO('\x0B\xAD\xBE\xEF')
-    with pytest.raises(BadMagic) as ctx:
-        read_section_header(data)
-
-    assert ctx.value.message == (
-        'Invalid magic number: got 0x0BADBEEF, expected 0x0A0D0D0A')
+    assert block['options_raw'] == []
 
 
 def test_read_section_header_bad_order_magic():
     data = io.BytesIO(
-        '\x0a\x0d\x0d\x0a'  # magic number
+        # '\x0a\x0d\x0d\x0a'  # magic number
         '\x1c\x00\x00\x00'  # block length (28 bytes)
         '\x0B\xAD\xBE\xEF'  # byte order magic [it's big endian!]
         '\x01\x00\x00\x00'  # version 1.0
@@ -120,7 +111,7 @@ def test_read_section_header_bad_order_magic():
 
 def test_read_section_header_mismatching_lengths():
     data = io.BytesIO(
-        '\x0a\x0d\x0d\x0a'  # magic number
+        # '\x0a\x0d\x0d\x0a'  # magic number
         '\x00\x00\x00\x1c'  # block length (28 bytes)
         '\x1a\x2b\x3c\x4d'  # byte order magic [it's big endian!]
         '\x00\x01\x00\x00'  # version 1.0

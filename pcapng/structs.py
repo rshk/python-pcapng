@@ -32,15 +32,17 @@ def read_section_header(stream):
     """
     Read a section header from a stream.
 
+    .. note:: We expect the bytes order magic to have been already read!
+
     :returns: a dict containing information about the section
     """
 
-    blktype = read_int(stream, 32, '>')
+    # blktype = read_int(stream, 32, '>')
 
-    if blktype != SECTION_HEADER_MAGIC:
-        raise BadMagic(
-            'Invalid magic number: got 0x{0:08X}, expected 0x{1:08X}'
-            .format(blktype, SECTION_HEADER_MAGIC))
+    # if blktype != SECTION_HEADER_MAGIC:
+    #     raise BadMagic(
+    #         'Invalid magic number: got 0x{0:08X}, expected 0x{1:08X}'
+    #         .format(blktype, SECTION_HEADER_MAGIC))
 
     blk_len_raw = read_bytes(stream, 4)  # We don't know endianness yet..
     byte_order_magic = read_int(stream, 32, '>')  # Default BIG
@@ -59,8 +61,11 @@ def read_section_header(stream):
     v_maj = read_int(stream, 16, False, endianness)
     v_min = read_int(stream, 16, False, endianness)
     section_len = read_int(stream, 64, True, endianness)
+
     options_len = blk_len - (7 * 4)
-    options_raw = read_bytes(stream, options_len)
+    options_raw_string = read_bytes(stream, options_len)
+    options_raw = read_options(io.BytesIO(options_raw_string), endianness)
+
     blk_len2 = read_int(stream, 32, False, endianness)
 
     if blk_len != blk_len2:
