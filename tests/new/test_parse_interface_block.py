@@ -37,6 +37,7 @@ def test_read_block_interface_bigendian():
 
     assert isinstance(blocks[1], InterfaceDescription)
     assert blocks[1].link_type == 0x01
+    assert blocks[1].link_type_description == 'D/I/X and 802.3 Ethernet'
     assert blocks[1].snaplen == 0xffff
     assert blocks[1].options['if_name'] == 'eth0'
     assert blocks[1].options['if_tsresol'] == '\x06'

@@ -4,6 +4,7 @@ import struct
 from pcapng.structs import (
     struct_decode, RawBytes, IntField, OptionsField, PacketDataField,
     ListField, NameResolutionRecordField, SimplePacketDataField)
+from pcapng.constants import link_types
 
 
 KNOWN_BLOCKS = {}
@@ -98,6 +99,13 @@ class InterfaceDescription(SectionMemberBlock):
     def statistics(self):
         # todo: we need to make the interface aware of its own id
         raise NotImplementedError
+
+    @property
+    def link_type_description(self):
+        try:
+            return link_types.LINKTYPE_DESCRIPTIONS[self.link_type]
+        except KeyError:
+            return 'Unknown link type: 0x{0:04X}'.format(self.link_type)
 
 
 class BlockWithTimestampMixin(object):
