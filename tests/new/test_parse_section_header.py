@@ -136,12 +136,19 @@ def test_read_block_sectionheader_bigendian_with_options():
 def test_read_block_sectionheader_littleendian_with_options():
     scanner = FileScanner(io.BytesIO(
         "\x0a\x0d\x0d\x0a"  # Magic number
-        "\x20\x00\x00\x00"  # Block size (32 bytes)
+        "\x60\x00\x00\x00"  # Block size (96 bytes)
         "\x4d\x3c\x2b\x1a"  # Magic number
         "\x01\x00\x00\x00"  # Version
         "\xff\xff\xff\xff\xff\xff\xff\xff"  # Undefined section length
-        "\x00\x00\x00\x00"  # Empty options
-        "\x20\x00\x00\x00"  # Block size (32 bytes)
+
+        # Options
+        '\x01\x00\x0e\x00''Just a comment\x00\x00'
+        '\x02\x00\x0b\x00''My Computer\x00'
+        '\x03\x00\x05\x00''My OS\x00\x00\x00'
+        '\x04\x00\x0a\x00''A fake app\x00\x00'
+        "\x00\x00\x00\x00"
+
+        "\x60\x00\x00\x00"  # Block size (96 bytes)
     ))
 
     blocks = list(scanner)
@@ -153,5 +160,6 @@ def test_read_block_sectionheader_littleendian_with_options():
     assert block.version == (1, 0)
     assert block.length == -1
     assert isinstance(block.options, Options)
-    assert len(block.options) == 0
+    assert len(block.options) == 4
+    assert block.options['opt_comment'] == 'Just a comment'
     assert block.interfaces == []
