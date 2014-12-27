@@ -69,7 +69,7 @@ class FileScanner(object):
         """
         data = read_block_data(self.stream, endianness=self.endianness)
         if block_type in blocks.KNOWN_BLOCKS:
-            return blocks.KNOWN_BLOCKS[block_type](data)
+            return blocks.KNOWN_BLOCKS[block_type].from_context(data, self)
         return blocks.UnknownBlock(block_type, data)
 
     def _read_int(self, size, signed=False):

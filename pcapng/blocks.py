@@ -1,3 +1,5 @@
+import io
+
 from pcapng.structs import (
     struct_decode, RawBytes, IntField, OptionsField, PacketDataField,
     ListField, NameResolutionRecordField, SimplePacketDataField)
@@ -13,8 +15,13 @@ class Block(object):
         self._raw = raw
         self._decoded = None
 
+    @classmethod
+    def from_context(cls, raw, ctx):
+        return cls(raw)
+
     def _decode(self):
-        return struct_decode(self.schema)
+        return struct_decode(self.schema, io.BytesIO(self._raw),
+                             endianness=self.section.endianness)
 
     def __getattr__(self, name):
         if self._decoded is None:
@@ -23,6 +30,16 @@ class Block(object):
             return self._decoded[name]
         except KeyError:
             raise AttributeError(name)
+
+
+class SectionMemberBlock(Block):
+    def __init__(self, raw, section):
+        super(SectionMemberBlock, self).__init__(raw)
+        self.section = section
+
+    @classmethod
+    def from_context(cls, raw, ctx):
+        return cls(raw, section=ctx.current_section)
 
 
 def register_block(block):
@@ -43,18 +60,12 @@ class SectionHeader(Block):
         self.interfaces = []
 
 
-class SectionMemberBlock(Block):
-    def __init__(self, raw, section):
-        super(SectionMemberBlock, self).__init__(raw)
-        self.section = section
-
-
 @register_block
 class InterfaceDescription(SectionMemberBlock):
     magic_number = 0x00000001
     schema = [
         ('link_type', IntField(16, False)),  # todo: enc/decode
-        ('reserved', RawBytes(16)),
+        ('reserved', RawBytes(2)),
         ('snaplen', IntField(32, False)),
         ('options', OptionsField([
             (2, 'if_name'),
@@ -158,7 +169,7 @@ class Packet(SectionMemberBlock):
 
 
 @register_block
-class NameResolution(Block):
+class NameResolution(SectionMemberBlock):
     magic_number = 0x00000004
     schema = [
         ('records', ListField(NameResolutionRecordField())),
