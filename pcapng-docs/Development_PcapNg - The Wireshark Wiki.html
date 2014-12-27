@@ -1,0 +1,595 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html><head>
+
+<link href="Development_PcapNg%20-%20The%20Wireshark%20Wiki_files/css.css" rel="stylesheet" type="text/css">
+  <link href="Development_PcapNg%20-%20The%20Wireshark%20Wiki_files/css_002.css" rel="stylesheet" type="text/css">
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<meta name="robots" content="index,nofollow">
+
+<title>Development/PcapNg - The Wireshark Wiki</title>
+<script src="Development_PcapNg%20-%20The%20Wireshark%20Wiki_files/ga.js" async="" type="text/javascript"></script><script type="text/javascript" src="Development_PcapNg%20-%20The%20Wireshark%20Wiki_files/common.js"></script>
+
+<script type="text/javascript">
+<!--
+var search_hint = "Search";
+//-->
+</script>
+
+
+<link rel="stylesheet" type="text/css" charset="utf-8" media="all" href="Development_PcapNg%20-%20The%20Wireshark%20Wiki_files/common.css">
+<link rel="stylesheet" type="text/css" charset="utf-8" media="screen" href="Development_PcapNg%20-%20The%20Wireshark%20Wiki_files/screen.css">
+<link rel="stylesheet" type="text/css" charset="utf-8" media="print" href="Development_PcapNg%20-%20The%20Wireshark%20Wiki_files/print.css">
+<link rel="stylesheet" type="text/css" charset="utf-8" media="projection" href="Development_PcapNg%20-%20The%20Wireshark%20Wiki_files/projection.css">
+<link rel="stylesheet" type="text/css" charset="utf-8" media="screen" href="Development_PcapNg%20-%20The%20Wireshark%20Wiki_files/ws-wiki-screen.css">
+<link rel="stylesheet" type="text/css" charset="utf-8" media="print" href="Development_PcapNg%20-%20The%20Wireshark%20Wiki_files/ws-wiki-print.css">
+
+<!-- css only for MS IE6/IE7 browsers -->
+<!--[if lt IE 8]>
+   <link rel="stylesheet" type="text/css" charset="utf-8" media="all" href="/moin_static196/modernized/css/msie.css">
+<![endif]-->
+
+
+
+
+
+<link rel="Start" href="http://wiki.wireshark.org/FrontPage">
+<link rel="Alternate" title="Wiki Markup" href="http://wiki.wireshark.org/Development/PcapNg?action=raw">
+<link rel="Alternate" media="print" title="Print View" href="http://wiki.wireshark.org/Development/PcapNg?action=print">
+<link rel="Up" href="http://wiki.wireshark.org/Development">
+<link rel="Appendix" title="http.bigendian.ntar" href="http://wiki.wireshark.org/Development/PcapNg?action=AttachFile&amp;do=view&amp;target=http.bigendian.ntar">
+<link rel="Appendix" title="http.littleendian.ntar" href="http://wiki.wireshark.org/Development/PcapNg?action=AttachFile&amp;do=view&amp;target=http.littleendian.ntar">
+<link rel="Appendix" title="icmp.jpg" href="http://wiki.wireshark.org/Development/PcapNg?action=AttachFile&amp;do=view&amp;target=icmp.jpg">
+<link rel="Appendix" title="icmp.ntar" href="http://wiki.wireshark.org/Development/PcapNg?action=AttachFile&amp;do=view&amp;target=icmp.ntar">
+<link rel="Appendix" title="icmp2.ntar" href="http://wiki.wireshark.org/Development/PcapNg?action=AttachFile&amp;do=view&amp;target=icmp2.ntar">
+<link rel="Appendix" title="ntartest.c" href="http://wiki.wireshark.org/Development/PcapNg?action=AttachFile&amp;do=view&amp;target=ntartest.c">
+<link rel="Appendix" title="pcap-ng_Wi-Fi_Bluetooth_USB_Cooked_timestamps_issue_1.ntar" href="http://wiki.wireshark.org/Development/PcapNg?action=AttachFile&amp;do=view&amp;target=pcap-ng_Wi-Fi_Bluetooth_USB_Cooked_timestamps_issue_1.ntar">
+<link rel="Appendix" title="test001.ntar" href="http://wiki.wireshark.org/Development/PcapNg?action=AttachFile&amp;do=view&amp;target=test001.ntar">
+<link rel="Appendix" title="test002.ntar" href="http://wiki.wireshark.org/Development/PcapNg?action=AttachFile&amp;do=view&amp;target=test002.ntar">
+<link rel="Appendix" title="test003.ntar" href="http://wiki.wireshark.org/Development/PcapNg?action=AttachFile&amp;do=view&amp;target=test003.ntar">
+<link rel="Appendix" title="test004.ntar" href="http://wiki.wireshark.org/Development/PcapNg?action=AttachFile&amp;do=view&amp;target=test004.ntar">
+<link rel="Appendix" title="test005.ntar" href="http://wiki.wireshark.org/Development/PcapNg?action=AttachFile&amp;do=view&amp;target=test005.ntar">
+<link rel="Appendix" title="test006.ntar" href="http://wiki.wireshark.org/Development/PcapNg?action=AttachFile&amp;do=view&amp;target=test006.ntar">
+<link rel="Appendix" title="test007.ntar" href="http://wiki.wireshark.org/Development/PcapNg?action=AttachFile&amp;do=view&amp;target=test007.ntar">
+<link rel="Appendix" title="test008.ntar" href="http://wiki.wireshark.org/Development/PcapNg?action=AttachFile&amp;do=view&amp;target=test008.ntar">
+<link rel="Appendix" title="test009.ntar" href="http://wiki.wireshark.org/Development/PcapNg?action=AttachFile&amp;do=view&amp;target=test009.ntar">
+<link rel="Appendix" title="test010.ntar" href="http://wiki.wireshark.org/Development/PcapNg?action=AttachFile&amp;do=view&amp;target=test010.ntar">
+<link rel="Search" href="http://wiki.wireshark.org/FindPage">
+<link rel="Index" href="http://wiki.wireshark.org/TitleIndex">
+<link rel="Glossary" href="http://wiki.wireshark.org/WordIndex">
+<link rel="Help" href="http://wiki.wireshark.org/HelpOnFormatting">
+</head>
+
+<body dir="ltr" lang="en">
+
+<div id="header">
+
+<form id="searchform" method="get" action="/Development/PcapNg">
+<div>
+<input name="action" value="fullsearch" type="hidden">
+<input name="context" value="180" type="hidden">
+<label style="display: none;" for="searchinput">Search:</label>
+<input class="disabled" id="searchinput" name="value" value="Search" size="20" onfocus="searchFocus(this)" onblur="searchBlur(this)" onkeyup="searchChange(this)" onchange="searchChange(this)" alt="Search" type="text">
+<input disabled="disabled" id="titlesearch" name="titlesearch" value="Titles" alt="Search Titles" type="submit">
+<input disabled="disabled" id="fullsearch" name="fullsearch" value="Text" alt="Search Full Text" type="submit">
+</div>
+</form>
+<script type="text/javascript">
+<!--// Initialize search form
+var f = document.getElementById('searchform');
+f.getElementsByTagName('label')[0].style.display = 'none';
+var e = document.getElementById('searchinput');
+searchChange(e);
+searchBlur(e);
+//-->
+</script>
+
+<div id="logo"><a href="http://wiki.wireshark.org/FrontPage"><img class="logo" src="Development_PcapNg%20-%20The%20Wireshark%20Wiki_files/wsbadge186x57.png" alt="The Wireshark Wiki" border="0"></a></div>
+<div id="username"><a href="http://wiki.wireshark.org/Development/PcapNg?action=login" id="login" rel="nofollow">Login</a></div>
+<h1 id="locationline">
+
+<span id="pagelocation"><span class="pagepath"><a href="http://wiki.wireshark.org/Development">Development</a></span><span class="sep">/</span><a class="backlink" href="http://wiki.wireshark.org/Development/PcapNg?action=fullsearch&amp;value=linkto%3A%22Development%2FPcapNg%22&amp;context=180" rel="nofollow" title="Click to do a full-text search for this title">PcapNg</a></span>
+</h1>
+
+
+<ul id="navibar">
+<li class="wikilink"><a href="http://wiki.wireshark.org/FrontPage">FrontPage</a></li><li class="wikilink"><a href="http://wiki.wireshark.org/RecentChanges">RecentChanges</a></li><li class="wikilink"><a href="http://wiki.wireshark.org/FindPage">FindPage</a></li><li class="wikilink"><a href="http://wiki.wireshark.org/HelpContents">HelpContents</a></li><li class="current"><a href="http://wiki.wireshark.org/Development/PcapNg">Development/PcapNg</a></li>
+</ul>
+
+<div id="pageline"><hr style="display:none;"></div>
+
+<ul class="editbar"><li><span class="disabled">Immutable Page</span></li><li class="toggleCommentsButton" style="display:none;"><a href="#" class="nbcomment" onclick="toggleComments();return false;">Comments</a></li><li><a class="nbinfo" href="http://wiki.wireshark.org/Development/PcapNg?action=info" rel="nofollow">Info</a></li><li><a class="nbattachments" href="http://wiki.wireshark.org/Development/PcapNg?action=AttachFile" rel="nofollow">Attachments</a></li><li>
+<form class="actionsmenu" method="GET" action="/Development/PcapNg">
+<div>
+    
+    <select name="action" onchange="if ((this.selectedIndex != 0) &amp;&amp;
+                      (this.options[this.selectedIndex].disabled == false)) {
+                this.form.submit();
+            }
+            this.selectedIndex = 0;">
+        <option selected="selected" value="show">More Actions:</option><option value="raw">Raw Text</option>
+<option value="print">Print View</option>
+<option value="RenderAsDocbook">Render as Docbook</option>
+<option value="refresh">Delete Cache</option>
+<option value="show" disabled="disabled" class="disabled">------------------------</option>
+<option value="SpellCheck">Check Spelling</option>
+<option value="LikePages">Like Pages</option>
+<option value="LocalSiteMap">Local Site Map</option>
+<option value="show" disabled="disabled" class="disabled">------------------------</option>
+<option value="RenamePage" disabled="disabled" class="disabled">Rename Page</option>
+<option value="DeletePage" disabled="disabled" class="disabled">Delete Page</option>
+<option value="show" disabled="disabled" class="disabled">------------------------</option>
+<option value="show" disabled="disabled" class="disabled">Subscribe User</option>
+<option value="show" disabled="disabled" class="disabled">------------------------</option>
+<option value="show" disabled="disabled" class="disabled">Remove Spam</option>
+<option value="show" disabled="disabled" class="disabled">Revert to this revision</option>
+<option value="PackagePages">Package Pages</option>
+<option value="SyncPages">Sync Pages</option>
+<option value="show" disabled="disabled" class="disabled">------------------------</option>
+<option value="Load">Load</option>
+<option value="Save">Save</option>
+<option value="SlideShow">SlideShow</option>
+    </select>
+    
+    
+</div>
+<script type="text/javascript">
+<!--// Init menu
+actionsMenuInit('More Actions:');
+//-->
+</script>
+</form>
+</li></ul>
+
+</div>
+
+<div id="page" dir="ltr" lang="en">
+<div dir="ltr" id="content" lang="en"><span class="anchor" id="top"></span>
+<span class="anchor" id="line-1"></span><p class="line867"></p><div class="table-of-contents"><p class="table-of-contents-heading">Contents</p><ol><li>
+<a href="#PcapNg">PcapNg</a></li><li>
+<a href="#Example_pcapng_Capture_File">Example pcapng Capture File</a></li><li>
+<a href="#ntartest_-_a_simplistic_standalone_pcapng_.28ntar.29_file_reader">ntartest - a simplistic standalone pcapng (ntar) file reader</a></li><li>
+<a href="#File">File</a></li><li>
+<a href="#NTAR">NTAR</a></li><li>
+<a href="#Libpcap">Libpcap</a></li><li>
+<a href="#Wireshark">Wireshark</a><ol><li>
+<a href="#Options_working">Options working</a></li><li>
+<a href="#Future">Future</a></li><li>
+<a href="#Wishlist">Wishlist</a></li></ol></li><li>
+<a href="#FAQ">FAQ</a><ol><li>
+<a href="#File_format_conversion">File format conversion</a></li><li>
+<a href="#Merging_pcapng_files">Merging pcapng files</a></li><li>
+<a href="#Create_pcap_files_instead_of_pcapng_files">Create pcap files instead of pcapng files</a></li></ol></li></ol></div> <span class="anchor" id="line-2"></span><span class="anchor" id="line-3"></span><p class="line867">
+</p><h1 id="PcapNg">PcapNg</h1>
+<span class="anchor" id="line-4"></span><p class="line862">The <em>PCAP Next Generation Dump File Format</em> (or pcapng for short) is an attempt to overcome the limitations of the currently widely used (but limited) libpcap format. <span class="anchor" id="line-5"></span><span class="anchor" id="line-6"></span></p><p class="line874">The pcapng file format specification is still work in progress, see: <span class="anchor" id="line-7"></span><span class="anchor" id="line-8"></span></p><ul><li><p class="line891"><a class="http" href="http://www.winpcap.org/ntar/draft/PCAP-DumpFileFormat.html">http://www.winpcap.org/ntar/draft/PCAP-DumpFileFormat.html</a> <span class="anchor" id="line-9"></span></p></li><li><p class="line862">(2012-05) New pcap-ng <a class="https" href="https://www.winpcap.org/mailman/listinfo/pcap-ng-format">mailing list</a> (and <a class="https" href="https://www.winpcap.org/pipermail/pcap-ng-format/">archives</a>) <span class="anchor" id="line-10"></span></p></li><li><p class="line862">(2012-07) Pcap-ng specification <a class="https" href="https://anonsvn.winpcap.org/pcap-ng/trunk">anonymous subversion repository</a> <span class="anchor" id="line-11"></span></p></li><li><p class="line891"><a class="https" href="https://github.com/HoneProject/Linux-Sensor/wiki/Augmented-PCAP-Next-Generation-Dump-File-Format">Some extensions to the PCAP-NG format</a> from the Linux-Sensor project. <span class="anchor" id="line-12"></span><span class="anchor" id="line-13"></span></p></li></ul><p class="line867">
+</p><h1 id="Example_pcapng_Capture_File">Example pcapng Capture File</h1>
+<span class="anchor" id="line-14"></span><p class="line874">Included 
+below are some example pcapng files. While the block headers for these 
+files appears to be formatted correctly, the payloads contained within 
+these may NOT necessarily be well-formed (this is especially true of the
+ "http.bigendian.ntar" file). Examples of pcapng files are currently 
+very scarce. A few of these files were found elsewhere on the net (most 
+likely the at the winpcap.org site referenced above). The 
+"http.littlendian.ntar" file was found as an attachment(under a 
+different name) in an email regarding pcapng. The http.bigendian.ntar is
+ a version of this same file that was edited by hand to illustrate how a
+ big-endian and little-endian machine might write the same data. <span class="anchor" id="line-15"></span><span class="anchor" id="line-16"></span></p><p class="line867"><img alt="/!\" src="Development_PcapNg%20-%20The%20Wireshark%20Wiki_files/alert.png" title="/!\" height="16" width="16"> <strong>Please note: The recommended file name extension for pcapng files is <em>.pcapng</em></strong> <span class="anchor" id="line-17"></span><span class="anchor" id="line-18"></span></p><ul><li><p class="line891"><a class="attachment" href="http://wiki.wireshark.org/Development/PcapNg?action=AttachFile&amp;do=view&amp;target=http.littleendian.ntar" title="">http.littleendian.ntar</a> (SHB, IDB, 43 * PB) <span class="anchor" id="line-19"></span></p></li><li><p class="line891"><a class="attachment" href="http://wiki.wireshark.org/Development/PcapNg?action=AttachFile&amp;do=view&amp;target=http.bigendian.ntar" title="">http.bigendian.ntar</a>
+ (same as http.littleendian but buggy! mixture of big and little endian 
+byte swapping -- ULFL, There were apparently mistakes made when 
+hand-editing this file.  It is not a valid pcapng file and Wireshark 
+won't load it. -- CM) <span class="anchor" id="line-20"></span></p></li><li><p class="line891"><a class="attachment" href="http://wiki.wireshark.org/Development/PcapNg?action=AttachFile&amp;do=view&amp;target=test001.ntar" title="">test001.ntar</a> (SHB) <span class="anchor" id="line-21"></span></p></li><li><p class="line891"><a class="attachment" href="http://wiki.wireshark.org/Development/PcapNg?action=AttachFile&amp;do=view&amp;target=test002.ntar" title="">test002.ntar</a> (SHB, IDB) <span class="anchor" id="line-22"></span></p></li><li><p class="line891"><a class="attachment" href="http://wiki.wireshark.org/Development/PcapNg?action=AttachFile&amp;do=view&amp;target=test003.ntar" title="">test003.ntar</a> (SHB, IDB) <span class="anchor" id="line-23"></span></p></li><li><p class="line891"><a class="attachment" href="http://wiki.wireshark.org/Development/PcapNg?action=AttachFile&amp;do=view&amp;target=test004.ntar" title="">test004.ntar</a> (SHB) <span class="anchor" id="line-24"></span></p></li><li><p class="line891"><a class="attachment" href="http://wiki.wireshark.org/Development/PcapNg?action=AttachFile&amp;do=view&amp;target=test005.ntar" title="">test005.ntar</a> (SHB, IDB) <span class="anchor" id="line-25"></span></p></li><li><p class="line891"><a class="attachment" href="http://wiki.wireshark.org/Development/PcapNg?action=AttachFile&amp;do=view&amp;target=test006.ntar" title="">test006.ntar</a> (SHB, IDB, 1 * PB) <span class="anchor" id="line-26"></span></p></li><li><p class="line891"><a class="attachment" href="http://wiki.wireshark.org/Development/PcapNg?action=AttachFile&amp;do=view&amp;target=test007.ntar" title="">test007.ntar</a> (SHB, IDB, 1 * SPB)  NOTE: Wireshark refuses to load this file.  It appears to be corrupt. -- CM <span class="anchor" id="line-27"></span></p></li><li><p class="line891"><a class="attachment" href="http://wiki.wireshark.org/Development/PcapNg?action=AttachFile&amp;do=view&amp;target=test008.ntar" title="">test008.ntar</a>
+ (SHB, IDB, SHB, IDB)  NOTE: Wireshark refuses to load this file since 
+it contains multiple SHB's, which is not yet supported. -- CM <span class="anchor" id="line-28"></span></p></li><li><p class="line891"><a class="attachment" href="http://wiki.wireshark.org/Development/PcapNg?action=AttachFile&amp;do=view&amp;target=test009.ntar" title="">test009.ntar</a> (SHB, IDB) <span class="anchor" id="line-29"></span></p></li><li><p class="line891"><a class="attachment" href="http://wiki.wireshark.org/Development/PcapNg?action=AttachFile&amp;do=view&amp;target=test010.ntar" title="">test010.ntar</a> (SHB, IDB, 1000 * PB)  NOTE: Wireshark refuses to load this file.  It appears to be corrupt. -- CM <span class="anchor" id="line-30"></span></p></li><li><p class="line891"><a class="attachment" href="http://wiki.wireshark.org/Development/PcapNg?action=AttachFile&amp;do=view&amp;target=icmp2.ntar" title="">icmp2.ntar</a>
+   (SHB, IDB, 8 * PB). This file contains 8 ICMP packets (a ping 
+operation). Timestamps have nanosecond precision and the packets contain
+ a valid FCS. The correct dissection of packets and timestamps 
+(relative) is the screenshot <img alt="icmp.jpg" class="attachment" src="Development_PcapNg%20-%20The%20Wireshark%20Wiki_files/PcapNg.jpeg" title="icmp.jpg"> . <span class="anchor" id="line-31"></span><span class="anchor" id="line-32"></span></p></li></ul><p class="line867">
+</p><h1 id="ntartest_-_a_simplistic_standalone_pcapng_.28ntar.29_file_reader">ntartest - a simplistic standalone pcapng (ntar) file reader</h1>
+<span class="anchor" id="line-33"></span><p class="line874">Included 
+below is the C source code to a very simplistic program to read and dump
+ header information about a pcapng (a.k.a. ntar) file. This program has 
+been successfully compiled using gcc and used on several different types
+ of systems including Linux, cygwin and Solaris 9. <span class="anchor" id="line-34"></span><span class="anchor" id="line-35"></span></p><ul><li><p class="line891"><a class="attachment" href="http://wiki.wireshark.org/Development/PcapNg?action=AttachFile&amp;do=view&amp;target=ntartest.c" title="">ntartest.c</a> <span class="anchor" id="line-36"></span><span class="anchor" id="line-37"></span></p></li></ul><p class="line874">To compile this program use the command: <span class="anchor" id="line-38"></span><span class="anchor" id="line-39"></span></p><ul><li style="list-style-type:none"># gcc -o ntartest ntartest.c <span class="anchor" id="line-40"></span><span class="anchor" id="line-41"></span></li></ul><p class="line874">To use the program provide a pcapng file as the first argument to the program: <span class="anchor" id="line-42"></span><span class="anchor" id="line-43"></span></p><ul><li style="list-style-type:none"># ntartest http.littleendian.pcapng <span class="anchor" id="line-44"></span><span class="anchor" id="line-45"></span></li></ul><p class="line867">
+</p><h1 id="File">File</h1>
+<span class="anchor" id="line-46"></span><p class="line862">File 5.08+ should be able to identify pcap-ng files (<a class="http" href="http://mx.gw.com/pipermail/file/2011/000815.html">ml thread</a>). <span class="anchor" id="line-47"></span><span class="anchor" id="line-48"></span></p><p class="line867">
+</p><h1 id="NTAR">NTAR</h1>
+<span class="anchor" id="line-49"></span><p class="line862">The <a class="http" href="http://www.winpcap.org/ntar/">Network Trace Archival and Retrieval</a>
+ library is able to read and write pcap-ng files. Caveats: i) frozen 
+since 2007, ii) no plugins for EPB, ISB, and NRB blocks. Mailing list <a class="https" href="https://www.winpcap.org/pipermail/ntar-workers/">archives</a>. <span class="anchor" id="line-50"></span><span class="anchor" id="line-51"></span></p><ul><li>Upstream
+ has a more recent version of the library that includes support for EPB 
+blocks. Unfortunately this version is not available for download on the 
+website. <span class="anchor" id="line-52"></span><span class="anchor" id="line-53"></span></li><li class="gap"><p class="line862">(2012-07) NTAR library <a class="https" href="https://anonsvn.winpcap.org/ntar/trunk">anonymous subversion repository</a> (<a class="https" href="https://www.winpcap.org/pipermail/pcap-ng-format/2012-July/000043.html">ml announcement</a>) <span class="anchor" id="line-54"></span><span class="anchor" id="line-55"></span></p></li></ul><p class="line867">
+</p><h1 id="Libpcap">Libpcap</h1>
+<span class="anchor" id="line-56"></span><p class="line862">As of the 1.1.0 release, libpcap adds limited support for reading pcap-ng files, see <a class="http" href="http://github.com/mcr/libpcap/blob/9d6dc34d55f7315ff7526c03f68996eeb4313664/CHANGES">CHANGES</a>. <span class="anchor" id="line-57"></span><span class="anchor" id="line-58"></span></p><p class="line867">
+</p><h1 id="Wireshark">Wireshark</h1>
+<span class="anchor" id="line-59"></span><p class="line874">As of 
+Wireshark 1.2.0, pcapng files can be read and written, and live captures
+ can be done in pcapng format as well as pcap format.  There were a 
+number of bugs in 1.2.0's support that were fixed in 1.2.1. <span class="anchor" id="line-60"></span><span class="anchor" id="line-61"></span></p><p class="line874">The current limitations for pcapng format are: <span class="anchor" id="line-62"></span><span class="anchor" id="line-63"></span></p><ul><li>Only a single section <span class="anchor" id="line-64"></span></li><li>Only blocks SHB, IDB, PB, EPB, SPB (others will be ignored) <span class="anchor" id="line-65"></span></li><li>Lots of Options not implemented <span class="anchor" id="line-66"></span></li><li>Writing files is mostly untested <span class="anchor" id="line-67"></span></li><li>When merging files, mergecap doesn't retain each IDB's snaplen <span class="anchor" id="line-68"></span></li><li>mergecap won't merge pcapng files with different encapsulations and intermixed timestamps <span class="anchor" id="line-69"></span><span class="anchor" id="line-70"></span></li></ul><p class="line874">tshark 1.6 should be able to read and write NRB blocks (command line options: -W n and -H hosts_file). <span class="anchor" id="line-71"></span><span class="anchor" id="line-72"></span></p><p class="line874">dumpcap
+ 1.4/1.6/1.7 uses the libpcap_write_.*_block functions from pcapio.c to 
+write the pcapng blocks. It currently writes SHB, IDB, EPB and ISB 
+blocks. <span class="anchor" id="line-73"></span><span class="anchor" id="line-74"></span></p><ul><li>[v1.6.x] dumpcap -i eth0 -n -w file.pcapng <span class="anchor" id="line-75"></span></li><li>[v1.7.x] dumpcap -i eth0 -w file.pcapng <span class="anchor" id="line-76"></span><ul><li>Capture file will have the following blocks: SHB, IDB, EPB, EPB, ..., ISB. <span class="anchor" id="line-77"></span><span class="anchor" id="line-78"></span></li></ul></li><li class="gap">[v1.7.x] dumpcap -i eth0 -i eth1 -i eth2 -w file.pcapng <span class="anchor" id="line-79"></span><ul><li>Capture file will have the following pcap-ng blocks: SHB, IDB, IDB, IDB, EPB, EPB, ..., ISB, ISB, ISB. <span class="anchor" id="line-80"></span></li><li>You can also supply a different capture filter for each interface: dumpcap -i eth0 -f udp -i eth1 -i eth2 -f tcp -w file.pcapng <span class="anchor" id="line-81"></span></li><li><p class="line862">TODO: the "-i any" behavior needs to be specified (see <a class="https" href="https://bugs.wireshark.org/bugzilla/show_bug.cgi?id=3096#c46">bug #3096 comments 46+</a>) <span class="anchor" id="line-82"></span><span class="anchor" id="line-83"></span></p></li></ul></li><li class="gap"><p class="line862">[v1.7.1 rev &gt;= 41137 and rev &lt; 41160] dumpcap -i eth0 -i eth1 -i eth2 -w file.pcapng <span class="anchor" id="line-84"></span></p><ul><li>Capture file will have the following pcap-ng blocks: SHB, IDB, ISB, IDB, ISB, IDB, ISB, EPB, EPB, ..., ISB, ISB, ISB. <span class="anchor" id="line-85"></span><span class="anchor" id="line-86"></span></li></ul></li><li class="gap"><p class="line862">[v1.7.1 rev &gt;= 41160] dumpcap -i eth0 -i eth1 -i eth2 -w file.pcapng <span class="anchor" id="line-87"></span></p><ul><li>Stopped writing ISB blocks immediately after IDB blocks <span class="anchor" id="line-88"></span></li><li>Capture file will have the following pcap-ng blocks: SHB, IDB, IDB, IDB, EPB, EPB, ..., ISB, ISB, ISB. <span class="anchor" id="line-89"></span><span class="anchor" id="line-90"></span></li></ul></li><li class="gap">[1.8] - Pcapng is now the default file format. <span class="anchor" id="line-91"></span><span class="anchor" id="line-92"></span></li></ul><p class="line867">
+</p><h2 id="Options_working">Options working</h2>
+<span class="anchor" id="line-93"></span><p class="line874">These options are working: <span class="anchor" id="line-94"></span><span class="anchor" id="line-95"></span></p><ul><li>opt_endofopt <span class="anchor" id="line-96"></span></li><li>if_tsresol (was if_tsaccur) - only values 6 (microseconds - the default) and 9 (nanoseconds) currently supported <span class="anchor" id="line-97"></span></li><li>if_fcslen <span class="anchor" id="line-98"></span><span class="anchor" id="line-99"></span></li></ul><p class="line874">These options will only be displayed on the console (missing API from wiretap to Wireshark): <span class="anchor" id="line-100"></span><span class="anchor" id="line-101"></span></p><ul><li><p class="line862">opt_comment - work in progress: see ticket <a class="http" href="http://bugs.wireshark.org/bugzilla/show_bug.cgi?id=3096">3096</a> <span class="anchor" id="line-102"></span></p></li><li>shb_hardware <span class="anchor" id="line-103"></span></li><li>shb_os <span class="anchor" id="line-104"></span></li><li>shb_userappl <span class="anchor" id="line-105"></span></li><li>if_name <span class="anchor" id="line-106"></span></li><li>if_description <span class="anchor" id="line-107"></span></li><li>if_speed <span class="anchor" id="line-108"></span></li><li>pack_flags <span class="anchor" id="line-109"></span></li><li>epb_flags <span class="anchor" id="line-110"></span><span class="anchor" id="line-111"></span></li></ul><p class="line874">Options status <span class="anchor" id="line-112"></span></p><div><table><tbody><tr>  <td><p class="line891"><strong>Block</strong> </p></td>
+  <td><p class="line891"><strong>Option</strong> </p></td>
+  <td><p class="line891"><strong>dumpcap pcapio.{c,h}</strong> </p></td>
+  <td><p class="line891"><strong>Wiretap API</strong> </p></td>
+  <td><p class="line891"><strong>Wireshark GUI</strong> </p></td>
+</tr>
+<tr style="background-color: #e0e0e0">  <td><span class="anchor" id="line-113"></span><p class="line862">All </p></td>
+  <td><p class="line862"> </p></td>
+  <td><p class="line862"> </p></td>
+  <td><p class="line862"> </p></td>
+  <td><p class="line862"> </p></td>
+</tr>
+<tr>  <td><span class="anchor" id="line-114"></span><p class="line862"> </p></td>
+  <td><p class="line862">(0) opt_endofopt </p></td>
+  <td style="background-color: #c0ffc0"><p class="line862">OK </p></td>
+  <td style="background-color: #c0ffc0"><p class="line862">OK </p></td>
+  <td><p class="line862">- </p></td>
+</tr>
+<tr>  <td><span class="anchor" id="line-115"></span><p class="line862"> </p></td>
+  <td><p class="line862">(1) opt_comment </p></td>
+  <td><p class="line862">SHB, IDB, ISB </p></td>
+  <td><p class="line862">WIP: see bug <a class="https" href="https://bugs.wireshark.org/bugzilla/show_bug.cgi?id=3096">#3096</a> </p></td>
+  <td><p class="line862">see per block </p></td>
+</tr>
+<tr style="background-color: #e0e0e0">  <td><span class="anchor" id="line-116"></span><p class="line862">SHB </p></td>
+  <td><p class="line862"> Section Header Block </p></td>
+  <td><p class="line862"> </p></td>
+  <td><p class="line862">WIP: see  bug <a class="https" href="https://bugs.wireshark.org/bugzilla/show_bug.cgi?id=3096">#3096</a> </p></td>
+  <td><p class="line862"> </p></td>
+</tr>
+<tr>  <td><span class="anchor" id="line-117"></span><p class="line862"> </p></td>
+  <td><p class="line862">(1) opt_comment </p></td>
+  <td style="background-color: #FFFFE0"><p class="line862">NULL (1.7.1 rev 41026) </p></td>
+  <td style="background-color: #c0ffc0"><p class="line862">(1.7.1 rev 41032) </p></td>
+  <td><p class="line862">Menu Statistics/Summary </p></td>
+</tr>
+<tr>  <td><span class="anchor" id="line-118"></span><p class="line862"> </p></td>
+  <td><p class="line862">(2) shb_hardware </p></td>
+  <td style="background-color: #FFFFE0"><p class="line862">NULL (1.7.1 rev 41026) </p></td>
+  <td style="background-color: #c0ffc0"><p class="line862">(1.7.1 rev 41032) </p></td>
+  <td><p class="line862">Menu Statistics/Summary </p></td>
+</tr>
+<tr>  <td><span class="anchor" id="line-119"></span><p class="line862"> </p></td>
+  <td><p class="line862">(3) shb_os </p></td>
+  <td style="background-color: #c0ffc0"><p class="line862">OK (1.7.1 rev 41026) </p></td>
+  <td style="background-color: #c0ffc0"><p class="line862">(1.7.1 rev 41032) </p></td>
+  <td><p class="line862">Menu Statistics/Summary </p></td>
+</tr>
+<tr>  <td><span class="anchor" id="line-120"></span><p class="line862"> </p></td>
+  <td><p class="line862">(4) shb_userappl </p></td>
+  <td style="background-color: #c0ffc0"><p class="line862">OK </p></td>
+  <td style="background-color: #c0ffc0"><p class="line862">(1.7.1 rev 41032) </p></td>
+  <td><p class="line862">Menu Statistics/Summary </p></td>
+</tr>
+<tr style="background-color: #e0e0e0">  <td><span class="anchor" id="line-121"></span><p class="line862">IDB </p></td>
+  <td><p class="line862"> Interface Description Block </p></td>
+  <td><p class="line862"> </p></td>
+  <td><p class="line862">WIP: see  bug <a class="https" href="https://bugs.wireshark.org/bugzilla/show_bug.cgi?id=3096">#3096</a>; <a class="http" href="http://anonsvn.wireshark.org/viewvc/viewvc.cgi?view=rev&amp;revision=41082">rev 41082</a> </p></td>
+  <td><p class="line862"> </p></td>
+</tr>
+<tr>  <td><span class="anchor" id="line-122"></span><p class="line862"> </p></td>
+  <td><p class="line862">(1) opt_comment </p></td>
+  <td style="background-color: #FFFFE0"><p class="line862">NULL (1.7.1 <a class="http" href="http://anonsvn.wireshark.org/viewvc/viewvc.cgi?view=rev&amp;revision=41108">rev 41108</a>) </p></td>
+  <td style="background-color: #c0ffc0"><p class="line862"> </p></td>
+  <td><p class="line862"> </p></td>
+</tr>
+<tr>  <td><span class="anchor" id="line-123"></span><p class="line862"> </p></td>
+  <td><p class="line862">(2) if_name </p></td>
+  <td style="background-color: #c0ffc0"><p class="line862">OK </p></td>
+  <td style="background-color: #c0ffc0"><p class="line862"> </p></td>
+  <td><p class="line862"> </p></td>
+</tr>
+<tr>  <td><span class="anchor" id="line-124"></span><p class="line862"> </p></td>
+  <td><p class="line862">(3) if_description </p></td>
+  <td style="background-color: #FFFFE0"><p class="line862">NULL (1.7.1 <a class="http" href="http://anonsvn.wireshark.org/viewvc/viewvc.cgi?view=rev&amp;revision=41108">rev 41108</a>) </p></td>
+  <td style="background-color: #FFFFE0"><p class="line862"> </p></td>
+  <td><p class="line862"> </p></td>
+</tr>
+<tr>  <td><span class="anchor" id="line-125"></span><p class="line862"> </p></td>
+  <td><p class="line862">(4) if_IPv4addr </p></td>
+  <td><p class="line862"> </p></td>
+  <td><p class="line862"> </p></td>
+  <td><p class="line862"> </p></td>
+</tr>
+<tr>  <td><span class="anchor" id="line-126"></span><p class="line862"> </p></td>
+  <td><p class="line862">(5) if_IPv6addr </p></td>
+  <td><p class="line862"> </p></td>
+  <td><p class="line862"> </p></td>
+  <td><p class="line862"> </p></td>
+</tr>
+<tr>  <td><span class="anchor" id="line-127"></span><p class="line862"> </p></td>
+  <td><p class="line862">(6) if_MACaddr </p></td>
+  <td><p class="line862"> </p></td>
+  <td><p class="line862"> </p></td>
+  <td><p class="line862"> </p></td>
+</tr>
+<tr>  <td><span class="anchor" id="line-128"></span><p class="line862"> </p></td>
+  <td><p class="line862">(7) if_EUIaddr </p></td>
+  <td><p class="line862"> </p></td>
+  <td><p class="line862"> </p></td>
+  <td><p class="line862"> </p></td>
+</tr>
+<tr>  <td><span class="anchor" id="line-129"></span><p class="line862"> </p></td>
+  <td><p class="line862">(8) if_speed </p></td>
+  <td style="background-color: #FFFFE0"><p class="line862">0 (1.7.1 <a class="http" href="http://anonsvn.wireshark.org/viewvc/viewvc.cgi?view=rev&amp;revision=41108">rev 41108</a>) </p></td>
+  <td style="background-color: #c0ffc0"><p class="line862"> </p></td>
+  <td><p class="line862"> </p></td>
+</tr>
+<tr>  <td><span class="anchor" id="line-130"></span><p class="line862"> </p></td>
+  <td><p class="line862">(9) if_tsresol </p></td>
+  <td style="background-color: #c0ffc0"><p class="line862">6 or 9 (1.7.1 <a class="http" href="http://anonsvn.wireshark.org/viewvc/viewvc.cgi?view=rev&amp;revision=41108">rev 41108</a>, <a class="http" href="http://anonsvn.wireshark.org/viewvc/viewvc.cgi?view=rev&amp;revision=41455">rev 41455</a>) </p></td>
+  <td style="background-color: #c0ffc0"><p class="line862"> </p></td>
+  <td><p class="line862"> </p></td>
+</tr>
+<tr>  <td><span class="anchor" id="line-131"></span><p class="line862"> </p></td>
+  <td><p class="line862">(10) if_tzone </p></td>
+  <td><p class="line862"> </p></td>
+  <td><p class="line862"> </p></td>
+  <td><p class="line862"> </p></td>
+</tr>
+<tr>  <td><span class="anchor" id="line-132"></span><p class="line862"> </p></td>
+  <td><p class="line862">(11) if_filter </p></td>
+  <td style="background-color: #c0ffc0"><p class="line862">OK </p></td>
+  <td style="background-color: #c0ffc0"><p class="line862"> </p></td>
+  <td><p class="line862"> </p></td>
+</tr>
+<tr>  <td><span class="anchor" id="line-133"></span><p class="line862"> </p></td>
+  <td><p class="line862">(12) if_os </p></td>
+  <td style="background-color: #c0ffc0"><p class="line862">OK (1.7.1 <a class="http" href="http://anonsvn.wireshark.org/viewvc/viewvc.cgi?view=rev&amp;revision=41108">rev 41108</a>) </p></td>
+  <td style="background-color: #c0ffc0"><p class="line862"> </p></td>
+  <td><p class="line862"> </p></td>
+</tr>
+<tr>  <td><span class="anchor" id="line-134"></span><p class="line862"> </p></td>
+  <td><p class="line862">(13) if_fcslen </p></td>
+  <td><p class="line862"> </p></td>
+  <td><p class="line862"> </p></td>
+  <td><p class="line862"> </p></td>
+</tr>
+<tr>  <td><span class="anchor" id="line-135"></span><p class="line862"> </p></td>
+  <td><p class="line862">(14) if_tsoffset </p></td>
+  <td><p class="line862"> </p></td>
+  <td><p class="line862"> </p></td>
+  <td><p class="line862"> </p></td>
+</tr>
+<tr style="background-color: #e0e0e0">  <td><span class="anchor" id="line-136"></span><p class="line862">EPB </p></td>
+  <td><p class="line862"> Enhanced Packet Block </p></td>
+  <td><p class="line862"> </p></td>
+  <td><p class="line862"> </p></td>
+  <td><p class="line862"> </p></td>
+</tr>
+<tr>  <td><span class="anchor" id="line-137"></span><p class="line862"> </p></td>
+  <td><p class="line862">(1) opt_comment </p></td>
+  <td style="background-color: #FFFFE0"><p class="line862">NULL </p></td>
+  <td style="background-color: #c0ffc0"><p class="line862"> </p></td>
+  <td><p class="line891"><a class="nonexistent" href="http://wiki.wireshark.org/EditMenu">EditMenu</a> <a class="nonexistent" href="http://wiki.wireshark.org/ExpertInfo">ExpertInfo</a> <a class="nonexistent" href="http://wiki.wireshark.org/StatusBar">StatusBar</a> </p></td>
+</tr>
+<tr>  <td><span class="anchor" id="line-138"></span><p class="line862"> </p></td>
+  <td><p class="line862">(2) epb_flags </p></td>
+  <td><p class="line862"> </p></td>
+  <td><p class="line862"> </p></td>
+  <td><p class="line862"> </p></td>
+</tr>
+<tr>  <td><span class="anchor" id="line-139"></span><p class="line862"> </p></td>
+  <td><p class="line862">(3) epb_hash </p></td>
+  <td><p class="line862"> </p></td>
+  <td><p class="line862"> </p></td>
+  <td><p class="line862"> </p></td>
+</tr>
+<tr>  <td><span class="anchor" id="line-140"></span><p class="line862"> </p></td>
+  <td><p class="line862">(4) epb_dropcount </p></td>
+  <td><p class="line862"> </p></td>
+  <td><p class="line862"> </p></td>
+  <td><p class="line862"> </p></td>
+</tr>
+<tr style="background-color: #e0e0e0">  <td><span class="anchor" id="line-141"></span><p class="line862">NRB </p></td>
+  <td><p class="line862"> Name Resolution Block </p></td>
+  <td><p class="line862"> </p></td>
+  <td><p class="line862"> </p></td>
+  <td><p class="line862"> </p></td>
+</tr>
+<tr>  <td><span class="anchor" id="line-142"></span><p class="line862"> </p></td>
+  <td><p class="line862">(2) ns_dnsname </p></td>
+  <td><p class="line862"> </p></td>
+  <td><p class="line862"> </p></td>
+  <td><p class="line862"> </p></td>
+</tr>
+<tr>  <td><span class="anchor" id="line-143"></span><p class="line862"> </p></td>
+  <td><p class="line862">(3) ns_dnsIP4addr </p></td>
+  <td><p class="line862"> </p></td>
+  <td><p class="line862"> </p></td>
+  <td><p class="line862"> </p></td>
+</tr>
+<tr>  <td><span class="anchor" id="line-144"></span><p class="line862"> </p></td>
+  <td><p class="line862">(4) ns_dnsIP6addr </p></td>
+  <td><p class="line862"> </p></td>
+  <td><p class="line862"> </p></td>
+  <td><p class="line862"> </p></td>
+</tr>
+<tr style="background-color: #e0e0e0">  <td><span class="anchor" id="line-145"></span><p class="line862">ISB </p></td>
+  <td><p class="line862"> Interface Statistics Block </p></td>
+  <td><p class="line862"> </p></td>
+  <td><p class="line862">WIP (1.7.1 <a class="http" href="http://anonsvn.wireshark.org/viewvc/viewvc.cgi?view=rev&amp;revision=41137">rev 41137</a>) </p></td>
+  <td><p class="line862"> </p></td>
+</tr>
+<tr>  <td><span class="anchor" id="line-146"></span><p class="line862"> </p></td>
+  <td><p class="line862">(1) opt_comment </p></td>
+  <td style="background-color: #c0ffc0"><p class="line862">OK (1.7.1 revs <a class="http" href="http://anonsvn.wireshark.org/viewvc/viewvc.cgi?view=rev&amp;revision=41136">41136</a> and <a class="http" href="http://anonsvn.wireshark.org/viewvc/viewvc.cgi?view=rev&amp;revision=41160">41160</a>) </p></td>
+  <td style="background-color: #c0ffc0"><p class="line862">OK </p></td>
+  <td><p class="line862"> </p></td>
+</tr>
+<tr>  <td><span class="anchor" id="line-147"></span><p class="line862"> </p></td>
+  <td><p class="line862">(2) isb_starttime </p></td>
+  <td style="background-color: #c0ffc0"><p class="line862">OK (1.7.1 revs <a class="http" href="http://anonsvn.wireshark.org/viewvc/viewvc.cgi?view=rev&amp;revision=41136">41136</a> and <a class="http" href="http://anonsvn.wireshark.org/viewvc/viewvc.cgi?view=rev&amp;revision=41160">41160</a>) </p></td>
+  <td style="background-color: #c0ffc0"><p class="line862">OK </p></td>
+  <td><p class="line862"> </p></td>
+</tr>
+<tr>  <td><span class="anchor" id="line-148"></span><p class="line862"> </p></td>
+  <td><p class="line862">(3) isb_endtime </p></td>
+  <td style="background-color: #c0ffc0"><p class="line862">OK (1.7.1 revs <a class="http" href="http://anonsvn.wireshark.org/viewvc/viewvc.cgi?view=rev&amp;revision=41136">41136</a> and <a class="http" href="http://anonsvn.wireshark.org/viewvc/viewvc.cgi?view=rev&amp;revision=41160">41160</a>) </p></td>
+  <td style="background-color: #c0ffc0"><p class="line862">OK </p></td>
+  <td><p class="line862"> </p></td>
+</tr>
+<tr>  <td><span class="anchor" id="line-149"></span><p class="line862"> </p></td>
+  <td><p class="line862">(4) isb_ifrecv </p></td>
+  <td style="background-color: #c0ffc0"><p class="line862">OK </p></td>
+  <td style="background-color: #c0ffc0"><p class="line862">OK </p></td>
+  <td><p class="line862"> </p></td>
+</tr>
+<tr>  <td><span class="anchor" id="line-150"></span><p class="line862"> </p></td>
+  <td><p class="line862">(5) isb_ifdrop </p></td>
+  <td style="background-color: #c0ffc0"><p class="line862">OK </p></td>
+  <td style="background-color: #c0ffc0"><p class="line862">OK </p></td>
+  <td><p class="line862">Menu Statistics/Summary </p></td>
+</tr>
+<tr>  <td><span class="anchor" id="line-151"></span><p class="line862"> </p></td>
+  <td><p class="line862">(6) isb_filteraccept </p></td>
+  <td><p class="line862"> </p></td>
+  <td style="background-color: #c0ffc0"><p class="line862">OK </p></td>
+  <td><p class="line862"> </p></td>
+</tr>
+<tr>  <td><span class="anchor" id="line-152"></span><p class="line862"> </p></td>
+  <td><p class="line862">(7) isb_osdrop </p></td>
+  <td><p class="line862"> </p></td>
+  <td style="background-color: #c0ffc0"><p class="line862">OK </p></td>
+  <td><p class="line862"> </p></td>
+</tr>
+<tr>  <td><span class="anchor" id="line-153"></span><p class="line862"> </p></td>
+  <td><p class="line862">(8) isb_usrdeliv </p></td>
+  <td><p class="line862"> </p></td>
+  <td style="background-color: #c0ffc0"><p class="line862">OK </p></td>
+  <td><p class="line862"> </p></td>
+</tr>
+</tbody></table></div><span class="anchor" id="line-154"></span><span class="anchor" id="line-155"></span><span class="anchor" id="line-156"></span><span class="anchor" id="line-157"></span><span class="anchor" id="line-158"></span><ul><li><p class="line862">dumpcap 1.4/1.6/1.7 (rev &lt; 41026) only supports (writes) the following options: <span class="anchor" id="line-159"></span></p><ul><li>SHB option 04 - shb_userappl <span class="anchor" id="line-160"></span></li><li>IDB option 02 - if_name <span class="anchor" id="line-161"></span></li><li>IDB option 11 - if_filter (if capture filter specified on the command line) <span class="anchor" id="line-162"></span></li><li>ISB option 04 - isb_ifrecv <span class="anchor" id="line-163"></span></li><li>ISB option 05 - isb_ifdrop <span class="anchor" id="line-164"></span></li></ul></li><li><p class="line862">dumpcap 1.7.1 <a class="http" href="http://anonsvn.wireshark.org/viewvc/viewvc.cgi?view=rev&amp;revision=41026">rev 41026</a> added support for the following three SHB options: <span class="anchor" id="line-165"></span></p><ul><li>SHB option 01 - opt_comment ( currently NULL as of rev 41046 ) <span class="anchor" id="line-166"></span></li><li>SHB option 02 - shb_hardware ( currently NULL as of rev 41046 ) <span class="anchor" id="line-167"></span></li><li>SHB option 03 - shb_os ( value from get_runtime_version_info() ) <span class="anchor" id="line-168"></span></li></ul></li><li><p class="line862">Pcapng files created with dumpcap 1.7.1 <a class="http" href="http://anonsvn.wireshark.org/viewvc/viewvc.cgi?view=rev&amp;revision=41026">rev 41026+</a>
+ can't be opened with previous versions of wireshark.  The problem is 
+that the Wiretap API code in previous versions can't handle SHB options 
+longer than 100 bytes (and the current shb_os is longer than that). A 
+patch has already been committed for version 1.6.6 (<a class="http" href="http://anonsvn.wireshark.org/viewvc/viewvc.cgi?view=rev&amp;revision=41037">rev 41037</a>) and is queued to be backported for version 1.4.12. Additional information in <a class="https" href="https://bugs.wireshark.org/bugzilla/show_bug.cgi?id=6846">bug 6846</a>. <span class="anchor" id="line-169"></span></p><ul><li><p class="line891"><a class="http" href="http://anonsvn.wireshark.org/viewvc/viewvc.cgi?view=rev&amp;revision=41086">Rev 41086</a>
+ - minimizes the exposure of bug #6846 by using get_os_version_info() 
+instead of get_runtime_version_info() to fill the value of shb_os (and 
+thus keeping its length below 100 bytes). <span class="anchor" id="line-170"></span></p></li></ul></li><li><p class="line891"><a class="http" href="http://anonsvn.wireshark.org/viewvc/viewvc.cgi?view=rev&amp;revision=41082">Rev 41082</a> - Improved Wiretap support of IDB blocks and IDB options. <span class="anchor" id="line-171"></span></p><ul><li><p class="line891"><a class="http" href="http://anonsvn.wireshark.org/viewvc/viewvc.cgi?view=rev&amp;revision=41097">Rev 41097</a> - IDB, EPB options longer than 100 bytes support in branch 1.6 <span class="anchor" id="line-172"></span></p></li></ul></li><li><p class="line891"><a class="http" href="http://anonsvn.wireshark.org/viewvc/viewvc.cgi?view=rev&amp;revision=41136">rev 41136</a>, <a class="http" href="http://anonsvn.wireshark.org/viewvc/viewvc.cgi?view=rev&amp;revision=41137">rev 41137</a> - dumpcap: ISB options <span class="anchor" id="line-173"></span></p></li><li><p class="line891"><a class="http" href="http://anonsvn.wireshark.org/viewvc/viewvc.cgi?view=rev&amp;revision=41137">rev 41137</a> - wiretap: read all ISB options and write ISB blocks <span class="anchor" id="line-174"></span></p><ul><li>It also started writing an ISB block immediately after each IDB block <span class="anchor" id="line-175"></span></li><li>The
+ capture file created by 'dumpcap -i eth0 -i eth1 -w file.pcapng' will 
+now have the following pcap-ng blocks: SHB, IDB, ISB, IDB, ISB, EPB, 
+EPB, ..., ISB, ISB. <span class="anchor" id="line-176"></span></li><li><p class="line891"><a class="http" href="http://anonsvn.wireshark.org/viewvc/viewvc.cgi?view=rev&amp;revision=41160">rev 41160</a> - stopped writing ISB blocks immediately after IDB blocks <span class="anchor" id="line-177"></span></p></li></ul></li><li><p class="line891"><a class="http" href="http://anonsvn.wireshark.org/viewvc/viewvc.cgi?view=rev&amp;revision=41143">rev 41143</a>, <a class="http" href="http://anonsvn.wireshark.org/viewvc/viewvc.cgi?view=rev&amp;revision=41152">rev 41152</a> - wiretap: pcapng sanity checks <span class="anchor" id="line-178"></span></p></li><li><p class="line891"><a class="http" href="http://anonsvn.wireshark.org/viewvc/viewvc.cgi?view=rev&amp;revision=41153">rev 41153</a> - more backports to branch 1.6 <span class="anchor" id="line-179"></span></p></li><li><p class="line891"><a class="http" href="http://anonsvn.wireshark.org/viewvc/viewvc.cgi?view=rev&amp;revision=41339">rev 41339</a>, <a class="http" href="http://anonsvn.wireshark.org/viewvc/viewvc.cgi?view=rev&amp;revision=41341">rev 41341</a>, <a class="http" href="http://anonsvn.wireshark.org/viewvc/viewvc.cgi?view=rev&amp;revision=41351">rev 41351</a>, <a class="http" href="http://anonsvn.wireshark.org/viewvc/viewvc.cgi?view=rev&amp;revision=41352">rev 41352</a> - if_filter: first byte specifies filter type (0 = libpcap filter string, 1 = libpcap filter bytecode, ...) <span class="anchor" id="line-180"></span></p></li><li><p class="line891"><a class="http" href="http://anonsvn.wireshark.org/viewvc/viewvc.cgi?view=rev&amp;revision=41455">rev 41455</a> - time resolution: if_tsresol = 6 (usec) or 9 (nsec) <span class="anchor" id="line-181"></span></p></li><li><p class="line891"><a class="http" href="http://anonsvn.wireshark.org/viewvc/viewvc.cgi?view=rev&amp;revision=41682">rev 41682</a> - dumpcap's pcapio no longer writes nul-terminated strings (block options values) <span class="anchor" id="line-182"></span></p></li><li><p class="line891"><a class="http" href="http://anonsvn.wireshark.org/viewvc/viewvc.cgi?view=rev&amp;revision=41683">rev 41683</a> - Wiretap API: write ISB blocks <span class="anchor" id="line-183"></span><span class="anchor" id="line-184"></span></p></li></ul><p class="line867">
+</p><h2 id="Future">Future</h2>
+<span class="anchor" id="line-185"></span><p class="line874">So after implementing the "skeleton" to read the pcapng file, there's a lot more to do: <span class="anchor" id="line-186"></span><span class="anchor" id="line-187"></span></p><ul><li>enhance/change/exchange current wiretap API (in part or in whole?) <span class="anchor" id="line-188"></span></li><li>hierarchically store information in Wireshark <span class="anchor" id="line-189"></span></li><li>somehow display these additional infos in the Wireshark GUI <span class="anchor" id="line-190"></span><span class="anchor" id="line-191"></span></li></ul><p class="line867">
+</p><h2 id="Wishlist">Wishlist</h2>
+<span class="anchor" id="line-192"></span><p class="line874">List here 
+things users would like Wireshark to support in PCAP-NG (this was 
+recorded at the Developer's Roundtable at Sharkfest '10). <span class="anchor" id="line-193"></span><span class="anchor" id="line-194"></span></p><p class="line874">Existing pcap-ng features: <span class="anchor" id="line-195"></span><span class="anchor" id="line-196"></span></p><ul><li>packet dropped count <span class="anchor" id="line-197"></span></li><li>annotations (comments) <span class="anchor" id="line-198"></span></li><li>local IP address <span class="anchor" id="line-199"></span></li><li><p class="line862">interface &amp; direction <span class="anchor" id="line-200"></span></p></li><li><p class="line862">hostname &lt;-&gt; IP address database <span class="anchor" id="line-201"></span><span class="anchor" id="line-202"></span></p></li></ul><p class="line874">Existing, but insufficiently specified, pcap-ng features: <span class="anchor" id="line-203"></span><span class="anchor" id="line-204"></span></p><ul><li>capture filter used <span class="anchor" id="line-205"></span></li><li>timezone <span class="anchor" id="line-206"></span><span class="anchor" id="line-207"></span></li></ul><p class="line874">Features not yet in pcap-ng: <span class="anchor" id="line-208"></span><span class="anchor" id="line-209"></span></p><ul><li>GPS location (of capturing computer) -- see Kismet <span class="anchor" id="line-210"></span></li><li>Wireless
+ spectrum information / physical layer meta-data other than what's 
+already carried in headers such as the radiotap header for 802.11; 
+per-packet information of this sort may belong in those headers rather 
+than in pcap-ng packet block options, as there's already code to handle 
+that in programs that read pcap and pcap-ng files, there's already code 
+in drivers to generate that information when capturing packets, and 
+including it in the packet data means that it can be supported in pcap 
+as well as pcap-ng. <span class="anchor" id="line-211"></span></li><li>Recording
+ the original frame numbers of packets from the original packet capture 
+file when saving packets to a new file in order to make 
+cross-referencing them easier. <span class="anchor" id="line-212"></span></li><li>SSL
+ session keys (when decrypting SSL with a private key, save the Master 
+Secrets of the SSL sessions, so the tracefile can be shown decrypted 
+without access to the private key) <span class="anchor" id="line-213"></span><span class="anchor" id="line-214"></span></li></ul><p class="line867"></p><hr><p class="line874"> <span class="anchor" id="line-215"></span>
+</p><h1 id="FAQ">FAQ</h1>
+<span class="anchor" id="line-216"></span><p class="line867">
+</p><h2 id="File_format_conversion">File format conversion</h2>
+<span class="anchor" id="line-217"></span><p class="line867">
+</p><h3 id="From_.pcap_to_.pcapng">From .pcap to .pcapng</h3>
+<span class="anchor" id="line-218"></span><p class="line874">Using editcap or tshark: <span class="anchor" id="line-219"></span><span class="anchor" id="line-220"></span></p><ul><li>editcap -F pcapng file.pcap file.pcapng <span class="anchor" id="line-221"></span></li><li>tshark -F pcapng -r file.pcap -w file.pcapng <span class="anchor" id="line-222"></span><span class="anchor" id="line-223"></span></li></ul><p class="line867">
+</p><h3 id="From_.pcapng_to_.pcap">From .pcapng to .pcap</h3>
+<span class="anchor" id="line-224"></span><p class="line874">Using editcap: <span class="anchor" id="line-225"></span><span class="anchor" id="line-226"></span></p><ul><li>editcap -F libpcap -T ether file.pcapng file.pcap <span class="anchor" id="line-227"></span><span class="anchor" id="line-228"></span></li></ul><p class="line862">Note: you need to specify an encapsulation type (-T &lt;encapsulation type&gt;) (<a class="http" href="http://bugs.wireshark.org/bugzilla/show_bug.cgi?id=4636">1</a>) <span class="anchor" id="line-229"></span><span class="anchor" id="line-230"></span></p><p class="line862">Using tcpdump/libpcap (4.1.0+/1.1.0+) (<a class="http" href="http://bugs.wireshark.org/bugzilla/show_bug.cgi?id=4636#c1">1</a>,<a class="http" href="http://www.wireshark.org/lists/wireshark-users/201004/msg00002.html">2</a>): <span class="anchor" id="line-231"></span><span class="anchor" id="line-232"></span></p><ul><li>tcpdump -r file.pcapng -w file.pcap <span class="anchor" id="line-233"></span><span class="anchor" id="line-234"></span></li></ul><p class="line867">
+</p><h2 id="Merging_pcapng_files">Merging pcapng files</h2>
+<span class="anchor" id="line-235"></span><p class="line874">Again, you need to manually specify an encapsulation type. For example: <span class="anchor" id="line-236"></span><span class="anchor" id="line-237"></span></p><ul><li>mergecap -T ether -w new.pcapng file1.pcapng file2.pcapng ... <span class="anchor" id="line-238"></span><span class="anchor" id="line-239"></span></li></ul><p class="line874">Note: This operation can't still be done via Wireshark's File/Merge ... (as of rev 40759). <span class="anchor" id="line-240"></span><span class="anchor" id="line-241"></span></p><p class="line867">
+</p><h2 id="Create_pcap_files_instead_of_pcapng_files">Create pcap files instead of pcapng files</h2>
+<span class="anchor" id="line-242"></span><p class="line874">You may use
+ the dumpcap's -P command line option if you need to create capture 
+files in the old libpcap format (instead of the new default pcapng): <span class="anchor" id="line-243"></span><span class="anchor" id="line-244"></span></p><ul><li>dumpcap -P -i eth0 -w file.pcap <span class="anchor" id="line-245"></span></li></ul><span class="anchor" id="bottom"></span></div><p id="pageinfo" class="info" dir="ltr" lang="en">Development/PcapNg  (last edited 2014-02-13 00:43:51 by <span title="GuyHarris @ 172.16.3.75[172.16.3.75]"><a class="nonexistent" href="http://wiki.wireshark.org/GuyHarris" title="GuyHarris @ 172.16.3.75[172.16.3.75]">GuyHarris</a></span>)</p>
+
+<div id="pagebottom"></div>
+</div>
+
+
+<div id="footer">
+<ul class="editbar"><li><span class="disabled">Immutable Page</span></li><li class="toggleCommentsButton" style="display:none;"><a href="#" class="nbcomment" onclick="toggleComments();return false;">Comments</a></li><li><a class="nbinfo" href="http://wiki.wireshark.org/Development/PcapNg?action=info" rel="nofollow">Info</a></li><li><a class="nbattachments" href="http://wiki.wireshark.org/Development/PcapNg?action=AttachFile" rel="nofollow">Attachments</a></li><li>
+<form class="actionsmenu" method="GET" action="/Development/PcapNg">
+<div>
+    
+    <select name="action" onchange="if ((this.selectedIndex != 0) &amp;&amp;
+                      (this.options[this.selectedIndex].disabled == false)) {
+                this.form.submit();
+            }
+            this.selectedIndex = 0;">
+        <option selected="selected" value="show">More Actions:</option><option value="raw">Raw Text</option>
+<option value="print">Print View</option>
+<option value="RenderAsDocbook">Render as Docbook</option>
+<option value="refresh">Delete Cache</option>
+<option value="show" disabled="disabled" class="disabled">------------------------</option>
+<option value="SpellCheck">Check Spelling</option>
+<option value="LikePages">Like Pages</option>
+<option value="LocalSiteMap">Local Site Map</option>
+<option value="show" disabled="disabled" class="disabled">------------------------</option>
+<option value="RenamePage" disabled="disabled" class="disabled">Rename Page</option>
+<option value="DeletePage" disabled="disabled" class="disabled">Delete Page</option>
+<option value="show" disabled="disabled" class="disabled">------------------------</option>
+<option value="show" disabled="disabled" class="disabled">Subscribe User</option>
+<option value="show" disabled="disabled" class="disabled">------------------------</option>
+<option value="show" disabled="disabled" class="disabled">Remove Spam</option>
+<option value="show" disabled="disabled" class="disabled">Revert to this revision</option>
+<option value="PackagePages">Package Pages</option>
+<option value="SyncPages">Sync Pages</option>
+<option value="show" disabled="disabled" class="disabled">------------------------</option>
+<option value="Load">Load</option>
+<option value="Save">Save</option>
+<option value="SlideShow">SlideShow</option>
+    </select>
+    
+    
+</div>
+<script type="text/javascript">
+<!--// Init menu
+actionsMenuInit('More Actions:');
+//-->
+</script>
+</form>
+</li></ul>
+
+
+<table class="credits" width="98%" border="0" cellpadding="0" cellspacing="0">
+  <tbody><tr>
+    <td valign="top">
+Original content on this site is available under the GNU General Public License.<br>
+See the <a href="http://wiki.wireshark.org/License">License</a> page for details.
+    </td>
+    <td valign="top" align="right">
+Powered by <a href="http://moinmoin.wikiwikiweb.de/">MoinMoin</a>
+and <a href="http://www.python.org/">Python</a>.
+<br>
+Please don't pee in the pool.
+    </td>
+  </tr>
+</tbody></table>
+
+<!-- Google Analytics -->
+<script type="text/javascript">
+
+  var _gaq = _gaq || [];
+  _gaq.push(['_setAccount', 'UA-605389-3']);
+  _gaq.push(['_trackPageview']);
+
+  (function() {
+    var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+    ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+    var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+  })();
+
+</script>
+<!-- / Google Analytics -->
+
+
+</div>
+
+
+
+</body></html>
