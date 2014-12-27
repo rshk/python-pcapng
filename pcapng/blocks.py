@@ -40,6 +40,7 @@ class SectionHeader(Block):
         self.version = version
         self.length = length
         self.options = options
+        self.interfaces = []
 
 
 class SectionMemberBlock(Block):
@@ -167,3 +168,10 @@ class NameResolution(Block):
             (4, 'ns_dnsIP6addr'),
         ])),
     ]
+
+
+@register_block
+class UnknownBlock(Block):
+    def __init__(self, block_type, data):
+        self.block_type = block_type
+        self.data = data

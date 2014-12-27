@@ -2,12 +2,8 @@
 Pcap-ng file scanner
 """
 
-import binascii
-import logging
-import struct
-
 from pcapng.structs import (
-    read_int, read_block, read_section_header, SECTION_HEADER_MAGIC)
+    read_int, read_block_data, read_section_header, SECTION_HEADER_MAGIC)
 import pcapng.blocks as blocks
 from pcapng.exceptions import StreamEmpty
 
@@ -44,9 +40,17 @@ class FileScanner(object):
             self.endianness = block.endianness
             return block
 
-        return self._read_block(block_type)
+        block = self._read_block(block_type)
+        if isinstance(block, blocks.InterfaceDescription):
+            self.current_section.interfaces.append(block)
+        return block
 
     def _read_section_header(self):
+        """
+        Section information headers are special blocks in that they
+        modify the state of the FileScanner instance (to change current
+        section / endianness)
+        """
         section_info = read_section_header(self.stream)
         self.endianness = section_info['endianness']
         return blocks.SectionHeader(
@@ -56,9 +60,17 @@ class FileScanner(object):
             options=blocks.Options(section_info['options_raw']))
 
     def _read_block(self, block_type):
-        pass
+        """
+        Read the block payload and pass to the appropriate block constructor
+        """
+        data = read_block_data(self.stream, endianness=self.endianness)
+        if block_type in blocks.KNOWN_BLOCKS:
+            return blocks.KNOWN_BLOCKS[block_type](data)
+        return blocks.UnknownBlock(block_type, data)
 
     def _read_int(self, size, signed=False):
+        """
+        Read an integer from the stream, using current endianness
+        """
         return read_int(self.stream, size, signed=signed,
                         endianness=self.endianness)
-        pass

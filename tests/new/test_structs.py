@@ -10,7 +10,7 @@ import pytest
 from pcapng.structs import (
     read_int, read_section_header, read_block_data, read_bytes,
     read_bytes_padded, RawBytes, IntField, struct_decode, read_options,
-    Options, OptionsField, PacketDataField, ListField,
+    Options, OptionsField, PacketDataField, SimplePacketDataField, ListField,
     NameResolutionRecordField)
 from pcapng.exceptions import (
     StreamEmpty, TruncatedFile, BadMagic, CorruptedFile)
@@ -301,6 +301,7 @@ def test_unpack_dummy_packet():
         ('a_number', IntField(32, False)),
         ('options', OptionsField([])),
         ('packet_data', PacketDataField()),
+        ('simple_packet_data', SimplePacketDataField()),
         ('name_res', ListField(NameResolutionRecordField())),
         ('another_number', IntField(32, False)),
     ]
@@ -316,10 +317,14 @@ def test_unpack_dummy_packet():
         '\x00\x02\x00\x0fSome other text\x00'
         '\x00\x00\x00\x00'
 
-        # Packet data
+        # Enhanced Packet data
         '\x00\x00\x00\x12'
         '\x00\x01\x00\x00'
         'These are 18 bytes\x00\x00'
+
+        # Simple packet data
+        '\x00\x00\x00\x0d'
+        'Simple packet\x00\x00\x00'
 
         # List of name resolution items
         '\x00\x01'  # IPv4
@@ -352,6 +357,8 @@ def test_unpack_dummy_packet():
     assert unpacked['options'][2] == 'Some other text'
 
     assert unpacked['packet_data'] == (0x12, 0x10000, 'These are 18 bytes')
+
+    assert unpacked['simple_packet_data'] == (13, 'Simple packet')
 
     assert unpacked['name_res'] == [
         {'address': '\x0a\x22\x33\x44', 'name': 'www.example.com', 'type': 1},
