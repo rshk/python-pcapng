@@ -322,18 +322,41 @@ def test_unpack_dummy_packet():
         'These are 18 bytes\x00\x00'
 
         # List of name resolution items
-        '\x00\x00\x00\x01'  # IPv4
-        '\x00\x00\x01\x03'  # Length: 19bytes
+        '\x00\x01'  # IPv4
+        '\x00\x13'  # Length: 19bytes
         '\x0a\x22\x33\x44www.example.com\x00'  # 19 bytes (10.34.51.68)
 
-        '\x00\x00\x00\x01'  # IPv4
-        '\x00\x00\x01\x03'  # Length: 19bytes
+        '\x00\x01'  # IPv4
+        '\x00\x13'  # Length: 19bytes
         '\xc0\xa8\x14\x01www.example.org\x00'  # 19 bytes (192.168.20.1)
 
-        '\x00\x00\x00\x00\x00\x00\x00\x00'  # End marker
+        '\x00\x02'  # IPv6
+        '\x00\x1e'  # 30 bytes
+        '\x00\x11\x22\x33\x44\x55\x66\x77'
+        '\x88\x99\xaa\xbb\xcc\xdd\xee\xff'
+        'v6.example.net\x00\x00'
 
-        '\xaa\xbb\xcc\xdd'  # Another number
+        '\x00\x00\x00\x00'  # End marker
+
+        # Another number, to check end
+        '\xaa\xbb\xcc\xdd'
     )
 
     unpacked = struct_decode(schema, data, endianness='>')
-    pass
+    assert unpacked['a_string'] == '\x01\x23\x45\x67\x89\xab\xcd\xef'
+    assert unpacked['a_number'] == 0x100
+
+    assert isinstance(unpacked['options'], Options)
+    assert len(unpacked['options']) == 2
+    assert unpacked['options']['opt_comment'] == 'Hello world!'
+    assert unpacked['options'][2] == 'Some other text'
+
+    assert unpacked['packet_data'] == (0x12, 0x10000, 'These are 18 bytes')
+
+    assert unpacked['name_res'] == [
+        {'address': '\x0a\x22\x33\x44', 'name': 'www.example.com', 'type': 1},
+        {'address': '\xc0\xa8\x14\x01', 'name': 'www.example.org', 'type': 1},
+        {'type': 2,
+         'address': '\x00\x11\x22\x33\x44\x55\x66\x77'
+                    '\x88\x99\xaa\xbb\xcc\xdd\xee\xff',
+         'name': 'v6.example.net'}]

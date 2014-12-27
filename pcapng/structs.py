@@ -208,12 +208,20 @@ class NameResolutionRecordField(StructField):
         data = read_bytes_padded(stream, record_length)
 
         if record_type == 1:  # IPv4
-            return {'address': data[:4], 'name': data[4:]}
+            return {
+                'type': record_type,
+                'address': data[:4],
+                'name': data[4:],
+            }
 
         if record_type == 2:  # IPv6
-            return {'address': data[:16], 'name': data[16:]}
+            return {
+                'type': record_type,
+                'address': data[:16],
+                'name': data[16:],
+            }
 
-        return {'raw': data}
+        return {'type': record_type, 'raw': data}
 
 
 def read_options(stream, endianness):
