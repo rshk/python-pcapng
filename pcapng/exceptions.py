@@ -1,4 +1,4 @@
-class PcapngException(object):
+class PcapngException(Exception):
     pass
 
 

@@ -10,6 +10,10 @@ SECTION_HEADER_MAGIC = 0x0a0d0d0a
 BYTE_ORDER_MAGIC = 0x1a2b3c4d
 BYTE_ORDER_MAGIC_INVERSE = 0x4d3c2b1a
 
+# Anything greater and we cannot safely read
+# todo: add support for this!
+CURRENT_SUPPORTED_VERSION = (1, 0)
+
 
 INT_FORMATS = {16: 'h', 32: 'i', 64: 'q'}
 
@@ -21,7 +25,7 @@ def read_int(stream, size, signed=False, endianness='>'):
     fmt = endianness + fmt
     size_bytes = size // 8
     data = read_bytes(stream, size_bytes)
-    return struct.unpack(fmt, data)
+    return struct.unpack(fmt, data)[0]
 
 
 def read_section_header(stream):
@@ -44,18 +48,18 @@ def read_section_header(stream):
         endianness = '>'  # BIG
     else:
         if byte_order_magic != BYTE_ORDER_MAGIC_INVERSE:
-            raise BadMagic('Wrong byte order magic: got {0:08X}, expected '
-                           '{1:08X} or {2:08X}'
+            raise BadMagic('Wrong byte order magic: got 0x{0:08X}, expected '
+                           '0x{1:08X} or 0x{2:08X}'
                            .format(byte_order_magic, BYTE_ORDER_MAGIC,
                                    BYTE_ORDER_MAGIC_INVERSE))
         endianness = '<'  # LITTLE
 
-    blk_len = struct.unpack(endianness + 'I', blk_len_raw)
+    blk_len = struct.unpack(endianness + 'I', blk_len_raw)[0]
 
     v_maj = read_int(stream, 16, False, endianness)
     v_min = read_int(stream, 16, False, endianness)
     section_len = read_int(stream, 64, True, endianness)
-    options_len = blk_len - (4 + 2 + 2 + 8)
+    options_len = blk_len - (7 * 4)
     options_raw = read_bytes(stream, options_len)
     blk_len2 = read_int(stream, 32, False, endianness)
 
@@ -79,7 +83,7 @@ def read_block_data(stream, endianness):
 
     block_length = read_int(stream, 32, signed=False, endianness=endianness)
     payload_length = block_length - 12  # bytes
-    block_data = read_bytes(stream, payload_length)  # todo: check length?
+    block_data = read_bytes_padded(stream, payload_length)
     block_length2 = read_int(stream, 32, signed=False, endianness=endianness)
     if block_length != block_length2:
         raise CorruptedFile('Mismatching block lengths: {0} and {1}'
@@ -94,6 +98,9 @@ def read_bytes(stream, size):
     :raises: StreamEmpty if zero bytes were read
     :raises: TruncatedFile if 0 < bytes < size were read
     """
+
+    if size == 0:
+        return ''
 
     try:
         data = stream.read(size)
@@ -125,8 +132,8 @@ def read_bytes_padded(stream, size, pad_block_size=4):
 
 
 class StructField(object):
-    def __init__(self):
-        pass
+    # def __init__(self):
+    #     pass
 
     def load(self, stream, endianness):
         raise NotImplementedError
