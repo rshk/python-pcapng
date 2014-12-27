@@ -233,6 +233,23 @@ def test_read_options():
     ]
 
 
+def test_read_options_2():
+    data = io.BytesIO(
+        '\x00\x01\x00\x0e''Just a comment\x00\x00'
+        '\x00\x02\x00\x0b''My Computer\x00'
+        '\x00\x03\x00\x05''My OS\x00\x00\x00'
+        '\x00\x04\x00\x0a''A fake app\x00\x00'
+        "\x00\x00\x00\x00")
+
+    options = read_options(data, '>')
+    assert options == [
+        (1, 'Just a comment'),
+        (2, 'My Computer'),
+        (3, 'My OS'),
+        (4, 'A fake app'),
+    ]
+
+
 def test_options_object():
     schema = [
         (2, 'spam'),

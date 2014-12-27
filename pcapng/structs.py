@@ -37,13 +37,6 @@ def read_section_header(stream):
     :returns: a dict containing information about the section
     """
 
-    # blktype = read_int(stream, 32, '>')
-
-    # if blktype != SECTION_HEADER_MAGIC:
-    #     raise BadMagic(
-    #         'Invalid magic number: got 0x{0:08X}, expected 0x{1:08X}'
-    #         .format(blktype, SECTION_HEADER_MAGIC))
-
     blk_len_raw = read_bytes(stream, 4)  # We don't know endianness yet..
     byte_order_magic = read_int(stream, 32, '>')  # Default BIG
     if byte_order_magic == BYTE_ORDER_MAGIC:

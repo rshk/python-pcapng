@@ -56,11 +56,12 @@ class FileScanner(object):
 
         section_info = read_section_header(self.stream)
         self.endianness = section_info['endianness']
+        opt_schema = []
         return blocks.SectionHeader(
             endianness=section_info['endianness'],
             version=section_info['version'],
             length=section_info['section_length'],
-            options=Options(section_info['options_raw']))
+            options=Options(opt_schema, section_info['options_raw']))
 
     def _read_block(self, block_type):
         """
