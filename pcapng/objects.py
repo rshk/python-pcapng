@@ -378,6 +378,10 @@ class Options(MutableMapping):
                 self.add_value(key, val)
 
     @classmethod
+    def from_stream(cls, stream):
+        pass
+
+    @classmethod
     def unpack(cls, data, names=None, endianness=0):
         unpacker = Unpacker(endianness)
         stream = BytesIO(data)
