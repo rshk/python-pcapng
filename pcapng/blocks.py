@@ -120,7 +120,10 @@ class BlockWithInterfaceMixin(object):
         return self.section.interfaces[self.interface_id]
 
 
-class BasePacketBlock(BlockWithInterfaceMixin, BlockWithTimestampMixin):
+class BasePacketBlock(
+        SectionMemberBlock,
+        BlockWithInterfaceMixin,
+        BlockWithTimestampMixin):
     pass
 
 

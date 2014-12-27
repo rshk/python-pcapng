@@ -1,4 +1,5 @@
 from collections import Mapping
+import abc
 import io
 import struct
 
@@ -100,10 +101,7 @@ def read_bytes(stream, size):
     if size == 0:
         return ''
 
-    try:
-        data = stream.read(size)
-    except EOFError:
-        raise StreamEmpty('Got EOFError while reading from stream')
+    data = stream.read(size)
     if len(data) == 0:
         raise StreamEmpty('Zero bytes read from stream')
     if len(data) < size:
@@ -130,11 +128,11 @@ def read_bytes_padded(stream, size, pad_block_size=4):
 
 
 class StructField(object):
-    # def __init__(self):
-    #     pass
+    __metaclass__ = abc.ABCMeta
 
+    @abc.abstractmethod
     def load(self, stream, endianness):
-        raise NotImplementedError
+        pass  # pragma: no-cover
 
 
 class RawBytes(StructField):
