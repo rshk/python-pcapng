@@ -44,10 +44,13 @@ class FileScanner(object):
             raise ValueError('File not starting with a proper section header')
 
         block = self._read_block(block_type)
+
         if isinstance(block, blocks.InterfaceDescription):
-            self.current_section.interfaces.append(block)
+            self.current_section.register_interface(block)
+
         elif isinstance(block, blocks.InterfaceStatistics):
             self.current_section.interface_stats[block.interface_id] = block
+
         return block
 
     def _read_section_header(self):

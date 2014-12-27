@@ -33,7 +33,7 @@ def test_read_block_interface_bigendian():
 
     assert isinstance(blocks[0], SectionHeader)
     assert blocks[0].endianness == '>'
-    assert blocks[0].interfaces == [blocks[1]]
+    assert blocks[0].interfaces == {0: blocks[1]}
 
     assert isinstance(blocks[1], InterfaceDescription)
     assert blocks[1].link_type == 0x01

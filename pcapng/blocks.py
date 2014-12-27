@@ -1,4 +1,5 @@
 import io
+import itertools
 import struct
 
 from pcapng.structs import (
@@ -67,8 +68,15 @@ class SectionHeader(Block):
         self.version = version
         self.length = length
         self.options = options
-        self.interfaces = []
+        self._interfaces_id = itertools.count(0)
+        self.interfaces = {}
         self.interface_stats = {}
+
+    def register_interface(self, interface):
+        assert isinstance(interface, InterfaceDescription)
+        interface_id = self._interfaces_id.next()
+        interface.interface_id = interface_id
+        self.interfaces[interface_id] = interface
 
 
 @register_block

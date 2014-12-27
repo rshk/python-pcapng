@@ -9,6 +9,12 @@ def test_sample_test001_ntar():
         # There is just a section header
         assert len(blocks) == 1
 
+        assert blocks[0].endianness == '<'
+        assert blocks[0].version == (1, 0)
+        assert blocks[0].length == -1
+        assert len(blocks[0].options) == 0
+        assert len(blocks[0].interfaces) == 0
+
 
 def test_sample_test002_ntar():
     with open('test_data/test002.ntar') as fp:
