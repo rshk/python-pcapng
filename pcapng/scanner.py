@@ -5,8 +5,9 @@ Pcap-ng file scanner
 from pcapng.structs import (
     read_int, read_block_data, read_section_header, SECTION_HEADER_MAGIC,
     Options)
+from pcapng.constants.block_types import BLK_RESERVED, BLK_RESERVED_CORRUPTED
+from pcapng.exceptions import StreamEmpty, CorruptedFile
 import pcapng.blocks as blocks
-from pcapng.exceptions import StreamEmpty
 
 
 class FileScanner(object):
@@ -45,6 +46,8 @@ class FileScanner(object):
         block = self._read_block(block_type)
         if isinstance(block, blocks.InterfaceDescription):
             self.current_section.interfaces.append(block)
+        elif isinstance(block, blocks.InterfaceStatistics):
+            self.current_section.interface_stats[block.interface_id] = block
         return block
 
     def _read_section_header(self):
@@ -68,8 +71,20 @@ class FileScanner(object):
         Read the block payload and pass to the appropriate block constructor
         """
         data = read_block_data(self.stream, endianness=self.endianness)
+
         if block_type in blocks.KNOWN_BLOCKS:
             return blocks.KNOWN_BLOCKS[block_type].from_context(data, self)
+
+        if block_type in BLK_RESERVED_CORRUPTED:
+            raise CorruptedFile(
+                'Block type 0x{0:08X} is reserved to detect a corrupted file'
+                .format(block_type))
+
+        if block_type == BLK_RESERVED:
+            raise CorruptedFile(
+                'Block type 0x00000000 is reserved and should not be used '
+                'in capture files!')
+
         return blocks.UnknownBlock(block_type, data)
 
     def _read_int(self, size, signed=False):

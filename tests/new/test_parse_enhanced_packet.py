@@ -69,8 +69,12 @@ def test_read_block_enhanced_packet_bigendian():
     assert blocks[2].section == blocks[0]
     assert blocks[2].interface_id == 0
     assert blocks[2].interface == blocks[1]
+
     assert blocks[2].timestamp_high == 0x0004f81e
     assert blocks[2].timestamp_low == 0x3c3ed5a9
+    assert blocks[2].timestamp_resolution == -6
+    assert blocks[2].timestamp == 1398708650.3008409
+
     assert blocks[2].captured_len == 0x51
     assert blocks[2].packet_len == 0x51
     assert blocks[2].packet_data == (

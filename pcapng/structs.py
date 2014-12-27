@@ -15,7 +15,7 @@ BYTE_ORDER_MAGIC_INVERSE = 0x4d3c2b1a
 CURRENT_SUPPORTED_VERSION = (1, 0)
 
 
-INT_FORMATS = {16: 'h', 32: 'i', 64: 'q'}
+INT_FORMATS = {8: 'b', 16: 'h', 32: 'i', 64: 'q'}
 
 
 def read_int(stream, size, signed=False, endianness='>'):

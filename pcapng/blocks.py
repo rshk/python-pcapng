@@ -1,4 +1,5 @@
 import io
+import struct
 
 from pcapng.structs import (
     struct_decode, RawBytes, IntField, OptionsField, PacketDataField,
@@ -58,6 +59,7 @@ class SectionHeader(Block):
         self.length = length
         self.options = options
         self.interfaces = []
+        self.interface_stats = {}
 
 
 @register_block
@@ -83,9 +85,47 @@ class InterfaceDescription(SectionMemberBlock):
             (14, 'if_tsoffset'),
         ]))]
 
+    @property  # todo: cache this property
+    def timestamp_resolution(self):
+        # ts_resol is a 8-bit integer representing the power of ten
+        # of the timestamp multiplier. If not specified, -6 is assumed
+        if 'ts_resol' in self.options:
+            resol = self.options['ts_resol']
+            return struct.unpack('b', resol)[0]
+        return -6
+
+    @property
+    def statistics(self):
+        # todo: we need to make the interface aware of its own id
+        raise NotImplementedError
+
+
+class BlockWithTimestampMixin(object):
+    @property
+    def timestamp(self):
+        # First, get the accuracy from the ts_resol option
+        return (((self.timestamp_high << 32) + self.timestamp_low)
+                * (10 ** self.timestamp_resolution))
+
+    @property
+    def timestamp_resolution(self):
+        return self.interface.timestamp_resolution
+
+
+class BlockWithInterfaceMixin(object):
+    @property
+    def interface(self):
+        # We need to get the correct interface from the section
+        # by looking up the interface_id
+        return self.section.interfaces[self.interface_id]
+
+
+class BasePacketBlock(BlockWithInterfaceMixin, BlockWithTimestampMixin):
+    pass
+
 
 @register_block
-class EnhancedPacket(SectionMemberBlock):
+class EnhancedPacket(BasePacketBlock):
     magic_number = 0x00000006
     schema = [
         ('interface_id', IntField(32, False)),
@@ -111,11 +151,7 @@ class EnhancedPacket(SectionMemberBlock):
     def packet_data(self):
         return self.packet_payload_info[2]
 
-    @property
-    def interface(self):
-        # We need to get the correct interface from the section
-        # by looking up the interface_id
-        return self.section.interfaces[self.interface_id]
+    # todo: add some property returning a datetime() with timezone..
 
 
 @register_block
@@ -135,7 +171,7 @@ class SimplePacket(SectionMemberBlock):
 
 
 @register_block
-class Packet(SectionMemberBlock):
+class Packet(BasePacketBlock):
     magic_number = 0x00000002
     schema = [
         ('interface_id', IntField(16, False)),
@@ -161,12 +197,6 @@ class Packet(SectionMemberBlock):
     def packet_data(self):
         return self.packet_payload_info[2]
 
-    @property
-    def interface(self):
-        # We need to get the correct interface from the section
-        # by looking up the interface_id
-        pass
-
 
 @register_block
 class NameResolution(SectionMemberBlock):
@@ -177,6 +207,26 @@ class NameResolution(SectionMemberBlock):
             (2, 'ns_dnsname'),
             (3, 'ns_dnsIP4addr'),
             (4, 'ns_dnsIP6addr'),
+        ])),
+    ]
+
+
+@register_block
+class InterfaceStatistics(SectionMemberBlock, BlockWithTimestampMixin,
+                          BlockWithInterfaceMixin):
+    magic_number = 0x00000005
+    schema = [
+        ('interface_id', IntField(32, False)),
+        ('timestamp_high', IntField(32, False)),
+        ('timestamp_low', IntField(32, False)),
+        ('options', OptionsField([
+            (2, 'isb_starttime'),
+            (3, 'isb_endtime'),
+            (4, 'isb_ifrecv'),
+            (5, 'isb_ifdrop'),
+            (6, 'isb_filteraccept'),
+            (7, 'isb_osdrop'),
+            (8, 'isb_usrdeliv'),
         ])),
     ]
 
