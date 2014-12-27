@@ -9,7 +9,9 @@ import pytest
 
 from pcapng.structs import (
     read_int, read_section_header, read_block_data, read_bytes,
-    read_bytes_padded, RawBytes, IntField, struct_decode)
+    read_bytes_padded, RawBytes, IntField, struct_decode, read_options,
+    Options, OptionsField, PacketDataField, ListField,
+    NameResolutionRecordField)
 from pcapng.exceptions import (
     StreamEmpty, TruncatedFile, BadMagic, CorruptedFile)
 
@@ -223,3 +225,115 @@ def test_decode_simple_struct():
     assert decoded['int32u'] == 1234
     assert decoded['int16s'] == -789
     assert decoded['int16u'] == 789
+
+
+def test_read_options():
+    data = io.BytesIO(
+        '\x00\x01\x00\x0cHello world!'
+        '\x00\x01\x00\x0fSpam eggs bacon\x00'
+        '\x00\x02\x00\x0fSome other text\x00'
+        '\x00\x00\x00\x00')
+
+    options = read_options(data, '>')
+    assert options == [
+        (1, 'Hello world!'),
+        (1, 'Spam eggs bacon'),
+        (2, 'Some other text'),
+    ]
+
+
+def test_options_object():
+    schema = [
+        (2, 'spam'),
+        (3, 'eggs', lambda x: struct.unpack('>I', x)[0]),
+        (4, 'bacon', lambda x: unicode(x, encoding='utf-8')),
+        (5, 'missing'),
+    ]
+
+    raw_options = [
+        (1, 'Comment #1'),
+        (1, 'Comment #2'),
+        (2, 'I love spam spam spam!'),
+        (3, '\x00\x00\x01\x00'),
+        (4, 'Bacon is delicious!'),
+        (20, 'Something different'),
+    ]
+
+    options = Options(schema, raw_options)
+
+    assert options['opt_comment'] == 'Comment #1'
+    assert options[1] == 'Comment #1'
+    assert options.getall('opt_comment') == ['Comment #1', 'Comment #2']
+    assert isinstance(options['opt_comment'], unicode)
+
+    assert options['spam'] == 'I love spam spam spam!'
+    assert isinstance(options['spam'], bytes)
+
+    assert options['eggs'] == 0x100
+    assert isinstance(options['eggs'], (int, long))
+
+    assert options['bacon'] == u'Bacon is delicious!'
+    assert isinstance(options['bacon'], unicode)
+
+    with pytest.raises(KeyError):
+        options['missing']
+
+    with pytest.raises(KeyError):
+        options[5]
+
+    with pytest.raises(KeyError):
+        options['Something completely missing']
+
+    with pytest.raises(KeyError):
+        options[12345]
+
+    assert options[20] == 'Something different'
+
+    # Check length / keys
+    assert len(options) == 5
+    assert sorted(options.iterkeys()) == sorted([
+        'opt_comment', 'spam', 'eggs', 'bacon', 20])
+
+
+def test_unpack_dummy_packet():
+    schema = [
+        ('a_string', RawBytes(8)),
+        ('a_number', IntField(32, False)),
+        ('options', OptionsField([])),
+        ('packet_data', PacketDataField()),
+        ('name_res', ListField(NameResolutionRecordField())),
+        ('another_number', IntField(32, False)),
+    ]
+
+    # Note: NULLs are for padding!
+    data = io.BytesIO(
+        '\x01\x23\x45\x67\x89\xab\xcd\xef'
+        '\x00\x00\x01\x00'
+
+        # Options
+        '\x00\x01\x00\x0cHello world!'
+        '\x00\x01\x00\x0fSpam eggs bacon\x00'
+        '\x00\x02\x00\x0fSome other text\x00'
+        '\x00\x00\x00\x00'
+
+        # Packet data
+        '\x00\x00\x00\x12'
+        '\x00\x01\x00\x00'
+        'These are 18 bytes\x00\x00'
+
+        # List of name resolution items
+        '\x00\x00\x00\x01'  # IPv4
+        '\x00\x00\x01\x03'  # Length: 19bytes
+        '\x0a\x22\x33\x44www.example.com\x00'  # 19 bytes (10.34.51.68)
+
+        '\x00\x00\x00\x01'  # IPv4
+        '\x00\x00\x01\x03'  # Length: 19bytes
+        '\xc0\xa8\x14\x01www.example.org\x00'  # 19 bytes (192.168.20.1)
+
+        '\x00\x00\x00\x00\x00\x00\x00\x00'  # End marker
+
+        '\xaa\xbb\xcc\xdd'  # Another number
+    )
+
+    unpacked = struct_decode(schema, data, endianness='>')
+    pass

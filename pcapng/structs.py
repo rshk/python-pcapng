@@ -171,7 +171,7 @@ class PacketDataField(StructField):
     def load(self, stream, endianness):
         captured_len = read_int(stream, 32, False, endianness)
         packet_len = read_int(stream, 32, False, endianness)
-        packet_data = read_bytes_padded(stream, packet_len)
+        packet_data = read_bytes_padded(stream, captured_len)
         return captured_len, packet_len, packet_data
 
 
@@ -187,12 +187,12 @@ class ListField(StructField):
         self.subfield = subfield
 
     def load(self, stream, endianness):
-        return list(self._iter_load())
+        return list(self._iter_load(stream, endianness))
 
     def _iter_load(self, stream, endianness):
         while True:
             try:
-                yield self.subfield.load(stream)
+                yield self.subfield.load(stream, endianness)
             except StreamEmpty:
                 return
 
@@ -225,13 +225,13 @@ def read_options(stream, endianness):
     def _iter_read_options(stream, endianness):
         while True:
             try:
-                option_code = read_int(stream, 16, None, endianness)
-                option_length = read_int(stream, 16, None, endianness)
+                option_code = read_int(stream, 16, False, endianness)
+                option_length = read_int(stream, 16, False, endianness)
 
                 if option_code == 0:  # End of options
                     return
 
-                payload = read_bytes_padded(option_length)
+                payload = read_bytes_padded(stream, option_length)
                 yield option_code, payload
 
             except StreamEmpty:
@@ -250,6 +250,10 @@ class Options(Mapping):
         ])
         self._update_schema(schema)
 
+        self._data = {}
+        if data is not None:
+            self._set_data(data)
+
     def _update_schema(self, schema):
         for item in schema:
             if len(item) == 2:
@@ -263,7 +267,7 @@ class Options(Mapping):
                 'name': name,
                 'constructor': constructor,
             }
-            self._field_names[name] = 'code'
+            self._field_names[name] = code
 
     def _set_data(self, data):
         if data is not None:
@@ -278,7 +282,30 @@ class Options(Mapping):
         return _schema.get('constructor') or (lambda x: x)
 
     def __getitem__(self, name):
-        pass
+        if name in self._field_names:
+            # Resolve to numeric option name
+            name = self._field_names[name]
+        return self._data[name][0]
+
+    def __len__(self):
+        return len(self._data)
+
+    def __iter__(self):
+        for key in self._data:
+            if key in self._schema:
+                yield self._schema[key]['name']
+            else:
+                yield key
+
+    def getall(self, name):
+        if name in self._field_names:
+            # Resolve to numeric option name
+            name = self._field_names[name]
+        return list(self._data[name])
+
+    def iterallitems(self):
+        for key in self:
+            yield key, self.getall(key)
 
 
 def struct_decode(schema, stream, endianness='='):
