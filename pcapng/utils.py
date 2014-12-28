@@ -16,7 +16,9 @@ def _get_pairs(data):
 
 
 def unpack_ipv6(data):
-    return ':'.join(format(ord(x), '02x') for x in _get_pairs(data))
+    return ':'.join(
+        '{0:02x}{1:02x}'.format(ord(x), ord(y))
+        for (x, y) in _get_pairs(data))
 
 
 def unpack_macaddr(data):
