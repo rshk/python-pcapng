@@ -94,9 +94,6 @@ class SectionHeader(Block):
         self._raw = raw
         self._decoded = None
         self.endianness = endianness
-        # self.version = version
-        # self.length = length
-        # self.options = options
         self._interfaces_id = itertools.count(0)
         self.interfaces = {}
         self.interface_stats = {}
