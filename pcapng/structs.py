@@ -33,45 +33,49 @@ def read_section_header(stream):
     """
     Read a section header from a stream.
 
-    .. note:: We expect the bytes order magic to have been already read!
+    .. note::
+        The byte order magic will be removed from the returned data
+        This is ok as we don't need it anymore once we determined
+        the correct endianness of the section.
 
-    :returns: a dict containing information about the section
+    :returns: a dict containing the 'endianness' and 'data' keys
     """
 
-    blk_len_raw = read_bytes(stream, 4)  # We don't know endianness yet..
+    # Read the length as raw bytes, then keep for later (since we
+    # don't know the section endianness yet, we cannot parse this)
+    blk_len_raw = read_bytes(stream, 4)
+
+    # Read the "byte order magic" and see which endianness reports
+    # it correctly (should be 0x1a2b3c4d)
     byte_order_magic = read_int(stream, 32, '>')  # Default BIG
     if byte_order_magic == BYTE_ORDER_MAGIC:
         endianness = '>'  # BIG
     else:
         if byte_order_magic != BYTE_ORDER_MAGIC_INVERSE:
+            # We got an invalid number..
             raise BadMagic('Wrong byte order magic: got 0x{0:08X}, expected '
                            '0x{1:08X} or 0x{2:08X}'
                            .format(byte_order_magic, BYTE_ORDER_MAGIC,
                                    BYTE_ORDER_MAGIC_INVERSE))
         endianness = '<'  # LITTLE
 
+    # Now we can safely decode the block length from the bytes we read earlier
     blk_len = struct.unpack(endianness + 'I', blk_len_raw)[0]
 
-    v_maj = read_int(stream, 16, False, endianness)
-    v_min = read_int(stream, 16, False, endianness)
-    section_len = read_int(stream, 64, True, endianness)
+    # ..and we then just want to read the appropriate amount of raw data.
+    # Exclude: magic, len, bom, len (16 bytes)
+    payload_size = blk_len - (4 + 4 + 4 + 4)
+    block_data = read_bytes_padded(stream, payload_size)
 
-    options_len = blk_len - (7 * 4)
-    options_raw_string = read_bytes(stream, options_len)
-    options_raw = read_options(io.BytesIO(options_raw_string), endianness)
-
+    # Double-check lenght at block end
     blk_len2 = read_int(stream, 32, False, endianness)
-
     if blk_len != blk_len2:
         raise CorruptedFile('Mismatching block lengths: {0} and {1}'
                             .format(blk_len, blk_len2))
 
     return {
         'endianness': endianness,
-        'block_length': blk_len,  # Not realy needed..
-        'version': (v_maj, v_min),
-        'section_length': section_len,
-        'options_raw': options_raw,
+        'data': block_data,
     }
 
 

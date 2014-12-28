@@ -1,3 +1,15 @@
+"""
+Module containing the definition of known / supported "blocks" of the
+pcap-ng format.
+
+Each block is a struct-like object with some fields and possibly
+a variable amount of "items" (usually options).
+
+They can optionally expose some other properties, used eg. to provide
+better access to decoded information, ...
+"""
+
+
 import io
 import itertools
 import struct
@@ -12,6 +24,8 @@ KNOWN_BLOCKS = {}
 
 
 class Block(object):
+    """Base class for blocks"""
+
     schema = []
 
     def __init__(self, raw):
@@ -38,9 +52,13 @@ class Block(object):
         args = []
         for item in self.schema:
             name = item[0]
-            args.append('{0}={1!r}'.format(name, getattr(self, name)))
-        return '{0}({1})'.format(self.__class__.__name__,
-                                 ', '.join(args))
+            value = getattr(self, name)
+            try:
+                value = repr(value)
+            except:
+                value = '<{0} (repr failed)>'.format(type(value).__name__)
+            args.append('{0}={1}'.format(name, value))
+        return '{0}({1})'.format(self.__class__.__name__, ', '.join(args))
 
 
 class SectionMemberBlock(Block):
@@ -54,6 +72,7 @@ class SectionMemberBlock(Block):
 
 
 def register_block(block):
+    """Handy decorator to register a new known block type"""
     KNOWN_BLOCKS[block.magic_number] = block
     return block
 
@@ -61,22 +80,50 @@ def register_block(block):
 @register_block
 class SectionHeader(Block):
     magic_number = 0x0a0d0d0a
-    schema = []
+    schema = [
+        ('version_major', IntField(16, False)),
+        ('version_minor', IntField(16, False)),
+        ('section_length', IntField(64, True)),
+        ('options', OptionsField([
+            (2, 'shb_hardware'),
+            (3, 'shb_os'),
+            (4, 'shb_userappl'),
+        ]))]
 
-    def __init__(self, endianness, version, length, options):
+    def __init__(self, raw, endianness):
+        self._raw = raw
+        self._decoded = None
         self.endianness = endianness
-        self.version = version
-        self.length = length
-        self.options = options
+        # self.version = version
+        # self.length = length
+        # self.options = options
         self._interfaces_id = itertools.count(0)
         self.interfaces = {}
         self.interface_stats = {}
 
+    def _decode(self):
+        return struct_decode(self.schema, io.BytesIO(self._raw),
+                             endianness=self.endianness)
+
     def register_interface(self, interface):
+        """Helper method to register an interface within this section"""
         assert isinstance(interface, InterfaceDescription)
         interface_id = self._interfaces_id.next()
         interface.interface_id = interface_id
         self.interfaces[interface_id] = interface
+
+    def add_interface_stats(self, interface_stats):
+        """Helper method to register interface stats within this section"""
+        assert isinstance(interface_stats, InterfaceStatistics)
+        self.interface_stats[interface_stats.interface_id] = interface_stats
+
+    @property
+    def version(self):
+        return (self.version_major, self.version_minor)
+
+    @property
+    def length(self):
+        return self.section_length
 
 
 @register_block

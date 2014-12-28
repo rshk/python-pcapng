@@ -61,21 +61,12 @@ class FileScanner(object):
         """
 
         section_info = read_section_header(self.stream)
-        self.endianness = section_info['endianness']
-        opt_schema = [
-            (2, 'shb_hardware'),
-            (3, 'shb_os'),
-            (4, 'shb_userappl'),
-        ]
+        self.endianness = section_info['endianness']  # todo: use property?
 
         # todo: make this use the standard schema facilities as well!
         return blocks.SectionHeader(
-            endianness=section_info['endianness'],
-            version=section_info['version'],
-            length=section_info['section_length'],
-            options=Options(schema=opt_schema,
-                            data=section_info['options_raw'],
-                            endianness=self.endianness))
+            raw=section_info['data'],
+            endianness=section_info['endianness'])
 
     def _read_block(self, block_type):
         """
@@ -84,6 +75,7 @@ class FileScanner(object):
         data = read_block_data(self.stream, endianness=self.endianness)
 
         if block_type in blocks.KNOWN_BLOCKS:
+            # This is a known block -- instantiate it
             return blocks.KNOWN_BLOCKS[block_type].from_context(data, self)
 
         if block_type in BLK_RESERVED_CORRUPTED:

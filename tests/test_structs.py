@@ -67,10 +67,7 @@ def test_read_section_header_big_endian():
 
     block = read_section_header(data)
     assert block['endianness'] == '>'
-    assert block['block_length'] == 28
-    assert block['version'] == (1, 0)
-    assert block['section_length'] == -1
-    assert block['options_raw'] == []
+    assert block['data'] == '\x00\x01\x00\x00\xff\xff\xff\xff\xff\xff\xff\xff'
 
 
 def test_read_section_header_little_endian():
@@ -85,10 +82,7 @@ def test_read_section_header_little_endian():
 
     block = read_section_header(data)
     assert block['endianness'] == '<'
-    assert block['block_length'] == 28
-    assert block['version'] == (1, 0)
-    assert block['section_length'] == -1
-    assert block['options_raw'] == []
+    assert block['data'] == '\x01\x00\x00\x00\xff\xff\xff\xff\xff\xff\xff\xff'
 
 
 def test_read_section_header_bad_order_magic():

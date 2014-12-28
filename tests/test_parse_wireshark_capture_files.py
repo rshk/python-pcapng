@@ -1,3 +1,5 @@
+import pytest
+
 from pcapng.scanner import FileScanner
 from pcapng.blocks import SectionHeader, InterfaceDescription, Packet
 
@@ -107,12 +109,17 @@ def test_sample_test005_ntar():
             'Stupid ethernet interface\x00'
 
 
-def test_sample_test006_ntar():  # todo: test test006.ntar for the error?
-    with open('test_data/test006-fixed.ntar') as fp:
-        scanner = FileScanner(fp)
+@pytest.mark.parametrize('filename', [
+    pytest.mark.xfail('test_data/test006.ntar'),
+    'test_data/test006-fixed.ntar'])
+def test_sample_test006_ntar(filename):
 
-        # WARNING: Something is broken with this file
-        # dig further and write more tests
+    # Note: See the comment below this function
+    # test006.ntar is reporting an incorrect size, which causes the
+    # test to fail. Is this the expected behavior?
+
+    with open(filename) as fp:
+        scanner = FileScanner(fp)
 
         blocks = list(scanner)
 
