@@ -491,6 +491,11 @@ class Options(Mapping):
         for key in self:
             yield key, self.get_all(key)
 
+    def __repr__(self):
+        args = dict(self.iter_all_items())
+        name = self.__class__.__name__
+        return '{0}({1!r})'.format(name, args)
+
     # -------------------- Internal methods --------------------
 
     def _update_schema(self, schema):
