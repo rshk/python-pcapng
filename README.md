@@ -1,7 +1,7 @@
 # Python-pcapng
 
 Python library to parse the pcap-ng format used by newer versions
-of dumpcap & similar tools.
+of dumpcap & similar tools (wireshark, winpcap, ...).
 
 Format specification is here:
 
@@ -12,6 +12,7 @@ http://www.winpcap.org/ntar/draft/PCAP-DumpFileFormat.html
 
 - I need to decently extract some information from a bunch of pcap-ng
   files, but apparently tcpdump has some problems reading those files,
+
   I couldn't find other nice tools nor Python bindings to a library
   able to parse this format, so..
 
@@ -25,7 +26,7 @@ http://www.winpcap.org/ntar/draft/PCAP-DumpFileFormat.html
 
 ## Isn't it slow?
 
-Yes, I guess it would be much slower than something writtien in C,
+Yes, I guess it would be much slower than something written in C,
 but I'm much better at Python than C.
 
 But I need to get things done, and CPU time is not that expensive :)
@@ -39,4 +40,4 @@ anyways, pure-Python libraries are always useful, eg. for PyPy).
 An usage example is contained in ``example.py``, but the project is
 still very young, so things might change completely.
 
-Keep tuned, and suggestions are welcome.
+Keep tuned, and suggestions / contributions are welcome.
