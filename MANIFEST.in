@@ -1,0 +1,31 @@
+include README.rst
+include CHANGELOG.rst
+# include *.rst
+include LICENSE
+
+# Some examples below.
+# See docs at: https://docs.python.org/2/distutils/sourcedist.html#the-manifest-in-template
+
+# include all files matching any of the listed patterns
+# include pat1 pat2 ...
+
+# exclude all files matching any of the listed patterns
+# exclude pat1 pat2 ...
+
+# include all files under dir matching any of the listed patterns
+# recursive-include dir pat1 pat2 ...
+
+# exclude all files under dir matching any of the listed patterns
+# recursive-exclude dir pat1 pat2 ...
+
+# include all files anywhere in the source tree matching — & any of the listed patterns
+# global-include pat1 pat2 ...
+
+# exclude all files anywhere in the source tree matching — & any of the listed patterns
+# global-exclude pat1 pat2 ...
+
+# exclude all files under dir
+# prune dir
+
+# include all files under dir
+# graft dir
