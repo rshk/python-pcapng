@@ -1,10 +1,5 @@
-"""
-Pcap-ng file scanner
-"""
-
 from pcapng.structs import (
-    read_int, read_block_data, read_section_header, SECTION_HEADER_MAGIC,
-    Options)
+    read_int, read_block_data, read_section_header, SECTION_HEADER_MAGIC)
 from pcapng.constants.block_types import BLK_RESERVED, BLK_RESERVED_CORRUPTED
 from pcapng.exceptions import StreamEmpty, CorruptedFile
 import pcapng.blocks as blocks
@@ -12,11 +7,26 @@ import pcapng.blocks as blocks
 
 class FileScanner(object):
     """
-    Scanner for pcap-ng files.
+    pcap-ng file scanner.
 
-    Can be iterated to get blocks from the file.
+    This object can be iterated to get blocks out of a pcap-ng
+    stream (a file or file-like object providing a .read() method).
 
-    :param stream: Stream from which to read data
+    Example usage:
+
+        .. code-block:: python
+
+            from pcapng import FileScanner
+
+            with open('/tmp/mycapture.pcap') as fp:
+                scanner = FileScanner(fp)
+                for block in scanner:
+                    pass  # do something with the block...
+
+    :param stream:
+        a file-like object from which to read the data.
+        If you need to parse data from some string you have entirely in-memory,
+        just wrap it in a :py:class:`io.BytesIO` object.
     """
 
     def __init__(self, stream):

@@ -1,3 +1,7 @@
+"""
+Module providing facilities for handling struct-like data.
+"""
+
 from collections import Mapping
 import abc
 import io
@@ -21,7 +25,21 @@ CURRENT_SUPPORTED_VERSION = (1, 0)
 INT_FORMATS = {8: 'b', 16: 'h', 32: 'i', 64: 'q'}
 
 
-def read_int(stream, size, signed=False, endianness='>'):
+def read_int(stream, size, signed=False, endianness='='):
+    """
+    Read (and decode) an integer number from a binary stream.
+
+    :param stream: an object providing a ``read()`` method
+    :param size: the size, in bits, of the number to be read.
+        Supported sizes are: 8, 16, 32 and 64 bits.
+    :param signed: Whether a signed or unsigned number is required.
+        Defaults to ``False`` (unsigned int).
+    :param endianness: specify the endianness to use to decode the number,
+        in the same format used by Python :py:mod:`struct` module.
+        Defaults to '=' (native endianness). '!' means "network" endianness
+        (big endian), '<' little endian, '>' big endian.
+    :return: the read integer number
+    """
     fmt = INT_FORMATS.get(size)
     fmt = fmt.lower() if signed else fmt.upper()
     assert endianness in '<>!='
@@ -33,14 +51,16 @@ def read_int(stream, size, signed=False, endianness='>'):
 
 def read_section_header(stream):
     """
-    Read a section header from a stream.
+    Read a section header block from a stream.
 
     .. note::
         The byte order magic will be removed from the returned data
         This is ok as we don't need it anymore once we determined
         the correct endianness of the section.
 
-    :returns: a dict containing the 'endianness' and 'data' keys
+    :returns: a dict containing the ``'endianness'`` and ``'data'`` keys
+        that will be used to construct a :py:mod:`~pcapng.blocks.SectionHeader`
+        instance.
     """
 
     # Read the length as raw bytes, then keep for later (since we
@@ -84,6 +104,15 @@ def read_section_header(stream):
 def read_block_data(stream, endianness):
     """
     Read block data from a stream.
+
+    Each "block" is in the form:
+
+    - 32bit integer indicating the size (including header and size)
+    - block payload (the above-specified number of bytes minus 12)
+    - 32bit integer indicating the size (again)
+
+    :param stream: the stream from which to read data
+    :param endianness: Endianness marker, one of '<', '>', '!', '='.
     """
 
     block_length = read_int(stream, 32, signed=False, endianness=endianness)
@@ -100,8 +129,12 @@ def read_bytes(stream, size):
     """
     Read the given amount of raw bytes from a stream.
 
-    :raises: StreamEmpty if zero bytes were read
-    :raises: TruncatedFile if 0 < bytes < size were read
+    :param stream: the stream from which to read data
+    :param size: the size to read, in bytes
+    :returns: the read data
+    :raises: :py:exc:`~pcapng.exceptions.StreamEmpty` if zero bytes were read
+    :raises: :py:exc:`~pcapng.exceptions.TruncatedFile` if 0 < bytes < size
+        were read
     """
 
     if size == 0:
@@ -121,6 +154,13 @@ def read_bytes_padded(stream, size, pad_block_size=4):
     Read the given amount of bytes from a stream, plus read and discard
     any necessary extra byte to align up to the pad_block_size-sized
     next block.
+
+    :param stream: the stream from which to read data
+    :param size: the size to read, in bytes
+    :returns: the read data
+    :raises: :py:exc:`~pcapng.exceptions.StreamEmpty` if zero bytes were read
+    :raises: :py:exc:`~pcapng.exceptions.TruncatedFile` if 0 < bytes < size
+        were read
     """
 
     if stream.tell() % pad_block_size != 0:
@@ -134,22 +174,48 @@ def read_bytes_padded(stream, size, pad_block_size=4):
 
 
 class StructField(object):
+    """Abstract base class for struct fields"""
+
     __metaclass__ = abc.ABCMeta
 
     @abc.abstractmethod
     def load(self, stream, endianness):
         pass
 
+    def __repr__(self):
+        return '{0}()'.format(self.__class__.__name__)
+
+    def __unicode__(self):
+        return unicode(self.__repr__())
+
 
 class RawBytes(StructField):
+    """
+    Field containing a fixed-width amount of raw bytes
+
+    :param size: field size, in bytes
+    """
+
     def __init__(self, size):
         self.size = size  # in bytes!
 
     def load(self, stream, endianness):
         return read_bytes(stream, self.size)
 
+    def __repr__(self):
+        return ('{0}(size={1!r})'.format(self.__class__.__name__, self.size))
+
 
 class IntField(StructField):
+    """
+    Field containing an integer number.
+
+    :param size: number size, in bits. Currently supported
+        are 8, 16, 32 and 64-bit integers
+    :param signed: whether the number is a signed or unsigned
+        integer. Defaults to False (unsigned)
+    """
+
     def __init__(self, size, signed=False):
         self.size = size  # in bits!
         self.signed = signed
@@ -159,8 +225,20 @@ class IntField(StructField):
                           endianness=endianness)
         return number
 
+    def __repr__(self):
+        return ('{0}(size={1!r}, signed={2!r})'
+                .format(self.__class__.__name__, self.size, self.signed))
+
 
 class OptionsField(StructField):
+    """
+    Field containing some options.
+
+    :param options_schema:
+        Same as the ``schema`` parameter to :py:class:`Options` class
+        constructor.
+    """
+
     def __init__(self, options_schema):
         self.options_schema = options_schema
 
@@ -169,8 +247,23 @@ class OptionsField(StructField):
         return Options(schema=self.options_schema, data=options,
                        endianness=endianness)
 
+    def __repr__(self):
+        return ('{0}({1!r})'
+                .format(self.__class__.__name__, self.options_schema))
+
 
 class PacketDataField(StructField):
+    """
+    Field containing some "packet data", used in the Packet
+    and EnhancedPacket blocks.
+
+    The packet data is composed of three fields (returned in a tuple):
+
+    - captured len (uint32)
+    - packet len (uint32)
+    - packet data (captured_len-sized binary data)
+    """
+
     def load(self, stream, endianness):
         captured_len = read_int(stream, 32, False, endianness)
         packet_len = read_int(stream, 32, False, endianness)
@@ -179,6 +272,15 @@ class PacketDataField(StructField):
 
 
 class SimplePacketDataField(StructField):
+    """
+    Field containing packet data from a SimplePacket object.
+
+    The packet data is represented by two fields (returned as a tuple):
+
+    - packet_len (uint32)
+    - packet_data (packet_len-sized binary data)
+    """
+
     def load(self, stream, endianness):
         packet_len = read_int(stream, 32, False, endianness)
         packet_data = read_bytes_padded(stream, packet_len)
@@ -186,6 +288,22 @@ class SimplePacketDataField(StructField):
 
 
 class ListField(StructField):
+    """
+    A list field is a variable amount of fields of some other type.
+    Used for packets containing multiple "items", such as
+    :py:class:`~pcapng.blocks.NameResolution`.
+
+    It will keep loading data using a subfield until a
+    :py:exc:`~pcapng.exceptions.StreamEmpty` excaption is raised, indicating
+    we reached the end of data (note that a sub-field might even "simulate"
+    a stream end once it reaches some end marker in the file).
+
+    Values are returned in a list.
+
+    :param subfield: a :py:class:`StructField` sub-class instance to be
+        used to read values from the stream.
+    """
+
     def __init__(self, subfield):
         self.subfield = subfield
 
@@ -199,8 +317,31 @@ class ListField(StructField):
             except StreamEmpty:
                 return
 
+    def __repr__(self):
+        return ('{0}({1!r})'.format(self.__class__.__name__, self.subfield))
+
 
 class NameResolutionRecordField(StructField):
+    """
+    A name resolution record field contains an item of data used in
+    the :py:class:`~pcapng.blocks.NameResolution` block.
+
+    it is composed of three fields:
+
+    - record type (uint16)
+    - record length (uint16)
+    - payload
+
+    Accepted types are:
+
+    - ``0x00`` - end marker
+    - ``0x01`` - ipv4 address resolution
+    - ``0x02`` - ipv6 address resolution
+
+    In both cases, the payload is composed of a valid address in the
+    selected IP version, followed by domain name up to the field end.
+    """
+
     def load(self, stream, endianness):
         record_type = read_int(stream, 16, False, endianness)
         record_length = read_int(stream, 16, False, endianness)
@@ -229,8 +370,16 @@ class NameResolutionRecordField(StructField):
 
 def read_options(stream, endianness):
     """
-    Read "options" from an "options block" in a stream,
-    up to an empty stream, or an end marker.
+    Read "options" from an "options block" in a stream, until a
+    ``StreamEmpty`` exception is caught, or an end marker is reached.
+
+    Each option is composed by:
+
+    - option_code (uint16)
+    - value_length (uint16)
+    - value (value_length-sized binary data)
+
+    The end marker is simply an option with code ``0x0000`` and no payload
     """
 
     def _iter_read_options(stream, endianness):
@@ -253,10 +402,45 @@ def read_options(stream, endianness):
 
 class Options(Mapping):
     """
-    Wrapper for the contents of the "options" field.
+    Wrapper object used to easily access the contents of an "options"
+    field.
 
-    This class will map names on numeric fields and perform all the
-    necessary transformations on the data before returning.
+    Fields can be accessed either by numerical id or by name (if one was
+    specified in the schema).
+
+    .. note::
+
+        When iterating the object (or calling :py:meth:`keys` /
+        :py:meth:`iterkeys` / :py:meth:`viewkeys`) string keys will be
+        returned if possible in place of numeric keys.  (The purpose of this
+        is to achieve better readability, for example, when converting
+        to a dictionary).
+
+    :param schema:
+        Definition of the known options: a list of 2- or 3-tuples
+        (the third argument is optional) representing, respectively,
+        the numeric option code, the option name and the value type.
+
+        The following value types are currently supported:
+
+        - ``string``: convert value to a unicode string, using utf-8 encoding
+        - ``{u,i}{8,16,32,64}``: (un)signed integer of the specified length
+        - ``ipv4``: a single ipv4 address [4 bytes]
+        - ``ipv4+mask``: an ipv4 address followed by a netmask [8 bytes]
+        - ``ipv6``: a single ipv6 address [16 bytes]
+        - ``ipv6+prefix``: an ipv6 address followed by prefix length [17 bytes]
+        - ``macaddr``: a mac address [6 bytes]
+        - ``euiaddr``: a eui address [8 bytes]
+
+    :param data:
+        Initial data for the options. A list of two-tuples: ``(code, value)``.
+        Items with the same code may be repeated; only the first one will be
+        accessible using subscript ``options[code]``; the others can be
+        accessed using :py:meth:`get_all` and related methods
+
+    :param endianness:
+        The current endianness of the section these options came from.
+        Required in order to load numeric fields.
     """
 
     def __init__(self, schema, data, endianness):
@@ -288,15 +472,22 @@ class Options(Mapping):
             yield self._get_name_alias(key)
 
     def get_all(self, name):
+        """Get all values for the given option"""
         return self._get_all_converted(name)
 
     def get_raw(self, name):
+        """Get raw value for the given option"""
         return self._get_raw(name)
 
     def get_all_raw(self, name):
+        """Get all raw values for the given option"""
         return self._get_all_raw(name)
 
     def iter_all_items(self):
+        """
+        Similar to :py:meth:`iteritems` but will yield a list of values
+        as the second tuple field.
+        """
         for key in self:
             yield key, self.get_all(key)
 
@@ -406,6 +597,27 @@ class Options(Mapping):
 
 
 def struct_decode(schema, stream, endianness='='):
+    """
+    Decode structured data from a stream, following a schema.
+
+    :param schema:
+        a list of two tuples: ````(name, field)``, where ``name`` is a string
+        representing the attribute name, and ``field`` is an instance of a
+        :py:class:`StructField` sub-class, providing a ``.load()`` method
+        to be called on the stream to get the field value.
+
+    :param stream:
+        a file-like object, providing a ``.read()`` method, from which data
+        will be read.
+
+    :param endianness:
+        endianness specifier, as accepted by Python struct module
+        (one of ``<>!=``, defaults to ``=``).
+
+    :return:
+        a dictionary mapping the field names to decoded data
+    """
+
     decoded = {}
     for name, field in schema:
         decoded[name] = field.load(stream, endianness=endianness)
@@ -413,14 +625,23 @@ def struct_decode(schema, stream, endianness='='):
 
 
 def struct_encode(schema, obj, outstream, endianness='='):
+    """
+    In the future, this function will be used to encode a structure into
+    a stream. For the moment, it just raises :py:exc:`NotImplementedError`.
+    """
     raise NotImplementedError
 
 
 def struct_decode_string(schema, data):
+    """Utility function to pass a string to :py:func:`struct_decode`"""
     return struct_decode(schema, io.BytesIO())
 
 
 def struct_encode_string(schema, obj):
+    """
+    Utility function to pass a string to :py:func:`struct_encode`
+    and get the result back as a bytes string.
+    """
     outstream = io.BytesIO()
     struct_encode(schema, obj, outstream)
     return outstream.getvalue()

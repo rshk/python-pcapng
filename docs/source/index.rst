@@ -4,17 +4,19 @@
    contain the root `toctree` directive.
 
 Welcome to python-pcapng's documentation!
-=========================================
+#########################################
 
 Contents:
 
 .. toctree::
    :maxdepth: 2
 
+   library-usage
+   api/index
 
 
 Indices and tables
-==================
+##################
 
 * :ref:`genindex`
 * :ref:`modindex`
