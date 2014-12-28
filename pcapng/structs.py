@@ -69,7 +69,7 @@ def read_section_header(stream):
 
     # Read the "byte order magic" and see which endianness reports
     # it correctly (should be 0x1a2b3c4d)
-    byte_order_magic = read_int(stream, 32, '>')  # Default BIG
+    byte_order_magic = read_int(stream, 32, False, '>')  # Default BIG
     if byte_order_magic == BYTE_ORDER_MAGIC:
         endianness = '>'  # BIG
     else:
