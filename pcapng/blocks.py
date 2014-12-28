@@ -85,9 +85,9 @@ class SectionHeader(Block):
         ('version_minor', IntField(16, False)),
         ('section_length', IntField(64, True)),
         ('options', OptionsField([
-            (2, 'shb_hardware'),
-            (3, 'shb_os'),
-            (4, 'shb_userappl'),
+            (2, 'shb_hardware', 'string'),
+            (3, 'shb_os', 'string'),
+            (4, 'shb_userappl', 'string'),
         ]))]
 
     def __init__(self, raw, endianness):
@@ -136,17 +136,17 @@ class InterfaceDescription(SectionMemberBlock):
         ('options', OptionsField([
             (2, 'if_name', 'string'),
             (3, 'if_description', 'string'),
-            (4, 'if_IPv4addr'),
-            (5, 'if_IPv6addr'),
-            (6, 'if_MACaddr'),
-            (7, 'if_EUIaddr'),
+            (4, 'if_IPv4addr', 'ipv4+mask'),
+            (5, 'if_IPv6addr', 'ipv6+prefix'),
+            (6, 'if_MACaddr', 'macaddr'),
+            (7, 'if_EUIaddr', 'euiaddr'),
             (8, 'if_speed', 'u64'),
             (9, 'if_tsresol', 'u8'),
             (10, 'if_tzone', 'u32'),
             (11, 'if_filter', 'string'),
             (12, 'if_os', 'string'),
-            (13, 'if_fcslen'),
-            (14, 'if_tsoffset'),
+            (13, 'if_fcslen', 'u8'),
+            (14, 'if_tsoffset', 'i64'),
         ]))]
 
     @property  # todo: cache this property
@@ -172,6 +172,11 @@ class InterfaceDescription(SectionMemberBlock):
 
 
 class BlockWithTimestampMixin(object):
+    """
+    Block mixin adding properties to better access timestamps
+    of blocks that provide one.
+    """
+
     @property
     def timestamp(self):
         # First, get the accuracy from the ts_resol option
@@ -181,6 +186,8 @@ class BlockWithTimestampMixin(object):
     @property
     def timestamp_resolution(self):
         return self.interface.timestamp_resolution
+
+    # todo: add some property returning a datetime() with timezone..
 
 
 class BlockWithInterfaceMixin(object):
@@ -195,6 +202,7 @@ class BasePacketBlock(
         SectionMemberBlock,
         BlockWithInterfaceMixin,
         BlockWithTimestampMixin):
+    """Base class for the "EnhancedPacket" and "Packet" blocks"""
     pass
 
 
@@ -207,9 +215,9 @@ class EnhancedPacket(BasePacketBlock):
         ('timestamp_low', IntField(32, False)),
         ('packet_payload_info', PacketDataField()),
         ('options', OptionsField([
-            (2, 'epb_flags'),
-            (3, 'epb_hash'),
-            (4, 'epb_dropcount'),
+            (2, 'epb_flags'),  # todo: is this endianness dependent?
+            (3, 'epb_hash'),  # todo: process the hash value
+            (4, 'epb_dropcount', 'u64'),
         ]))
     ]
 
@@ -224,8 +232,6 @@ class EnhancedPacket(BasePacketBlock):
     @property
     def packet_data(self):
         return self.packet_payload_info[2]
-
-    # todo: add some property returning a datetime() with timezone..
 
 
 @register_block
@@ -278,9 +284,9 @@ class NameResolution(SectionMemberBlock):
     schema = [
         ('records', ListField(NameResolutionRecordField())),
         ('options', OptionsField([
-            (2, 'ns_dnsname'),
-            (3, 'ns_dnsIP4addr'),
-            (4, 'ns_dnsIP6addr'),
+            (2, 'ns_dnsname', 'string'),
+            (3, 'ns_dnsIP4addr', 'ipv4'),
+            (4, 'ns_dnsIP6addr', 'ipv6'),
         ])),
     ]
 
@@ -294,18 +300,25 @@ class InterfaceStatistics(SectionMemberBlock, BlockWithTimestampMixin,
         ('timestamp_high', IntField(32, False)),
         ('timestamp_low', IntField(32, False)),
         ('options', OptionsField([
-            (2, 'isb_starttime'),
-            (3, 'isb_endtime'),
-            (4, 'isb_ifrecv'),
-            (5, 'isb_ifdrop'),
-            (6, 'isb_filteraccept'),
-            (7, 'isb_osdrop'),
-            (8, 'isb_usrdeliv'),
+            (2, 'isb_starttime', 'u64'),  # todo: consider resolution
+            (3, 'isb_endtime', 'u64'),
+            (4, 'isb_ifrecv', 'u64'),
+            (5, 'isb_ifdrop', 'u64'),
+            (6, 'isb_filteraccept', 'u64'),
+            (7, 'isb_osdrop', 'u64'),
+            (8, 'isb_usrdeliv', 'u64'),
         ])),
     ]
 
 
 class UnknownBlock(Block):
+    """
+    Class used to represent an unknown block.
+
+    Its block type and raw data will be stored directly with no further
+    processing.
+    """
+
     def __init__(self, block_type, data):
         self.block_type = block_type
         self.data = data
@@ -313,13 +326,3 @@ class UnknownBlock(Block):
     def __repr__(self):
         return ('UnknownBlock(0x{0:08X}, {1!r})'
                 .format(self.block_type, self.data))
-
-
-class OptConv(object):
-    @staticmethod
-    def unicode(val):
-        return unicode(val, encoding='utf-8')
-
-    @staticmethod
-    def uint64(val):
-        return struct.unpack('Q')

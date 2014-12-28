@@ -3,6 +3,8 @@ import abc
 import io
 import struct
 
+from pcapng.utils import (
+    unpack_ipv4, unpack_ipv6, unpack_macaddr, unpack_euiaddr)
 from pcapng.exceptions import (
     BadMagic, StreamEmpty, CorruptedFile, TruncatedFile)
 
@@ -380,6 +382,25 @@ class Options(Mapping):
         if ftype in _numeric_types:
             return struct.unpack(
                 self.endianness + _numeric_types[ftype], value)[0]
+
+        if ftype == 'ipv4':
+            return unpack_ipv4(value)
+
+        if ftype == 'ipv4+mask':
+            return unpack_ipv4(value[:4]), unpack_ipv4(value[4:8])
+
+        if ftype == 'ipv6':
+            return unpack_ipv6(value)
+
+        if ftype == 'ipv6+prefix':
+            return (unpack_ipv6(value[:16]),
+                    struct.unpack(self.endianness + 'B', value[16]))
+
+        if ftype == 'macaddr':
+            return unpack_macaddr(value)
+
+        if ftype == 'euiaddr':
+            return unpack_euiaddr(value)
 
         raise ValueError('Unsupported field type: {0}'.format(ftype))
 
