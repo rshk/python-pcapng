@@ -40,5 +40,5 @@ def test_read_block_interface_bigendian():
     assert blocks[1].link_type_description == 'D/I/X and 802.3 Ethernet'
     assert blocks[1].snaplen == 0xffff
     assert blocks[1].options['if_name'] == 'eth0'
-    assert blocks[1].options['if_tsresol'] == '\x06'
+    assert blocks[1].options['if_tsresol'] == 6
     assert blocks[1].options['if_os'] == 'Linux 3.2.0-4-amd64'

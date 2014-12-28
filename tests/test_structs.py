@@ -253,8 +253,8 @@ def test_read_options_2():
 def test_options_object():
     schema = [
         (2, 'spam'),
-        (3, 'eggs', lambda x: struct.unpack('>I', x)[0]),
-        (4, 'bacon', lambda x: unicode(x, encoding='utf-8')),
+        (3, 'eggs', 'u32'),
+        (4, 'bacon', 'string'),
         (5, 'missing'),
     ]
 
@@ -267,11 +267,11 @@ def test_options_object():
         (20, 'Something different'),
     ]
 
-    options = Options(schema, raw_options)
+    options = Options(schema=schema, data=raw_options, endianness='>')
 
-    assert options['opt_comment'] == 'Comment #1'
-    assert options[1] == 'Comment #1'
-    assert options.getall('opt_comment') == ['Comment #1', 'Comment #2']
+    assert options['opt_comment'] == u'Comment #1'
+    assert options[1] == u'Comment #1'
+    assert options.get_all('opt_comment') == ['Comment #1', 'Comment #2']
     assert isinstance(options['opt_comment'], unicode)
 
     assert options['spam'] == 'I love spam spam spam!'

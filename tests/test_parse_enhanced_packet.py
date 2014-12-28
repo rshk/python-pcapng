@@ -63,7 +63,7 @@ def test_read_block_enhanced_packet_bigendian():
     assert blocks[1].link_type == 0x01
     assert blocks[1].snaplen == 0xffff
     assert blocks[1].options['if_name'] == 'eth0'
-    assert blocks[1].options['if_tsresol'] == '\x06'
+    assert blocks[1].options['if_tsresol'] == 6
 
     assert isinstance(blocks[2], EnhancedPacket)
     assert blocks[2].section == blocks[0]

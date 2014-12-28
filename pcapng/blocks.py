@@ -87,17 +87,17 @@ class InterfaceDescription(SectionMemberBlock):
         ('reserved', RawBytes(2)),
         ('snaplen', IntField(32, False)),
         ('options', OptionsField([
-            (2, 'if_name'),
-            (3, 'if_description'),
+            (2, 'if_name', 'string'),
+            (3, 'if_description', 'string'),
             (4, 'if_IPv4addr'),
             (5, 'if_IPv6addr'),
             (6, 'if_MACaddr'),
             (7, 'if_EUIaddr'),
-            (8, 'if_speed'),
-            (9, 'if_tsresol'),
-            (10, 'if_tzone'),
-            (11, 'if_filter'),
-            (12, 'if_os'),
+            (8, 'if_speed', 'u64'),
+            (9, 'if_tsresol', 'u8'),
+            (10, 'if_tzone', 'u32'),
+            (11, 'if_filter', 'string'),
+            (12, 'if_os', 'string'),
             (13, 'if_fcslen'),
             (14, 'if_tsoffset'),
         ]))]
@@ -113,8 +113,8 @@ class InterfaceDescription(SectionMemberBlock):
 
     @property
     def statistics(self):
-        # todo: we need to make the interface aware of its own id
-        raise NotImplementedError
+        # todo: ensure we always have an interface id -> how??
+        return self.section.interface_stats.get(self.interface_id)
 
     @property
     def link_type_description(self):
@@ -207,7 +207,7 @@ class Packet(BasePacketBlock):
         ('timestamp_low', IntField(32, False)),
         ('packet_payload_info', PacketDataField()),
         ('options', OptionsField([
-            (2, 'epb_flags', IntField(32, False)),  # A flag!
+            (2, 'epb_flags', 'u32'),  # A flag!
             (3, 'epb_hash'),  # Variable size!
         ]))
     ]
@@ -266,3 +266,13 @@ class UnknownBlock(Block):
     def __repr__(self):
         return ('UnknownBlock(0x{0:08X}, {1!r})'
                 .format(self.block_type, self.data))
+
+
+class OptConv(object):
+    @staticmethod
+    def unicode(val):
+        return unicode(val, encoding='utf-8')
+
+    @staticmethod
+    def uint64(val):
+        return struct.unpack('Q')

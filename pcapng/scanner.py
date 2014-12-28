@@ -62,12 +62,20 @@ class FileScanner(object):
 
         section_info = read_section_header(self.stream)
         self.endianness = section_info['endianness']
-        opt_schema = []
+        opt_schema = [
+            (2, 'shb_hardware'),
+            (3, 'shb_os'),
+            (4, 'shb_userappl'),
+        ]
+
+        # todo: make this use the standard schema facilities as well!
         return blocks.SectionHeader(
             endianness=section_info['endianness'],
             version=section_info['version'],
             length=section_info['section_length'],
-            options=Options(opt_schema, section_info['options_raw']))
+            options=Options(schema=opt_schema,
+                            data=section_info['options_raw'],
+                            endianness=self.endianness))
 
     def _read_block(self, block_type):
         """

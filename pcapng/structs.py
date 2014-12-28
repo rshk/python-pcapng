@@ -160,7 +160,8 @@ class OptionsField(StructField):
 
     def load(self, stream, endianness):
         options = read_options(stream, endianness)
-        return Options(self.options_schema, options)
+        return Options(schema=self.options_schema, data=options,
+                       endianness=endianness)
 
 
 class PacketDataField(StructField):
@@ -245,71 +246,138 @@ def read_options(stream, endianness):
 
 
 class Options(Mapping):
-    def __init__(self, schema, data=None):
-        self._schema = {}
-        self._field_names = {}
+    """
+    Wrapper for the contents of the "options" field.
+
+    This class will map names on numeric fields and perform all the
+    necessary transformations on the data before returning.
+    """
+
+    def __init__(self, schema, data, endianness):
+        self.schema = {}  # Schema of option fields: {<code>: {..def..}}
+        self._field_names = {}  # Map names to codes
+        self.raw_data = {}  # List of (code, value) tuples
+        self.endianness = endianness  # one of '<>!='
+
+        # This is the default schema, common to all objects
         self._update_schema([
             (0, 'opt_endofopt'),
-            (1, 'opt_comment', lambda x: unicode(x, encoding='utf-8')),
+            (1, 'opt_comment', 'string'),
         ])
         self._update_schema(schema)
 
-        self._data = {}
-        if data is not None:
-            self._set_data(data)
+        # Update raw data with current values
+        self._update_data(data)
+
+    # -------------------- Nice interface :) --------------------
+
+    def __getitem__(self, name):
+        return self._get_converted(name)
+
+    def __len__(self):
+        return len(self.raw_data)
+
+    def __iter__(self):
+        for key in self.raw_data:
+            yield self._get_name_alias(key)
+
+    def get_all(self, name):
+        return self._get_all_converted(name)
+
+    def get_raw(self, name):
+        return self._get_raw(name)
+
+    def get_all_raw(self, name):
+        return self._get_all_raw(name)
+
+    def iter_all_items(self):
+        for key in self:
+            yield key, self.get_all(key)
+
+    # -------------------- Internal methods --------------------
 
     def _update_schema(self, schema):
         for item in schema:
             if len(item) == 2:
                 code, name = item
-                constructor = lambda x: x
+                ftype = None
+
             elif len(item) == 3:
-                code, name, constructor = item
+                code, name, ftype = item
+
             else:
                 raise TypeError('Options schema item must be a 2- or 3-tuple')
-            self._schema[code] = {
-                'name': name,
-                'constructor': constructor,
-            }
+
+            self.schema[code] = {'name': name, 'ftype': ftype}
             self._field_names[name] = code
 
-    def _set_data(self, data):
-        if data is not None:
-            for key, val in data:
-                if key not in self._data:
-                    self._data[key] = []
-                val = self._get_constructor(key)(val)
-                self._data[key].append(val)
+    def _update_data(self, data):
+        if data is None:
+            return
 
-    def _get_constructor(self, code):
-        _schema = self._schema.get(code) or {}
-        return _schema.get('constructor') or (lambda x: x)
+        for code, value in data:
+            if code not in self.raw_data:
+                self.raw_data[code] = []
+            self.raw_data[code].append(value)
 
-    def __getitem__(self, name):
-        if name in self._field_names:
-            # Resolve to numeric option name
-            name = self._field_names[name]
-        return self._data[name][0]
+    def _resolve_name(self, name):
+        return self._field_names.get(name) or name
 
-    def __len__(self):
-        return len(self._data)
+    def _get_name_alias(self, code):
+        if code in self.schema:
+            return self.schema[code]['name']
+        return code
 
-    def __iter__(self):
-        for key in self._data:
-            if key in self._schema:
-                yield self._schema[key]['name']
-            else:
-                yield key
+    def _get_raw(self, name):
+        name = self._resolve_name(name)
+        return self.raw_data[name][0]
 
-    def getall(self, name):
-        if name in self._field_names:
-            # Resolve to numeric option name
-            name = self._field_names[name]
-        return list(self._data[name])
+    def _get_all_raw(self, name):
+        name = self._resolve_name(name)
+        return list(self.raw_data[name])
 
-    def iterallitems(self):
-        for key in self:
-            yield key, self.getall(key)
+    def _get_converted(self, name):
+        value = self._get_raw(name)
+        return self._convert(name, value)
+
+    def _get_all_converted(self, name):
+        value = self._get_all_raw(name)
+        return self._convert_all(name, value)
+
+    def _convert(self, code, value):
+        code = self._resolve_name(code)
+        if code in self.schema:
+            return self._convert_value(value, self.schema[code]['ftype'])
+        return value
+
+    def _convert_all(self, code, values):
+        code = self._resolve_name(code)
+        if code in self.schema:
+            return [self._convert_value(value, self.schema[code]['ftype'])
+                    for value in values]
+        return values
+
+    def _convert_value(self, value, ftype):
+        if ftype is None:
+            return value
+
+        if hasattr(ftype, '__call__'):
+            return ftype(value, self.endianness)
+
+        if ftype in ('str', 'string', 'unicode'):
+            return unicode(value, encoding='utf-8')
+
+        _numeric_types = {
+            'u8': 'B', 'i8': 'b',
+            'u16': 'H', 'i16': 'h',
+            'u32': 'I', 'i32': 'i',
+            'u64': 'Q', 'i64': 'q',
+        }
+        if ftype in _numeric_types:
+            return struct.unpack(
+                self.endianness + _numeric_types[ftype], value)[0]
+
+        raise ValueError('Unsupported field type: {0}'.format(ftype))
 
 
 def struct_decode(schema, stream, endianness='='):
