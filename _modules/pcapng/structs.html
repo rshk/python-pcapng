@@ -1,0 +1,739 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>pcapng.structs &mdash; python-pcapng 0.1a documentation</title>
+    
+    <link rel="stylesheet" href="../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../',
+        VERSION:     '0.1a',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <link rel="top" title="python-pcapng 0.1a documentation" href="../../index.html" />
+    <link rel="up" title="Module code" href="../index.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../index.html">python-pcapng 0.1a documentation</a> &raquo;</li>
+          <li><a href="../index.html" accesskey="U">Module code</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for pcapng.structs</h1><div class="highlight"><pre>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Module providing facilities for handling struct-like data.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">from</span> <span class="nn">collections</span> <span class="kn">import</span> <span class="n">Mapping</span>
+<span class="kn">import</span> <span class="nn">abc</span>
+<span class="kn">import</span> <span class="nn">io</span>
+<span class="kn">import</span> <span class="nn">struct</span>
+
+<span class="kn">from</span> <span class="nn">pcapng.utils</span> <span class="kn">import</span> <span class="p">(</span>
+    <span class="n">unpack_ipv4</span><span class="p">,</span> <span class="n">unpack_ipv6</span><span class="p">,</span> <span class="n">unpack_macaddr</span><span class="p">,</span> <span class="n">unpack_euiaddr</span><span class="p">)</span>
+<span class="kn">from</span> <span class="nn">pcapng.exceptions</span> <span class="kn">import</span> <span class="p">(</span>
+    <span class="n">BadMagic</span><span class="p">,</span> <span class="n">StreamEmpty</span><span class="p">,</span> <span class="n">CorruptedFile</span><span class="p">,</span> <span class="n">TruncatedFile</span><span class="p">)</span>
+
+
+<span class="n">SECTION_HEADER_MAGIC</span> <span class="o">=</span> <span class="mh">0x0a0d0d0a</span>
+<span class="n">BYTE_ORDER_MAGIC</span> <span class="o">=</span> <span class="mh">0x1a2b3c4d</span>
+<span class="n">BYTE_ORDER_MAGIC_INVERSE</span> <span class="o">=</span> <span class="mh">0x4d3c2b1a</span>
+
+<span class="c"># Anything greater and we cannot safely read</span>
+<span class="c"># todo: add support for this!</span>
+<span class="n">CURRENT_SUPPORTED_VERSION</span> <span class="o">=</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+
+
+<span class="n">INT_FORMATS</span> <span class="o">=</span> <span class="p">{</span><span class="mi">8</span><span class="p">:</span> <span class="s">&#39;b&#39;</span><span class="p">,</span> <span class="mi">16</span><span class="p">:</span> <span class="s">&#39;h&#39;</span><span class="p">,</span> <span class="mi">32</span><span class="p">:</span> <span class="s">&#39;i&#39;</span><span class="p">,</span> <span class="mi">64</span><span class="p">:</span> <span class="s">&#39;q&#39;</span><span class="p">}</span>
+
+
+<div class="viewcode-block" id="read_int"><a class="viewcode-back" href="../../api/structs.html#pcapng.structs.read_int">[docs]</a><span class="k">def</span> <span class="nf">read_int</span><span class="p">(</span><span class="n">stream</span><span class="p">,</span> <span class="n">size</span><span class="p">,</span> <span class="n">signed</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span> <span class="n">endianness</span><span class="o">=</span><span class="s">&#39;=&#39;</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Read (and decode) an integer number from a binary stream.</span>
+
+<span class="sd">    :param stream: an object providing a ``read()`` method</span>
+<span class="sd">    :param size: the size, in bits, of the number to be read.</span>
+<span class="sd">        Supported sizes are: 8, 16, 32 and 64 bits.</span>
+<span class="sd">    :param signed: Whether a signed or unsigned number is required.</span>
+<span class="sd">        Defaults to ``False`` (unsigned int).</span>
+<span class="sd">    :param endianness: specify the endianness to use to decode the number,</span>
+<span class="sd">        in the same format used by Python :py:mod:`struct` module.</span>
+<span class="sd">        Defaults to &#39;=&#39; (native endianness). &#39;!&#39; means &quot;network&quot; endianness</span>
+<span class="sd">        (big endian), &#39;&lt;&#39; little endian, &#39;&gt;&#39; big endian.</span>
+<span class="sd">    :return: the read integer number</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">fmt</span> <span class="o">=</span> <span class="n">INT_FORMATS</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">size</span><span class="p">)</span>
+    <span class="n">fmt</span> <span class="o">=</span> <span class="n">fmt</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="k">if</span> <span class="n">signed</span> <span class="k">else</span> <span class="n">fmt</span><span class="o">.</span><span class="n">upper</span><span class="p">()</span>
+    <span class="k">assert</span> <span class="n">endianness</span> <span class="ow">in</span> <span class="s">&#39;&lt;&gt;!=&#39;</span>
+    <span class="n">fmt</span> <span class="o">=</span> <span class="n">endianness</span> <span class="o">+</span> <span class="n">fmt</span>
+    <span class="n">size_bytes</span> <span class="o">=</span> <span class="n">size</span> <span class="o">//</span> <span class="mi">8</span>
+    <span class="n">data</span> <span class="o">=</span> <span class="n">read_bytes</span><span class="p">(</span><span class="n">stream</span><span class="p">,</span> <span class="n">size_bytes</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">struct</span><span class="o">.</span><span class="n">unpack</span><span class="p">(</span><span class="n">fmt</span><span class="p">,</span> <span class="n">data</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+
+</div>
+<div class="viewcode-block" id="read_section_header"><a class="viewcode-back" href="../../api/structs.html#pcapng.structs.read_section_header">[docs]</a><span class="k">def</span> <span class="nf">read_section_header</span><span class="p">(</span><span class="n">stream</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Read a section header block from a stream.</span>
+
+<span class="sd">    .. note::</span>
+<span class="sd">        The byte order magic will be removed from the returned data</span>
+<span class="sd">        This is ok as we don&#39;t need it anymore once we determined</span>
+<span class="sd">        the correct endianness of the section.</span>
+
+<span class="sd">    :returns: a dict containing the ``&#39;endianness&#39;`` and ``&#39;data&#39;`` keys</span>
+<span class="sd">        that will be used to construct a :py:mod:`~pcapng.blocks.SectionHeader`</span>
+<span class="sd">        instance.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="c"># Read the length as raw bytes, then keep for later (since we</span>
+    <span class="c"># don&#39;t know the section endianness yet, we cannot parse this)</span>
+    <span class="n">blk_len_raw</span> <span class="o">=</span> <span class="n">read_bytes</span><span class="p">(</span><span class="n">stream</span><span class="p">,</span> <span class="mi">4</span><span class="p">)</span>
+
+    <span class="c"># Read the &quot;byte order magic&quot; and see which endianness reports</span>
+    <span class="c"># it correctly (should be 0x1a2b3c4d)</span>
+    <span class="n">byte_order_magic</span> <span class="o">=</span> <span class="n">read_int</span><span class="p">(</span><span class="n">stream</span><span class="p">,</span> <span class="mi">32</span><span class="p">,</span> <span class="s">&#39;&gt;&#39;</span><span class="p">)</span>  <span class="c"># Default BIG</span>
+    <span class="k">if</span> <span class="n">byte_order_magic</span> <span class="o">==</span> <span class="n">BYTE_ORDER_MAGIC</span><span class="p">:</span>
+        <span class="n">endianness</span> <span class="o">=</span> <span class="s">&#39;&gt;&#39;</span>  <span class="c"># BIG</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">byte_order_magic</span> <span class="o">!=</span> <span class="n">BYTE_ORDER_MAGIC_INVERSE</span><span class="p">:</span>
+            <span class="c"># We got an invalid number..</span>
+            <span class="k">raise</span> <span class="n">BadMagic</span><span class="p">(</span><span class="s">&#39;Wrong byte order magic: got 0x{0:08X}, expected &#39;</span>
+                           <span class="s">&#39;0x{1:08X} or 0x{2:08X}&#39;</span>
+                           <span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">byte_order_magic</span><span class="p">,</span> <span class="n">BYTE_ORDER_MAGIC</span><span class="p">,</span>
+                                   <span class="n">BYTE_ORDER_MAGIC_INVERSE</span><span class="p">))</span>
+        <span class="n">endianness</span> <span class="o">=</span> <span class="s">&#39;&lt;&#39;</span>  <span class="c"># LITTLE</span>
+
+    <span class="c"># Now we can safely decode the block length from the bytes we read earlier</span>
+    <span class="n">blk_len</span> <span class="o">=</span> <span class="n">struct</span><span class="o">.</span><span class="n">unpack</span><span class="p">(</span><span class="n">endianness</span> <span class="o">+</span> <span class="s">&#39;I&#39;</span><span class="p">,</span> <span class="n">blk_len_raw</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+
+    <span class="c"># ..and we then just want to read the appropriate amount of raw data.</span>
+    <span class="c"># Exclude: magic, len, bom, len (16 bytes)</span>
+    <span class="n">payload_size</span> <span class="o">=</span> <span class="n">blk_len</span> <span class="o">-</span> <span class="p">(</span><span class="mi">4</span> <span class="o">+</span> <span class="mi">4</span> <span class="o">+</span> <span class="mi">4</span> <span class="o">+</span> <span class="mi">4</span><span class="p">)</span>
+    <span class="n">block_data</span> <span class="o">=</span> <span class="n">read_bytes_padded</span><span class="p">(</span><span class="n">stream</span><span class="p">,</span> <span class="n">payload_size</span><span class="p">)</span>
+
+    <span class="c"># Double-check lenght at block end</span>
+    <span class="n">blk_len2</span> <span class="o">=</span> <span class="n">read_int</span><span class="p">(</span><span class="n">stream</span><span class="p">,</span> <span class="mi">32</span><span class="p">,</span> <span class="bp">False</span><span class="p">,</span> <span class="n">endianness</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">blk_len</span> <span class="o">!=</span> <span class="n">blk_len2</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">CorruptedFile</span><span class="p">(</span><span class="s">&#39;Mismatching block lengths: {0} and {1}&#39;</span>
+                            <span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">blk_len</span><span class="p">,</span> <span class="n">blk_len2</span><span class="p">))</span>
+
+    <span class="k">return</span> <span class="p">{</span>
+        <span class="s">&#39;endianness&#39;</span><span class="p">:</span> <span class="n">endianness</span><span class="p">,</span>
+        <span class="s">&#39;data&#39;</span><span class="p">:</span> <span class="n">block_data</span><span class="p">,</span>
+    <span class="p">}</span>
+
+</div>
+<div class="viewcode-block" id="read_block_data"><a class="viewcode-back" href="../../api/structs.html#pcapng.structs.read_block_data">[docs]</a><span class="k">def</span> <span class="nf">read_block_data</span><span class="p">(</span><span class="n">stream</span><span class="p">,</span> <span class="n">endianness</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Read block data from a stream.</span>
+
+<span class="sd">    Each &quot;block&quot; is in the form:</span>
+
+<span class="sd">    - 32bit integer indicating the size (including header and size)</span>
+<span class="sd">    - block payload (the above-specified number of bytes minus 12)</span>
+<span class="sd">    - 32bit integer indicating the size (again)</span>
+
+<span class="sd">    :param stream: the stream from which to read data</span>
+<span class="sd">    :param endianness: Endianness marker, one of &#39;&lt;&#39;, &#39;&gt;&#39;, &#39;!&#39;, &#39;=&#39;.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">block_length</span> <span class="o">=</span> <span class="n">read_int</span><span class="p">(</span><span class="n">stream</span><span class="p">,</span> <span class="mi">32</span><span class="p">,</span> <span class="n">signed</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span> <span class="n">endianness</span><span class="o">=</span><span class="n">endianness</span><span class="p">)</span>
+    <span class="n">payload_length</span> <span class="o">=</span> <span class="n">block_length</span> <span class="o">-</span> <span class="mi">12</span>  <span class="c"># bytes</span>
+    <span class="n">block_data</span> <span class="o">=</span> <span class="n">read_bytes_padded</span><span class="p">(</span><span class="n">stream</span><span class="p">,</span> <span class="n">payload_length</span><span class="p">)</span>
+    <span class="n">block_length2</span> <span class="o">=</span> <span class="n">read_int</span><span class="p">(</span><span class="n">stream</span><span class="p">,</span> <span class="mi">32</span><span class="p">,</span> <span class="n">signed</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span> <span class="n">endianness</span><span class="o">=</span><span class="n">endianness</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">block_length</span> <span class="o">!=</span> <span class="n">block_length2</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">CorruptedFile</span><span class="p">(</span><span class="s">&#39;Mismatching block lengths: {0} and {1}&#39;</span>
+                            <span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">block_length</span><span class="p">,</span> <span class="n">block_length2</span><span class="p">))</span>
+    <span class="k">return</span> <span class="n">block_data</span>
+
+</div>
+<div class="viewcode-block" id="read_bytes"><a class="viewcode-back" href="../../api/structs.html#pcapng.structs.read_bytes">[docs]</a><span class="k">def</span> <span class="nf">read_bytes</span><span class="p">(</span><span class="n">stream</span><span class="p">,</span> <span class="n">size</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Read the given amount of raw bytes from a stream.</span>
+
+<span class="sd">    :param stream: the stream from which to read data</span>
+<span class="sd">    :param size: the size to read, in bytes</span>
+<span class="sd">    :returns: the read data</span>
+<span class="sd">    :raises: :py:exc:`~pcapng.exceptions.StreamEmpty` if zero bytes were read</span>
+<span class="sd">    :raises: :py:exc:`~pcapng.exceptions.TruncatedFile` if 0 &lt; bytes &lt; size</span>
+<span class="sd">        were read</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">if</span> <span class="n">size</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">return</span> <span class="s">&#39;&#39;</span>
+
+    <span class="n">data</span> <span class="o">=</span> <span class="n">stream</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="n">size</span><span class="p">)</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">data</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">StreamEmpty</span><span class="p">(</span><span class="s">&#39;Zero bytes read from stream&#39;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">data</span><span class="p">)</span> <span class="o">&lt;</span> <span class="n">size</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">TruncatedFile</span><span class="p">(</span><span class="s">&#39;Trying to read {0} bytes, only got {1}&#39;</span>
+                            <span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">size</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">data</span><span class="p">)))</span>
+    <span class="k">return</span> <span class="n">data</span>
+
+</div>
+<div class="viewcode-block" id="read_bytes_padded"><a class="viewcode-back" href="../../api/structs.html#pcapng.structs.read_bytes_padded">[docs]</a><span class="k">def</span> <span class="nf">read_bytes_padded</span><span class="p">(</span><span class="n">stream</span><span class="p">,</span> <span class="n">size</span><span class="p">,</span> <span class="n">pad_block_size</span><span class="o">=</span><span class="mi">4</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Read the given amount of bytes from a stream, plus read and discard</span>
+<span class="sd">    any necessary extra byte to align up to the pad_block_size-sized</span>
+<span class="sd">    next block.</span>
+
+<span class="sd">    :param stream: the stream from which to read data</span>
+<span class="sd">    :param size: the size to read, in bytes</span>
+<span class="sd">    :returns: the read data</span>
+<span class="sd">    :raises: :py:exc:`~pcapng.exceptions.StreamEmpty` if zero bytes were read</span>
+<span class="sd">    :raises: :py:exc:`~pcapng.exceptions.TruncatedFile` if 0 &lt; bytes &lt; size</span>
+<span class="sd">        were read</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">if</span> <span class="n">stream</span><span class="o">.</span><span class="n">tell</span><span class="p">()</span> <span class="o">%</span> <span class="n">pad_block_size</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s">&#39;Stream is misaligned!&#39;</span><span class="p">)</span>
+
+    <span class="n">data</span> <span class="o">=</span> <span class="n">read_bytes</span><span class="p">(</span><span class="n">stream</span><span class="p">,</span> <span class="n">size</span><span class="p">)</span>
+    <span class="n">padding</span> <span class="o">=</span> <span class="p">(</span><span class="n">pad_block_size</span> <span class="o">-</span> <span class="p">(</span><span class="n">size</span> <span class="o">%</span> <span class="n">pad_block_size</span><span class="p">))</span> <span class="o">%</span> <span class="n">pad_block_size</span>
+    <span class="k">if</span> <span class="n">padding</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="n">read_bytes</span><span class="p">(</span><span class="n">stream</span><span class="p">,</span> <span class="n">padding</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">data</span>
+
+</div>
+<div class="viewcode-block" id="StructField"><a class="viewcode-back" href="../../api/structs.html#pcapng.structs.StructField">[docs]</a><span class="k">class</span> <span class="nc">StructField</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Abstract base class for struct fields&quot;&quot;&quot;</span>
+
+    <span class="n">__metaclass__</span> <span class="o">=</span> <span class="n">abc</span><span class="o">.</span><span class="n">ABCMeta</span>
+
+    <span class="nd">@abc.abstractmethod</span>
+<div class="viewcode-block" id="StructField.load"><a class="viewcode-back" href="../../api/structs.html#pcapng.structs.StructField.load">[docs]</a>    <span class="k">def</span> <span class="nf">load</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">stream</span><span class="p">,</span> <span class="n">endianness</span><span class="p">):</span>
+        <span class="k">pass</span>
+</div>
+    <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s">&#39;{0}()&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">__class__</span><span class="o">.</span><span class="n">__name__</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__unicode__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">unicode</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">__repr__</span><span class="p">())</span>
+
+</div>
+<div class="viewcode-block" id="RawBytes"><a class="viewcode-back" href="../../api/structs.html#pcapng.structs.RawBytes">[docs]</a><span class="k">class</span> <span class="nc">RawBytes</span><span class="p">(</span><span class="n">StructField</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Field containing a fixed-width amount of raw bytes</span>
+
+<span class="sd">    :param size: field size, in bytes</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">size</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">size</span> <span class="o">=</span> <span class="n">size</span>  <span class="c"># in bytes!</span>
+
+<div class="viewcode-block" id="RawBytes.load"><a class="viewcode-back" href="../../api/structs.html#pcapng.structs.RawBytes.load">[docs]</a>    <span class="k">def</span> <span class="nf">load</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">stream</span><span class="p">,</span> <span class="n">endianness</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">read_bytes</span><span class="p">(</span><span class="n">stream</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">size</span><span class="p">)</span>
+</div>
+    <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">(</span><span class="s">&#39;{0}(size={1!r})&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">__class__</span><span class="o">.</span><span class="n">__name__</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">size</span><span class="p">))</span>
+
+</div>
+<div class="viewcode-block" id="IntField"><a class="viewcode-back" href="../../api/structs.html#pcapng.structs.IntField">[docs]</a><span class="k">class</span> <span class="nc">IntField</span><span class="p">(</span><span class="n">StructField</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Field containing an integer number.</span>
+
+<span class="sd">    :param size: number size, in bits. Currently supported</span>
+<span class="sd">        are 8, 16, 32 and 64-bit integers</span>
+<span class="sd">    :param signed: whether the number is a signed or unsigned</span>
+<span class="sd">        integer. Defaults to False (unsigned)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">size</span><span class="p">,</span> <span class="n">signed</span><span class="o">=</span><span class="bp">False</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">size</span> <span class="o">=</span> <span class="n">size</span>  <span class="c"># in bits!</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">signed</span> <span class="o">=</span> <span class="n">signed</span>
+
+<div class="viewcode-block" id="IntField.load"><a class="viewcode-back" href="../../api/structs.html#pcapng.structs.IntField.load">[docs]</a>    <span class="k">def</span> <span class="nf">load</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">stream</span><span class="p">,</span> <span class="n">endianness</span><span class="p">):</span>
+        <span class="n">number</span> <span class="o">=</span> <span class="n">read_int</span><span class="p">(</span><span class="n">stream</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">size</span><span class="p">,</span> <span class="n">signed</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">signed</span><span class="p">,</span>
+                          <span class="n">endianness</span><span class="o">=</span><span class="n">endianness</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">number</span>
+</div>
+    <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">(</span><span class="s">&#39;{0}(size={1!r}, signed={2!r})&#39;</span>
+                <span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">__class__</span><span class="o">.</span><span class="n">__name__</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">size</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">signed</span><span class="p">))</span>
+
+</div>
+<div class="viewcode-block" id="OptionsField"><a class="viewcode-back" href="../../api/structs.html#pcapng.structs.OptionsField">[docs]</a><span class="k">class</span> <span class="nc">OptionsField</span><span class="p">(</span><span class="n">StructField</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Field containing some options.</span>
+
+<span class="sd">    :param options_schema:</span>
+<span class="sd">        Same as the ``schema`` parameter to :py:class:`Options` class</span>
+<span class="sd">        constructor.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">options_schema</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">options_schema</span> <span class="o">=</span> <span class="n">options_schema</span>
+
+<div class="viewcode-block" id="OptionsField.load"><a class="viewcode-back" href="../../api/structs.html#pcapng.structs.OptionsField.load">[docs]</a>    <span class="k">def</span> <span class="nf">load</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">stream</span><span class="p">,</span> <span class="n">endianness</span><span class="p">):</span>
+        <span class="n">options</span> <span class="o">=</span> <span class="n">read_options</span><span class="p">(</span><span class="n">stream</span><span class="p">,</span> <span class="n">endianness</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">Options</span><span class="p">(</span><span class="n">schema</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">options_schema</span><span class="p">,</span> <span class="n">data</span><span class="o">=</span><span class="n">options</span><span class="p">,</span>
+                       <span class="n">endianness</span><span class="o">=</span><span class="n">endianness</span><span class="p">)</span>
+</div>
+    <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">(</span><span class="s">&#39;{0}({1!r})&#39;</span>
+                <span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">__class__</span><span class="o">.</span><span class="n">__name__</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">options_schema</span><span class="p">))</span>
+
+</div>
+<div class="viewcode-block" id="PacketDataField"><a class="viewcode-back" href="../../api/structs.html#pcapng.structs.PacketDataField">[docs]</a><span class="k">class</span> <span class="nc">PacketDataField</span><span class="p">(</span><span class="n">StructField</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Field containing some &quot;packet data&quot;, used in the Packet</span>
+<span class="sd">    and EnhancedPacket blocks.</span>
+
+<span class="sd">    The packet data is composed of three fields (returned in a tuple):</span>
+
+<span class="sd">    - captured len (uint32)</span>
+<span class="sd">    - packet len (uint32)</span>
+<span class="sd">    - packet data (captured_len-sized binary data)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="PacketDataField.load"><a class="viewcode-back" href="../../api/structs.html#pcapng.structs.PacketDataField.load">[docs]</a>    <span class="k">def</span> <span class="nf">load</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">stream</span><span class="p">,</span> <span class="n">endianness</span><span class="p">):</span>
+        <span class="n">captured_len</span> <span class="o">=</span> <span class="n">read_int</span><span class="p">(</span><span class="n">stream</span><span class="p">,</span> <span class="mi">32</span><span class="p">,</span> <span class="bp">False</span><span class="p">,</span> <span class="n">endianness</span><span class="p">)</span>
+        <span class="n">packet_len</span> <span class="o">=</span> <span class="n">read_int</span><span class="p">(</span><span class="n">stream</span><span class="p">,</span> <span class="mi">32</span><span class="p">,</span> <span class="bp">False</span><span class="p">,</span> <span class="n">endianness</span><span class="p">)</span>
+        <span class="n">packet_data</span> <span class="o">=</span> <span class="n">read_bytes_padded</span><span class="p">(</span><span class="n">stream</span><span class="p">,</span> <span class="n">captured_len</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">captured_len</span><span class="p">,</span> <span class="n">packet_len</span><span class="p">,</span> <span class="n">packet_data</span>
+
+</div></div>
+<div class="viewcode-block" id="SimplePacketDataField"><a class="viewcode-back" href="../../api/structs.html#pcapng.structs.SimplePacketDataField">[docs]</a><span class="k">class</span> <span class="nc">SimplePacketDataField</span><span class="p">(</span><span class="n">StructField</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Field containing packet data from a SimplePacket object.</span>
+
+<span class="sd">    The packet data is represented by two fields (returned as a tuple):</span>
+
+<span class="sd">    - packet_len (uint32)</span>
+<span class="sd">    - packet_data (packet_len-sized binary data)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="SimplePacketDataField.load"><a class="viewcode-back" href="../../api/structs.html#pcapng.structs.SimplePacketDataField.load">[docs]</a>    <span class="k">def</span> <span class="nf">load</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">stream</span><span class="p">,</span> <span class="n">endianness</span><span class="p">):</span>
+        <span class="n">packet_len</span> <span class="o">=</span> <span class="n">read_int</span><span class="p">(</span><span class="n">stream</span><span class="p">,</span> <span class="mi">32</span><span class="p">,</span> <span class="bp">False</span><span class="p">,</span> <span class="n">endianness</span><span class="p">)</span>
+        <span class="n">packet_data</span> <span class="o">=</span> <span class="n">read_bytes_padded</span><span class="p">(</span><span class="n">stream</span><span class="p">,</span> <span class="n">packet_len</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">packet_len</span><span class="p">,</span> <span class="n">packet_data</span>
+
+</div></div>
+<div class="viewcode-block" id="ListField"><a class="viewcode-back" href="../../api/structs.html#pcapng.structs.ListField">[docs]</a><span class="k">class</span> <span class="nc">ListField</span><span class="p">(</span><span class="n">StructField</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    A list field is a variable amount of fields of some other type.</span>
+<span class="sd">    Used for packets containing multiple &quot;items&quot;, such as</span>
+<span class="sd">    :py:class:`~pcapng.blocks.NameResolution`.</span>
+
+<span class="sd">    It will keep loading data using a subfield until a</span>
+<span class="sd">    :py:exc:`~pcapng.exceptions.StreamEmpty` excaption is raised, indicating</span>
+<span class="sd">    we reached the end of data (note that a sub-field might even &quot;simulate&quot;</span>
+<span class="sd">    a stream end once it reaches some end marker in the file).</span>
+
+<span class="sd">    Values are returned in a list.</span>
+
+<span class="sd">    :param subfield: a :py:class:`StructField` sub-class instance to be</span>
+<span class="sd">        used to read values from the stream.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">subfield</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">subfield</span> <span class="o">=</span> <span class="n">subfield</span>
+
+<div class="viewcode-block" id="ListField.load"><a class="viewcode-back" href="../../api/structs.html#pcapng.structs.ListField.load">[docs]</a>    <span class="k">def</span> <span class="nf">load</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">stream</span><span class="p">,</span> <span class="n">endianness</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_iter_load</span><span class="p">(</span><span class="n">stream</span><span class="p">,</span> <span class="n">endianness</span><span class="p">))</span>
+</div>
+    <span class="k">def</span> <span class="nf">_iter_load</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">stream</span><span class="p">,</span> <span class="n">endianness</span><span class="p">):</span>
+        <span class="k">while</span> <span class="bp">True</span><span class="p">:</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="k">yield</span> <span class="bp">self</span><span class="o">.</span><span class="n">subfield</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">stream</span><span class="p">,</span> <span class="n">endianness</span><span class="p">)</span>
+            <span class="k">except</span> <span class="n">StreamEmpty</span><span class="p">:</span>
+                <span class="k">return</span>
+
+    <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">(</span><span class="s">&#39;{0}({1!r})&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">__class__</span><span class="o">.</span><span class="n">__name__</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">subfield</span><span class="p">))</span>
+
+</div>
+<div class="viewcode-block" id="NameResolutionRecordField"><a class="viewcode-back" href="../../api/structs.html#pcapng.structs.NameResolutionRecordField">[docs]</a><span class="k">class</span> <span class="nc">NameResolutionRecordField</span><span class="p">(</span><span class="n">StructField</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    A name resolution record field contains an item of data used in</span>
+<span class="sd">    the :py:class:`~pcapng.blocks.NameResolution` block.</span>
+
+<span class="sd">    it is composed of three fields:</span>
+
+<span class="sd">    - record type (uint16)</span>
+<span class="sd">    - record length (uint16)</span>
+<span class="sd">    - payload</span>
+
+<span class="sd">    Accepted types are:</span>
+
+<span class="sd">    - ``0x00`` - end marker</span>
+<span class="sd">    - ``0x01`` - ipv4 address resolution</span>
+<span class="sd">    - ``0x02`` - ipv6 address resolution</span>
+
+<span class="sd">    In both cases, the payload is composed of a valid address in the</span>
+<span class="sd">    selected IP version, followed by domain name up to the field end.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="NameResolutionRecordField.load"><a class="viewcode-back" href="../../api/structs.html#pcapng.structs.NameResolutionRecordField.load">[docs]</a>    <span class="k">def</span> <span class="nf">load</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">stream</span><span class="p">,</span> <span class="n">endianness</span><span class="p">):</span>
+        <span class="n">record_type</span> <span class="o">=</span> <span class="n">read_int</span><span class="p">(</span><span class="n">stream</span><span class="p">,</span> <span class="mi">16</span><span class="p">,</span> <span class="bp">False</span><span class="p">,</span> <span class="n">endianness</span><span class="p">)</span>
+        <span class="n">record_length</span> <span class="o">=</span> <span class="n">read_int</span><span class="p">(</span><span class="n">stream</span><span class="p">,</span> <span class="mi">16</span><span class="p">,</span> <span class="bp">False</span><span class="p">,</span> <span class="n">endianness</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">record_type</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">StreamEmpty</span><span class="p">(</span><span class="s">&#39;End marker reached&#39;</span><span class="p">)</span>
+
+        <span class="n">data</span> <span class="o">=</span> <span class="n">read_bytes_padded</span><span class="p">(</span><span class="n">stream</span><span class="p">,</span> <span class="n">record_length</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">record_type</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>  <span class="c"># IPv4</span>
+            <span class="k">return</span> <span class="p">{</span>
+                <span class="s">&#39;type&#39;</span><span class="p">:</span> <span class="n">record_type</span><span class="p">,</span>
+                <span class="s">&#39;address&#39;</span><span class="p">:</span> <span class="n">data</span><span class="p">[:</span><span class="mi">4</span><span class="p">],</span>
+                <span class="s">&#39;name&#39;</span><span class="p">:</span> <span class="n">data</span><span class="p">[</span><span class="mi">4</span><span class="p">:],</span>
+            <span class="p">}</span>
+
+        <span class="k">if</span> <span class="n">record_type</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>  <span class="c"># IPv6</span>
+            <span class="k">return</span> <span class="p">{</span>
+                <span class="s">&#39;type&#39;</span><span class="p">:</span> <span class="n">record_type</span><span class="p">,</span>
+                <span class="s">&#39;address&#39;</span><span class="p">:</span> <span class="n">data</span><span class="p">[:</span><span class="mi">16</span><span class="p">],</span>
+                <span class="s">&#39;name&#39;</span><span class="p">:</span> <span class="n">data</span><span class="p">[</span><span class="mi">16</span><span class="p">:],</span>
+            <span class="p">}</span>
+
+        <span class="k">return</span> <span class="p">{</span><span class="s">&#39;type&#39;</span><span class="p">:</span> <span class="n">record_type</span><span class="p">,</span> <span class="s">&#39;raw&#39;</span><span class="p">:</span> <span class="n">data</span><span class="p">}</span>
+
+</div></div>
+<div class="viewcode-block" id="read_options"><a class="viewcode-back" href="../../api/structs.html#pcapng.structs.read_options">[docs]</a><span class="k">def</span> <span class="nf">read_options</span><span class="p">(</span><span class="n">stream</span><span class="p">,</span> <span class="n">endianness</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Read &quot;options&quot; from an &quot;options block&quot; in a stream, until a</span>
+<span class="sd">    ``StreamEmpty`` exception is caught, or an end marker is reached.</span>
+
+<span class="sd">    Each option is composed by:</span>
+
+<span class="sd">    - option_code (uint16)</span>
+<span class="sd">    - value_length (uint16)</span>
+<span class="sd">    - value (value_length-sized binary data)</span>
+
+<span class="sd">    The end marker is simply an option with code ``0x0000`` and no payload</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">_iter_read_options</span><span class="p">(</span><span class="n">stream</span><span class="p">,</span> <span class="n">endianness</span><span class="p">):</span>
+        <span class="k">while</span> <span class="bp">True</span><span class="p">:</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">option_code</span> <span class="o">=</span> <span class="n">read_int</span><span class="p">(</span><span class="n">stream</span><span class="p">,</span> <span class="mi">16</span><span class="p">,</span> <span class="bp">False</span><span class="p">,</span> <span class="n">endianness</span><span class="p">)</span>
+                <span class="n">option_length</span> <span class="o">=</span> <span class="n">read_int</span><span class="p">(</span><span class="n">stream</span><span class="p">,</span> <span class="mi">16</span><span class="p">,</span> <span class="bp">False</span><span class="p">,</span> <span class="n">endianness</span><span class="p">)</span>
+
+                <span class="k">if</span> <span class="n">option_code</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>  <span class="c"># End of options</span>
+                    <span class="k">return</span>
+
+                <span class="n">payload</span> <span class="o">=</span> <span class="n">read_bytes_padded</span><span class="p">(</span><span class="n">stream</span><span class="p">,</span> <span class="n">option_length</span><span class="p">)</span>
+                <span class="k">yield</span> <span class="n">option_code</span><span class="p">,</span> <span class="n">payload</span>
+
+            <span class="k">except</span> <span class="n">StreamEmpty</span><span class="p">:</span>
+                <span class="k">return</span>
+
+    <span class="k">return</span> <span class="nb">list</span><span class="p">(</span><span class="n">_iter_read_options</span><span class="p">(</span><span class="n">stream</span><span class="p">,</span> <span class="n">endianness</span><span class="p">))</span>
+
+</div>
+<div class="viewcode-block" id="Options"><a class="viewcode-back" href="../../api/structs.html#pcapng.structs.Options">[docs]</a><span class="k">class</span> <span class="nc">Options</span><span class="p">(</span><span class="n">Mapping</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Wrapper object used to easily access the contents of an &quot;options&quot;</span>
+<span class="sd">    field.</span>
+
+<span class="sd">    Fields can be accessed either by numerical id or by name (if one was</span>
+<span class="sd">    specified in the schema).</span>
+
+<span class="sd">    .. note::</span>
+
+<span class="sd">        When iterating the object (or calling :py:meth:`keys` /</span>
+<span class="sd">        :py:meth:`iterkeys` / :py:meth:`viewkeys`) string keys will be</span>
+<span class="sd">        returned if possible in place of numeric keys.  (The purpose of this</span>
+<span class="sd">        is to achieve better readability, for example, when converting</span>
+<span class="sd">        to a dictionary).</span>
+
+<span class="sd">    :param schema:</span>
+<span class="sd">        Definition of the known options: a list of 2- or 3-tuples</span>
+<span class="sd">        (the third argument is optional) representing, respectively,</span>
+<span class="sd">        the numeric option code, the option name and the value type.</span>
+
+<span class="sd">        The following value types are currently supported:</span>
+
+<span class="sd">        - ``string``: convert value to a unicode string, using utf-8 encoding</span>
+<span class="sd">        - ``{u,i}{8,16,32,64}``: (un)signed integer of the specified length</span>
+<span class="sd">        - ``ipv4``: a single ipv4 address [4 bytes]</span>
+<span class="sd">        - ``ipv4+mask``: an ipv4 address followed by a netmask [8 bytes]</span>
+<span class="sd">        - ``ipv6``: a single ipv6 address [16 bytes]</span>
+<span class="sd">        - ``ipv6+prefix``: an ipv6 address followed by prefix length [17 bytes]</span>
+<span class="sd">        - ``macaddr``: a mac address [6 bytes]</span>
+<span class="sd">        - ``euiaddr``: a eui address [8 bytes]</span>
+
+<span class="sd">    :param data:</span>
+<span class="sd">        Initial data for the options. A list of two-tuples: ``(code, value)``.</span>
+<span class="sd">        Items with the same code may be repeated; only the first one will be</span>
+<span class="sd">        accessible using subscript ``options[code]``; the others can be</span>
+<span class="sd">        accessed using :py:meth:`get_all` and related methods</span>
+
+<span class="sd">    :param endianness:</span>
+<span class="sd">        The current endianness of the section these options came from.</span>
+<span class="sd">        Required in order to load numeric fields.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">schema</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">endianness</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">schema</span> <span class="o">=</span> <span class="p">{}</span>  <span class="c"># Schema of option fields: {&lt;code&gt;: {..def..}}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_field_names</span> <span class="o">=</span> <span class="p">{}</span>  <span class="c"># Map names to codes</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">raw_data</span> <span class="o">=</span> <span class="p">{}</span>  <span class="c"># List of (code, value) tuples</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">endianness</span> <span class="o">=</span> <span class="n">endianness</span>  <span class="c"># one of &#39;&lt;&gt;!=&#39;</span>
+
+        <span class="c"># This is the default schema, common to all objects</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_update_schema</span><span class="p">([</span>
+            <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="s">&#39;opt_endofopt&#39;</span><span class="p">),</span>
+            <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="s">&#39;opt_comment&#39;</span><span class="p">,</span> <span class="s">&#39;string&#39;</span><span class="p">),</span>
+        <span class="p">])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_update_schema</span><span class="p">(</span><span class="n">schema</span><span class="p">)</span>
+
+        <span class="c"># Update raw data with current values</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_update_data</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+
+    <span class="c"># -------------------- Nice interface :) --------------------</span>
+
+    <span class="k">def</span> <span class="nf">__getitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_converted</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__len__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">raw_data</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__iter__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">raw_data</span><span class="p">:</span>
+            <span class="k">yield</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_name_alias</span><span class="p">(</span><span class="n">key</span><span class="p">)</span>
+
+<div class="viewcode-block" id="Options.get_all"><a class="viewcode-back" href="../../api/structs.html#pcapng.structs.Options.get_all">[docs]</a>    <span class="k">def</span> <span class="nf">get_all</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Get all values for the given option&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_all_converted</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="Options.get_raw"><a class="viewcode-back" href="../../api/structs.html#pcapng.structs.Options.get_raw">[docs]</a>    <span class="k">def</span> <span class="nf">get_raw</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Get raw value for the given option&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_raw</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="Options.get_all_raw"><a class="viewcode-back" href="../../api/structs.html#pcapng.structs.Options.get_all_raw">[docs]</a>    <span class="k">def</span> <span class="nf">get_all_raw</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Get all raw values for the given option&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_all_raw</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="Options.iter_all_items"><a class="viewcode-back" href="../../api/structs.html#pcapng.structs.Options.iter_all_items">[docs]</a>    <span class="k">def</span> <span class="nf">iter_all_items</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Similar to :py:meth:`iteritems` but will yield a list of values</span>
+<span class="sd">        as the second tuple field.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="bp">self</span><span class="p">:</span>
+            <span class="k">yield</span> <span class="n">key</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_all</span><span class="p">(</span><span class="n">key</span><span class="p">)</span>
+
+    <span class="c"># -------------------- Internal methods --------------------</span>
+</div>
+    <span class="k">def</span> <span class="nf">_update_schema</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">schema</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">schema</span><span class="p">:</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">item</span><span class="p">)</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
+                <span class="n">code</span><span class="p">,</span> <span class="n">name</span> <span class="o">=</span> <span class="n">item</span>
+                <span class="n">ftype</span> <span class="o">=</span> <span class="bp">None</span>
+
+            <span class="k">elif</span> <span class="nb">len</span><span class="p">(</span><span class="n">item</span><span class="p">)</span> <span class="o">==</span> <span class="mi">3</span><span class="p">:</span>
+                <span class="n">code</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">ftype</span> <span class="o">=</span> <span class="n">item</span>
+
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s">&#39;Options schema item must be a 2- or 3-tuple&#39;</span><span class="p">)</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">schema</span><span class="p">[</span><span class="n">code</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span><span class="s">&#39;name&#39;</span><span class="p">:</span> <span class="n">name</span><span class="p">,</span> <span class="s">&#39;ftype&#39;</span><span class="p">:</span> <span class="n">ftype</span><span class="p">}</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_field_names</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">code</span>
+
+    <span class="k">def</span> <span class="nf">_update_data</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">data</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="k">return</span>
+
+        <span class="k">for</span> <span class="n">code</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">data</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">code</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">raw_data</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">raw_data</span><span class="p">[</span><span class="n">code</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">raw_data</span><span class="p">[</span><span class="n">code</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_resolve_name</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_field_names</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">name</span><span class="p">)</span> <span class="ow">or</span> <span class="n">name</span>
+
+    <span class="k">def</span> <span class="nf">_get_name_alias</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">code</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">code</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">schema</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">schema</span><span class="p">[</span><span class="n">code</span><span class="p">][</span><span class="s">&#39;name&#39;</span><span class="p">]</span>
+        <span class="k">return</span> <span class="n">code</span>
+
+    <span class="k">def</span> <span class="nf">_get_raw</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">):</span>
+        <span class="n">name</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_resolve_name</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">raw_data</span><span class="p">[</span><span class="n">name</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+
+    <span class="k">def</span> <span class="nf">_get_all_raw</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">):</span>
+        <span class="n">name</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_resolve_name</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
+        <span class="k">return</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">raw_data</span><span class="p">[</span><span class="n">name</span><span class="p">])</span>
+
+    <span class="k">def</span> <span class="nf">_get_converted</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">):</span>
+        <span class="n">value</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_raw</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_convert</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_get_all_converted</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">):</span>
+        <span class="n">value</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_all_raw</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_convert_all</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_convert</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">code</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+        <span class="n">code</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_resolve_name</span><span class="p">(</span><span class="n">code</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">code</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">schema</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_convert_value</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">schema</span><span class="p">[</span><span class="n">code</span><span class="p">][</span><span class="s">&#39;ftype&#39;</span><span class="p">])</span>
+        <span class="k">return</span> <span class="n">value</span>
+
+    <span class="k">def</span> <span class="nf">_convert_all</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">code</span><span class="p">,</span> <span class="n">values</span><span class="p">):</span>
+        <span class="n">code</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_resolve_name</span><span class="p">(</span><span class="n">code</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">code</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">schema</span><span class="p">:</span>
+            <span class="k">return</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">_convert_value</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">schema</span><span class="p">[</span><span class="n">code</span><span class="p">][</span><span class="s">&#39;ftype&#39;</span><span class="p">])</span>
+                    <span class="k">for</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">values</span><span class="p">]</span>
+        <span class="k">return</span> <span class="n">values</span>
+
+    <span class="k">def</span> <span class="nf">_convert_value</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">,</span> <span class="n">ftype</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">ftype</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">value</span>
+
+        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">ftype</span><span class="p">,</span> <span class="s">&#39;__call__&#39;</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">ftype</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">endianness</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">ftype</span> <span class="ow">in</span> <span class="p">(</span><span class="s">&#39;str&#39;</span><span class="p">,</span> <span class="s">&#39;string&#39;</span><span class="p">,</span> <span class="s">&#39;unicode&#39;</span><span class="p">):</span>
+            <span class="k">return</span> <span class="nb">unicode</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s">&#39;utf-8&#39;</span><span class="p">)</span>
+
+        <span class="n">_numeric_types</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s">&#39;u8&#39;</span><span class="p">:</span> <span class="s">&#39;B&#39;</span><span class="p">,</span> <span class="s">&#39;i8&#39;</span><span class="p">:</span> <span class="s">&#39;b&#39;</span><span class="p">,</span>
+            <span class="s">&#39;u16&#39;</span><span class="p">:</span> <span class="s">&#39;H&#39;</span><span class="p">,</span> <span class="s">&#39;i16&#39;</span><span class="p">:</span> <span class="s">&#39;h&#39;</span><span class="p">,</span>
+            <span class="s">&#39;u32&#39;</span><span class="p">:</span> <span class="s">&#39;I&#39;</span><span class="p">,</span> <span class="s">&#39;i32&#39;</span><span class="p">:</span> <span class="s">&#39;i&#39;</span><span class="p">,</span>
+            <span class="s">&#39;u64&#39;</span><span class="p">:</span> <span class="s">&#39;Q&#39;</span><span class="p">,</span> <span class="s">&#39;i64&#39;</span><span class="p">:</span> <span class="s">&#39;q&#39;</span><span class="p">,</span>
+        <span class="p">}</span>
+        <span class="k">if</span> <span class="n">ftype</span> <span class="ow">in</span> <span class="n">_numeric_types</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">struct</span><span class="o">.</span><span class="n">unpack</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">endianness</span> <span class="o">+</span> <span class="n">_numeric_types</span><span class="p">[</span><span class="n">ftype</span><span class="p">],</span> <span class="n">value</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+
+        <span class="k">if</span> <span class="n">ftype</span> <span class="o">==</span> <span class="s">&#39;ipv4&#39;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">unpack_ipv4</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">ftype</span> <span class="o">==</span> <span class="s">&#39;ipv4+mask&#39;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">unpack_ipv4</span><span class="p">(</span><span class="n">value</span><span class="p">[:</span><span class="mi">4</span><span class="p">]),</span> <span class="n">unpack_ipv4</span><span class="p">(</span><span class="n">value</span><span class="p">[</span><span class="mi">4</span><span class="p">:</span><span class="mi">8</span><span class="p">])</span>
+
+        <span class="k">if</span> <span class="n">ftype</span> <span class="o">==</span> <span class="s">&#39;ipv6&#39;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">unpack_ipv6</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">ftype</span> <span class="o">==</span> <span class="s">&#39;ipv6+prefix&#39;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="p">(</span><span class="n">unpack_ipv6</span><span class="p">(</span><span class="n">value</span><span class="p">[:</span><span class="mi">16</span><span class="p">]),</span>
+                    <span class="n">struct</span><span class="o">.</span><span class="n">unpack</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">endianness</span> <span class="o">+</span> <span class="s">&#39;B&#39;</span><span class="p">,</span> <span class="n">value</span><span class="p">[</span><span class="mi">16</span><span class="p">]))</span>
+
+        <span class="k">if</span> <span class="n">ftype</span> <span class="o">==</span> <span class="s">&#39;macaddr&#39;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">unpack_macaddr</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">ftype</span> <span class="o">==</span> <span class="s">&#39;euiaddr&#39;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">unpack_euiaddr</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s">&#39;Unsupported field type: {0}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">ftype</span><span class="p">))</span>
+
+</div>
+<div class="viewcode-block" id="struct_decode"><a class="viewcode-back" href="../../api/structs.html#pcapng.structs.struct_decode">[docs]</a><span class="k">def</span> <span class="nf">struct_decode</span><span class="p">(</span><span class="n">schema</span><span class="p">,</span> <span class="n">stream</span><span class="p">,</span> <span class="n">endianness</span><span class="o">=</span><span class="s">&#39;=&#39;</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Decode structured data from a stream, following a schema.</span>
+
+<span class="sd">    :param schema:</span>
+<span class="sd">        a list of two tuples: ````(name, field)``, where ``name`` is a string</span>
+<span class="sd">        representing the attribute name, and ``field`` is an instance of a</span>
+<span class="sd">        :py:class:`StructField` sub-class, providing a ``.load()`` method</span>
+<span class="sd">        to be called on the stream to get the field value.</span>
+
+<span class="sd">    :param stream:</span>
+<span class="sd">        a file-like object, providing a ``.read()`` method, from which data</span>
+<span class="sd">        will be read.</span>
+
+<span class="sd">    :param endianness:</span>
+<span class="sd">        endianness specifier, as accepted by Python struct module</span>
+<span class="sd">        (one of ``&lt;&gt;!=``, defaults to ``=``).</span>
+
+<span class="sd">    :return:</span>
+<span class="sd">        a dictionary mapping the field names to decoded data</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">decoded</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">field</span> <span class="ow">in</span> <span class="n">schema</span><span class="p">:</span>
+        <span class="n">decoded</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">field</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">stream</span><span class="p">,</span> <span class="n">endianness</span><span class="o">=</span><span class="n">endianness</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">decoded</span>
+
+</div>
+<div class="viewcode-block" id="struct_encode"><a class="viewcode-back" href="../../api/structs.html#pcapng.structs.struct_encode">[docs]</a><span class="k">def</span> <span class="nf">struct_encode</span><span class="p">(</span><span class="n">schema</span><span class="p">,</span> <span class="n">obj</span><span class="p">,</span> <span class="n">outstream</span><span class="p">,</span> <span class="n">endianness</span><span class="o">=</span><span class="s">&#39;=&#39;</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    In the future, this function will be used to encode a structure into</span>
+<span class="sd">    a stream. For the moment, it just raises :py:exc:`NotImplementedError`.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">raise</span> <span class="ne">NotImplementedError</span>
+
+</div>
+<div class="viewcode-block" id="struct_decode_string"><a class="viewcode-back" href="../../api/structs.html#pcapng.structs.struct_decode_string">[docs]</a><span class="k">def</span> <span class="nf">struct_decode_string</span><span class="p">(</span><span class="n">schema</span><span class="p">,</span> <span class="n">data</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Utility function to pass a string to :py:func:`struct_decode`&quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">struct_decode</span><span class="p">(</span><span class="n">schema</span><span class="p">,</span> <span class="n">io</span><span class="o">.</span><span class="n">BytesIO</span><span class="p">())</span>
+
+</div>
+<div class="viewcode-block" id="struct_encode_string"><a class="viewcode-back" href="../../api/structs.html#pcapng.structs.struct_encode_string">[docs]</a><span class="k">def</span> <span class="nf">struct_encode_string</span><span class="p">(</span><span class="n">schema</span><span class="p">,</span> <span class="n">obj</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Utility function to pass a string to :py:func:`struct_encode`</span>
+<span class="sd">    and get the result back as a bytes string.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">outstream</span> <span class="o">=</span> <span class="n">io</span><span class="o">.</span><span class="n">BytesIO</span><span class="p">()</span>
+    <span class="n">struct_encode</span><span class="p">(</span><span class="n">schema</span><span class="p">,</span> <span class="n">obj</span><span class="p">,</span> <span class="n">outstream</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">outstream</span><span class="o">.</span><span class="n">getvalue</span><span class="p">()</span></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../index.html">python-pcapng 0.1a documentation</a> &raquo;</li>
+          <li><a href="../index.html" >Module code</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2014, Samuele Santi.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.3.
+    </div>
+  </body>
+</html>

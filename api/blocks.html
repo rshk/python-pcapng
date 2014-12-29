@@ -1,0 +1,380 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>pcapng.blocks &mdash; python-pcapng 0.1a documentation</title>
+    
+    <link rel="stylesheet" href="../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../',
+        VERSION:     '0.1a',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <link rel="top" title="python-pcapng 0.1a documentation" href="../index.html" />
+    <link rel="up" title="API Documentation" href="index.html" />
+    <link rel="next" title="pcapng.exceptions" href="exceptions.html" />
+    <link rel="prev" title="API Documentation" href="index.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="exceptions.html" title="pcapng.exceptions"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="index.html" title="API Documentation"
+             accesskey="P">previous</a> |</li>
+        <li><a href="../index.html">python-pcapng 0.1a documentation</a> &raquo;</li>
+          <li><a href="index.html" accesskey="U">API Documentation</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="module-pcapng.blocks">
+<span id="pcapng-blocks"></span><h1>pcapng.blocks<a class="headerlink" href="#module-pcapng.blocks" title="Permalink to this headline">¶</a></h1>
+<p>Module containing the definition of known / supported &#8220;blocks&#8221; of the
+pcap-ng format.</p>
+<p>Each block is a struct-like object with some fields and possibly
+a variable amount of &#8220;items&#8221; (usually options).</p>
+<p>They can optionally expose some other properties, used eg. to provide
+better access to decoded information, ...</p>
+<dl class="class">
+<dt id="pcapng.blocks.Block">
+<em class="property">class </em><tt class="descclassname">pcapng.blocks.</tt><tt class="descname">Block</tt><big>(</big><em>raw</em><big>)</big><a class="reference internal" href="../_modules/pcapng/blocks.html#Block"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pcapng.blocks.Block" title="Permalink to this definition">¶</a></dt>
+<dd><p>Base class for blocks</p>
+<dl class="attribute">
+<dt id="pcapng.blocks.Block.schema">
+<tt class="descname">schema</tt><em class="property"> = []</em><a class="headerlink" href="#pcapng.blocks.Block.schema" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="classmethod">
+<dt id="pcapng.blocks.Block.from_context">
+<em class="property">classmethod </em><tt class="descname">from_context</tt><big>(</big><em>raw</em>, <em>ctx</em><big>)</big><a class="reference internal" href="../_modules/pcapng/blocks.html#Block.from_context"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pcapng.blocks.Block.from_context" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="pcapng.blocks.SectionMemberBlock">
+<em class="property">class </em><tt class="descclassname">pcapng.blocks.</tt><tt class="descname">SectionMemberBlock</tt><big>(</big><em>raw</em>, <em>section</em><big>)</big><a class="reference internal" href="../_modules/pcapng/blocks.html#SectionMemberBlock"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pcapng.blocks.SectionMemberBlock" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="classmethod">
+<dt id="pcapng.blocks.SectionMemberBlock.from_context">
+<em class="property">classmethod </em><tt class="descname">from_context</tt><big>(</big><em>raw</em>, <em>ctx</em><big>)</big><a class="reference internal" href="../_modules/pcapng/blocks.html#SectionMemberBlock.from_context"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pcapng.blocks.SectionMemberBlock.from_context" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="function">
+<dt id="pcapng.blocks.register_block">
+<tt class="descclassname">pcapng.blocks.</tt><tt class="descname">register_block</tt><big>(</big><em>block</em><big>)</big><a class="reference internal" href="../_modules/pcapng/blocks.html#register_block"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pcapng.blocks.register_block" title="Permalink to this definition">¶</a></dt>
+<dd><p>Handy decorator to register a new known block type</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="pcapng.blocks.SectionHeader">
+<em class="property">class </em><tt class="descclassname">pcapng.blocks.</tt><tt class="descname">SectionHeader</tt><big>(</big><em>raw</em>, <em>endianness</em><big>)</big><a class="reference internal" href="../_modules/pcapng/blocks.html#SectionHeader"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pcapng.blocks.SectionHeader" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="attribute">
+<dt id="pcapng.blocks.SectionHeader.magic_number">
+<tt class="descname">magic_number</tt><em class="property"> = 168627466</em><a class="headerlink" href="#pcapng.blocks.SectionHeader.magic_number" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="pcapng.blocks.SectionHeader.schema">
+<tt class="descname">schema</tt><em class="property"> = [('version_major', IntField(size=16, signed=False)), ('version_minor', IntField(size=16, signed=False)), ('section_length', IntField(size=64, signed=True)), ('options', OptionsField([(2, 'shb_hardware', 'string'), (3, 'shb_os', 'string'), (4, 'shb_userappl', 'string')]))]</em><a class="headerlink" href="#pcapng.blocks.SectionHeader.schema" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="pcapng.blocks.SectionHeader.register_interface">
+<tt class="descname">register_interface</tt><big>(</big><em>interface</em><big>)</big><a class="reference internal" href="../_modules/pcapng/blocks.html#SectionHeader.register_interface"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pcapng.blocks.SectionHeader.register_interface" title="Permalink to this definition">¶</a></dt>
+<dd><p>Helper method to register an interface within this section</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="pcapng.blocks.SectionHeader.add_interface_stats">
+<tt class="descname">add_interface_stats</tt><big>(</big><em>interface_stats</em><big>)</big><a class="reference internal" href="../_modules/pcapng/blocks.html#SectionHeader.add_interface_stats"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pcapng.blocks.SectionHeader.add_interface_stats" title="Permalink to this definition">¶</a></dt>
+<dd><p>Helper method to register interface stats within this section</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="pcapng.blocks.SectionHeader.version">
+<tt class="descname">version</tt><a class="reference internal" href="../_modules/pcapng/blocks.html#SectionHeader.version"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pcapng.blocks.SectionHeader.version" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="pcapng.blocks.SectionHeader.length">
+<tt class="descname">length</tt><a class="reference internal" href="../_modules/pcapng/blocks.html#SectionHeader.length"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pcapng.blocks.SectionHeader.length" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="pcapng.blocks.InterfaceDescription">
+<em class="property">class </em><tt class="descclassname">pcapng.blocks.</tt><tt class="descname">InterfaceDescription</tt><big>(</big><em>raw</em>, <em>section</em><big>)</big><a class="reference internal" href="../_modules/pcapng/blocks.html#InterfaceDescription"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pcapng.blocks.InterfaceDescription" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="attribute">
+<dt id="pcapng.blocks.InterfaceDescription.magic_number">
+<tt class="descname">magic_number</tt><em class="property"> = 1</em><a class="headerlink" href="#pcapng.blocks.InterfaceDescription.magic_number" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="pcapng.blocks.InterfaceDescription.schema">
+<tt class="descname">schema</tt><em class="property"> = [('link_type', IntField(size=16, signed=False)), ('reserved', RawBytes(size=2)), ('snaplen', IntField(size=32, signed=False)), ('options', OptionsField([(2, 'if_name', 'string'), (3, 'if_description', 'string'), (4, 'if_IPv4addr', 'ipv4+mask'), (5, 'if_IPv6addr', 'ipv6+prefix'), (6, 'if_MACaddr', 'macaddr'), (7, 'if_EUIaddr', 'euiaddr'), (8, 'if_speed', 'u64'), (9, 'if_tsresol', 'u8'), (10, 'if_tzone', 'u32'), (11, 'if_filter', 'string'), (12, 'if_os', 'string'), (13, 'if_fcslen', 'u8'), (14, 'if_tsoffset', 'i64')]))]</em><a class="headerlink" href="#pcapng.blocks.InterfaceDescription.schema" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="pcapng.blocks.InterfaceDescription.timestamp_resolution">
+<tt class="descname">timestamp_resolution</tt><a class="reference internal" href="../_modules/pcapng/blocks.html#InterfaceDescription.timestamp_resolution"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pcapng.blocks.InterfaceDescription.timestamp_resolution" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="pcapng.blocks.InterfaceDescription.statistics">
+<tt class="descname">statistics</tt><a class="reference internal" href="../_modules/pcapng/blocks.html#InterfaceDescription.statistics"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pcapng.blocks.InterfaceDescription.statistics" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="pcapng.blocks.InterfaceDescription.link_type_description">
+<tt class="descname">link_type_description</tt><a class="reference internal" href="../_modules/pcapng/blocks.html#InterfaceDescription.link_type_description"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pcapng.blocks.InterfaceDescription.link_type_description" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="pcapng.blocks.BlockWithTimestampMixin">
+<em class="property">class </em><tt class="descclassname">pcapng.blocks.</tt><tt class="descname">BlockWithTimestampMixin</tt><a class="reference internal" href="../_modules/pcapng/blocks.html#BlockWithTimestampMixin"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pcapng.blocks.BlockWithTimestampMixin" title="Permalink to this definition">¶</a></dt>
+<dd><p>Block mixin adding properties to better access timestamps
+of blocks that provide one.</p>
+<dl class="attribute">
+<dt id="pcapng.blocks.BlockWithTimestampMixin.timestamp">
+<tt class="descname">timestamp</tt><a class="reference internal" href="../_modules/pcapng/blocks.html#BlockWithTimestampMixin.timestamp"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pcapng.blocks.BlockWithTimestampMixin.timestamp" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="pcapng.blocks.BlockWithTimestampMixin.timestamp_resolution">
+<tt class="descname">timestamp_resolution</tt><a class="reference internal" href="../_modules/pcapng/blocks.html#BlockWithTimestampMixin.timestamp_resolution"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pcapng.blocks.BlockWithTimestampMixin.timestamp_resolution" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="pcapng.blocks.BlockWithInterfaceMixin">
+<em class="property">class </em><tt class="descclassname">pcapng.blocks.</tt><tt class="descname">BlockWithInterfaceMixin</tt><a class="reference internal" href="../_modules/pcapng/blocks.html#BlockWithInterfaceMixin"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pcapng.blocks.BlockWithInterfaceMixin" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="attribute">
+<dt id="pcapng.blocks.BlockWithInterfaceMixin.interface">
+<tt class="descname">interface</tt><a class="reference internal" href="../_modules/pcapng/blocks.html#BlockWithInterfaceMixin.interface"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pcapng.blocks.BlockWithInterfaceMixin.interface" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="pcapng.blocks.BasePacketBlock">
+<em class="property">class </em><tt class="descclassname">pcapng.blocks.</tt><tt class="descname">BasePacketBlock</tt><big>(</big><em>raw</em>, <em>section</em><big>)</big><a class="reference internal" href="../_modules/pcapng/blocks.html#BasePacketBlock"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pcapng.blocks.BasePacketBlock" title="Permalink to this definition">¶</a></dt>
+<dd><p>Base class for the &#8220;EnhancedPacket&#8221; and &#8220;Packet&#8221; blocks</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="pcapng.blocks.EnhancedPacket">
+<em class="property">class </em><tt class="descclassname">pcapng.blocks.</tt><tt class="descname">EnhancedPacket</tt><big>(</big><em>raw</em>, <em>section</em><big>)</big><a class="reference internal" href="../_modules/pcapng/blocks.html#EnhancedPacket"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pcapng.blocks.EnhancedPacket" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="attribute">
+<dt id="pcapng.blocks.EnhancedPacket.magic_number">
+<tt class="descname">magic_number</tt><em class="property"> = 6</em><a class="headerlink" href="#pcapng.blocks.EnhancedPacket.magic_number" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="pcapng.blocks.EnhancedPacket.schema">
+<tt class="descname">schema</tt><em class="property"> = [('interface_id', IntField(size=32, signed=False)), ('timestamp_high', IntField(size=32, signed=False)), ('timestamp_low', IntField(size=32, signed=False)), ('packet_payload_info', PacketDataField()), ('options', OptionsField([(2, 'epb_flags'), (3, 'epb_hash'), (4, 'epb_dropcount', 'u64')]))]</em><a class="headerlink" href="#pcapng.blocks.EnhancedPacket.schema" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="pcapng.blocks.EnhancedPacket.captured_len">
+<tt class="descname">captured_len</tt><a class="reference internal" href="../_modules/pcapng/blocks.html#EnhancedPacket.captured_len"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pcapng.blocks.EnhancedPacket.captured_len" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="pcapng.blocks.EnhancedPacket.packet_len">
+<tt class="descname">packet_len</tt><a class="reference internal" href="../_modules/pcapng/blocks.html#EnhancedPacket.packet_len"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pcapng.blocks.EnhancedPacket.packet_len" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="pcapng.blocks.EnhancedPacket.packet_data">
+<tt class="descname">packet_data</tt><a class="reference internal" href="../_modules/pcapng/blocks.html#EnhancedPacket.packet_data"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pcapng.blocks.EnhancedPacket.packet_data" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="pcapng.blocks.SimplePacket">
+<em class="property">class </em><tt class="descclassname">pcapng.blocks.</tt><tt class="descname">SimplePacket</tt><big>(</big><em>raw</em>, <em>section</em><big>)</big><a class="reference internal" href="../_modules/pcapng/blocks.html#SimplePacket"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pcapng.blocks.SimplePacket" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="attribute">
+<dt id="pcapng.blocks.SimplePacket.magic_number">
+<tt class="descname">magic_number</tt><em class="property"> = 3</em><a class="headerlink" href="#pcapng.blocks.SimplePacket.magic_number" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="pcapng.blocks.SimplePacket.schema">
+<tt class="descname">schema</tt><em class="property"> = [('packet_simple_payload_info', SimplePacketDataField())]</em><a class="headerlink" href="#pcapng.blocks.SimplePacket.schema" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="pcapng.blocks.SimplePacket.packet_len">
+<tt class="descname">packet_len</tt><a class="reference internal" href="../_modules/pcapng/blocks.html#SimplePacket.packet_len"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pcapng.blocks.SimplePacket.packet_len" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="pcapng.blocks.SimplePacket.packet_data">
+<tt class="descname">packet_data</tt><a class="reference internal" href="../_modules/pcapng/blocks.html#SimplePacket.packet_data"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pcapng.blocks.SimplePacket.packet_data" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="pcapng.blocks.Packet">
+<em class="property">class </em><tt class="descclassname">pcapng.blocks.</tt><tt class="descname">Packet</tt><big>(</big><em>raw</em>, <em>section</em><big>)</big><a class="reference internal" href="../_modules/pcapng/blocks.html#Packet"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pcapng.blocks.Packet" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="attribute">
+<dt id="pcapng.blocks.Packet.magic_number">
+<tt class="descname">magic_number</tt><em class="property"> = 2</em><a class="headerlink" href="#pcapng.blocks.Packet.magic_number" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="pcapng.blocks.Packet.schema">
+<tt class="descname">schema</tt><em class="property"> = [('interface_id', IntField(size=16, signed=False)), ('drops_count', IntField(size=16, signed=False)), ('timestamp_high', IntField(size=32, signed=False)), ('timestamp_low', IntField(size=32, signed=False)), ('packet_payload_info', PacketDataField()), ('options', OptionsField([(2, 'epb_flags', 'u32'), (3, 'epb_hash')]))]</em><a class="headerlink" href="#pcapng.blocks.Packet.schema" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="pcapng.blocks.Packet.captured_len">
+<tt class="descname">captured_len</tt><a class="reference internal" href="../_modules/pcapng/blocks.html#Packet.captured_len"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pcapng.blocks.Packet.captured_len" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="pcapng.blocks.Packet.packet_len">
+<tt class="descname">packet_len</tt><a class="reference internal" href="../_modules/pcapng/blocks.html#Packet.packet_len"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pcapng.blocks.Packet.packet_len" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="pcapng.blocks.Packet.packet_data">
+<tt class="descname">packet_data</tt><a class="reference internal" href="../_modules/pcapng/blocks.html#Packet.packet_data"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pcapng.blocks.Packet.packet_data" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="pcapng.blocks.NameResolution">
+<em class="property">class </em><tt class="descclassname">pcapng.blocks.</tt><tt class="descname">NameResolution</tt><big>(</big><em>raw</em>, <em>section</em><big>)</big><a class="reference internal" href="../_modules/pcapng/blocks.html#NameResolution"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pcapng.blocks.NameResolution" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="attribute">
+<dt id="pcapng.blocks.NameResolution.magic_number">
+<tt class="descname">magic_number</tt><em class="property"> = 4</em><a class="headerlink" href="#pcapng.blocks.NameResolution.magic_number" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="pcapng.blocks.NameResolution.schema">
+<tt class="descname">schema</tt><em class="property"> = [('records', ListField(NameResolutionRecordField())), ('options', OptionsField([(2, 'ns_dnsname', 'string'), (3, 'ns_dnsIP4addr', 'ipv4'), (4, 'ns_dnsIP6addr', 'ipv6')]))]</em><a class="headerlink" href="#pcapng.blocks.NameResolution.schema" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="pcapng.blocks.InterfaceStatistics">
+<em class="property">class </em><tt class="descclassname">pcapng.blocks.</tt><tt class="descname">InterfaceStatistics</tt><big>(</big><em>raw</em>, <em>section</em><big>)</big><a class="reference internal" href="../_modules/pcapng/blocks.html#InterfaceStatistics"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pcapng.blocks.InterfaceStatistics" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="attribute">
+<dt id="pcapng.blocks.InterfaceStatistics.magic_number">
+<tt class="descname">magic_number</tt><em class="property"> = 5</em><a class="headerlink" href="#pcapng.blocks.InterfaceStatistics.magic_number" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="pcapng.blocks.InterfaceStatistics.schema">
+<tt class="descname">schema</tt><em class="property"> = [('interface_id', IntField(size=32, signed=False)), ('timestamp_high', IntField(size=32, signed=False)), ('timestamp_low', IntField(size=32, signed=False)), ('options', OptionsField([(2, 'isb_starttime', 'u64'), (3, 'isb_endtime', 'u64'), (4, 'isb_ifrecv', 'u64'), (5, 'isb_ifdrop', 'u64'), (6, 'isb_filteraccept', 'u64'), (7, 'isb_osdrop', 'u64'), (8, 'isb_usrdeliv', 'u64')]))]</em><a class="headerlink" href="#pcapng.blocks.InterfaceStatistics.schema" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="pcapng.blocks.UnknownBlock">
+<em class="property">class </em><tt class="descclassname">pcapng.blocks.</tt><tt class="descname">UnknownBlock</tt><big>(</big><em>block_type</em>, <em>data</em><big>)</big><a class="reference internal" href="../_modules/pcapng/blocks.html#UnknownBlock"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pcapng.blocks.UnknownBlock" title="Permalink to this definition">¶</a></dt>
+<dd><p>Class used to represent an unknown block.</p>
+<p>Its block type and raw data will be stored directly with no further
+processing.</p>
+</dd></dl>
+
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="index.html"
+                        title="previous chapter">API Documentation</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="exceptions.html"
+                        title="next chapter">pcapng.exceptions</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="../_sources/api/blocks.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="exceptions.html" title="pcapng.exceptions"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="index.html" title="API Documentation"
+             >previous</a> |</li>
+        <li><a href="../index.html">python-pcapng 0.1a documentation</a> &raquo;</li>
+          <li><a href="index.html" >API Documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2014, Samuele Santi.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.3.
+    </div>
+  </body>
+</html>

@@ -1,0 +1,200 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>pcapng.scanner &mdash; python-pcapng 0.1a documentation</title>
+    
+    <link rel="stylesheet" href="../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../',
+        VERSION:     '0.1a',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <link rel="top" title="python-pcapng 0.1a documentation" href="../../index.html" />
+    <link rel="up" title="Module code" href="../index.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../index.html">python-pcapng 0.1a documentation</a> &raquo;</li>
+          <li><a href="../index.html" accesskey="U">Module code</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for pcapng.scanner</h1><div class="highlight"><pre>
+<span class="kn">from</span> <span class="nn">pcapng.structs</span> <span class="kn">import</span> <span class="p">(</span>
+    <span class="n">read_int</span><span class="p">,</span> <span class="n">read_block_data</span><span class="p">,</span> <span class="n">read_section_header</span><span class="p">,</span> <span class="n">SECTION_HEADER_MAGIC</span><span class="p">)</span>
+<span class="kn">from</span> <span class="nn">pcapng.constants.block_types</span> <span class="kn">import</span> <span class="n">BLK_RESERVED</span><span class="p">,</span> <span class="n">BLK_RESERVED_CORRUPTED</span>
+<span class="kn">from</span> <span class="nn">pcapng.exceptions</span> <span class="kn">import</span> <span class="n">StreamEmpty</span><span class="p">,</span> <span class="n">CorruptedFile</span>
+<span class="kn">import</span> <span class="nn">pcapng.blocks</span> <span class="kn">as</span> <span class="nn">blocks</span>
+
+
+<div class="viewcode-block" id="FileScanner"><a class="viewcode-back" href="../../api/scanner.html#pcapng.scanner.FileScanner">[docs]</a><span class="k">class</span> <span class="nc">FileScanner</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    pcap-ng file scanner.</span>
+
+<span class="sd">    This object can be iterated to get blocks out of a pcap-ng</span>
+<span class="sd">    stream (a file or file-like object providing a .read() method).</span>
+
+<span class="sd">    Example usage:</span>
+
+<span class="sd">        .. code-block:: python</span>
+
+<span class="sd">            from pcapng import FileScanner</span>
+
+<span class="sd">            with open(&#39;/tmp/mycapture.pcap&#39;) as fp:</span>
+<span class="sd">                scanner = FileScanner(fp)</span>
+<span class="sd">                for block in scanner:</span>
+<span class="sd">                    pass  # do something with the block...</span>
+
+<span class="sd">    :param stream:</span>
+<span class="sd">        a file-like object from which to read the data.</span>
+<span class="sd">        If you need to parse data from some string you have entirely in-memory,</span>
+<span class="sd">        just wrap it in a :py:class:`io.BytesIO` object.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">stream</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">stream</span> <span class="o">=</span> <span class="n">stream</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">current_section</span> <span class="o">=</span> <span class="bp">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">endianness</span> <span class="o">=</span> <span class="s">&#39;=&#39;</span>
+
+    <span class="k">def</span> <span class="nf">__iter__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">while</span> <span class="bp">True</span><span class="p">:</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="k">yield</span> <span class="bp">self</span><span class="o">.</span><span class="n">_read_next_block</span><span class="p">()</span>
+            <span class="k">except</span> <span class="n">StreamEmpty</span><span class="p">:</span>
+                <span class="k">return</span>
+
+    <span class="k">def</span> <span class="nf">_read_next_block</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">block_type</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_read_int</span><span class="p">(</span><span class="mi">32</span><span class="p">,</span> <span class="bp">False</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">block_type</span> <span class="o">==</span> <span class="n">SECTION_HEADER_MAGIC</span><span class="p">:</span>
+            <span class="n">block</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_read_section_header</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">current_section</span> <span class="o">=</span> <span class="n">block</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">endianness</span> <span class="o">=</span> <span class="n">block</span><span class="o">.</span><span class="n">endianness</span>
+            <span class="k">return</span> <span class="n">block</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">current_section</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s">&#39;File not starting with a proper section header&#39;</span><span class="p">)</span>
+
+        <span class="n">block</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_read_block</span><span class="p">(</span><span class="n">block_type</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">block</span><span class="p">,</span> <span class="n">blocks</span><span class="o">.</span><span class="n">InterfaceDescription</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">current_section</span><span class="o">.</span><span class="n">register_interface</span><span class="p">(</span><span class="n">block</span><span class="p">)</span>
+
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">block</span><span class="p">,</span> <span class="n">blocks</span><span class="o">.</span><span class="n">InterfaceStatistics</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">current_section</span><span class="o">.</span><span class="n">interface_stats</span><span class="p">[</span><span class="n">block</span><span class="o">.</span><span class="n">interface_id</span><span class="p">]</span> <span class="o">=</span> <span class="n">block</span>
+
+        <span class="k">return</span> <span class="n">block</span>
+
+    <span class="k">def</span> <span class="nf">_read_section_header</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Section information headers are special blocks in that they</span>
+<span class="sd">        modify the state of the FileScanner instance (to change current</span>
+<span class="sd">        section / endianness)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">section_info</span> <span class="o">=</span> <span class="n">read_section_header</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">stream</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">endianness</span> <span class="o">=</span> <span class="n">section_info</span><span class="p">[</span><span class="s">&#39;endianness&#39;</span><span class="p">]</span>  <span class="c"># todo: use property?</span>
+
+        <span class="c"># todo: make this use the standard schema facilities as well!</span>
+        <span class="k">return</span> <span class="n">blocks</span><span class="o">.</span><span class="n">SectionHeader</span><span class="p">(</span>
+            <span class="n">raw</span><span class="o">=</span><span class="n">section_info</span><span class="p">[</span><span class="s">&#39;data&#39;</span><span class="p">],</span>
+            <span class="n">endianness</span><span class="o">=</span><span class="n">section_info</span><span class="p">[</span><span class="s">&#39;endianness&#39;</span><span class="p">])</span>
+
+    <span class="k">def</span> <span class="nf">_read_block</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">block_type</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Read the block payload and pass to the appropriate block constructor</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="n">read_block_data</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">stream</span><span class="p">,</span> <span class="n">endianness</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">endianness</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">block_type</span> <span class="ow">in</span> <span class="n">blocks</span><span class="o">.</span><span class="n">KNOWN_BLOCKS</span><span class="p">:</span>
+            <span class="c"># This is a known block -- instantiate it</span>
+            <span class="k">return</span> <span class="n">blocks</span><span class="o">.</span><span class="n">KNOWN_BLOCKS</span><span class="p">[</span><span class="n">block_type</span><span class="p">]</span><span class="o">.</span><span class="n">from_context</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">block_type</span> <span class="ow">in</span> <span class="n">BLK_RESERVED_CORRUPTED</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">CorruptedFile</span><span class="p">(</span>
+                <span class="s">&#39;Block type 0x{0:08X} is reserved to detect a corrupted file&#39;</span>
+                <span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">block_type</span><span class="p">))</span>
+
+        <span class="k">if</span> <span class="n">block_type</span> <span class="o">==</span> <span class="n">BLK_RESERVED</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">CorruptedFile</span><span class="p">(</span>
+                <span class="s">&#39;Block type 0x00000000 is reserved and should not be used &#39;</span>
+                <span class="s">&#39;in capture files!&#39;</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">blocks</span><span class="o">.</span><span class="n">UnknownBlock</span><span class="p">(</span><span class="n">block_type</span><span class="p">,</span> <span class="n">data</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_read_int</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">size</span><span class="p">,</span> <span class="n">signed</span><span class="o">=</span><span class="bp">False</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Read an integer from the stream, using current endianness</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">read_int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">stream</span><span class="p">,</span> <span class="n">size</span><span class="p">,</span> <span class="n">signed</span><span class="o">=</span><span class="n">signed</span><span class="p">,</span>
+                        <span class="n">endianness</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">endianness</span><span class="p">)</span></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../index.html">python-pcapng 0.1a documentation</a> &raquo;</li>
+          <li><a href="../index.html" >Module code</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2014, Samuele Santi.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.3.
+    </div>
+  </body>
+</html>

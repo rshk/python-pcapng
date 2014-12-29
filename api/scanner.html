@@ -1,0 +1,148 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>pcapng.scanner &mdash; python-pcapng 0.1a documentation</title>
+    
+    <link rel="stylesheet" href="../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../',
+        VERSION:     '0.1a',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <link rel="top" title="python-pcapng 0.1a documentation" href="../index.html" />
+    <link rel="up" title="API Documentation" href="index.html" />
+    <link rel="next" title="pcapng.structs" href="structs.html" />
+    <link rel="prev" title="pcapng.exceptions" href="exceptions.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="structs.html" title="pcapng.structs"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="exceptions.html" title="pcapng.exceptions"
+             accesskey="P">previous</a> |</li>
+        <li><a href="../index.html">python-pcapng 0.1a documentation</a> &raquo;</li>
+          <li><a href="index.html" accesskey="U">API Documentation</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="module-pcapng.scanner">
+<span id="pcapng-scanner"></span><h1>pcapng.scanner<a class="headerlink" href="#module-pcapng.scanner" title="Permalink to this headline">¶</a></h1>
+<dl class="class">
+<dt id="pcapng.scanner.FileScanner">
+<em class="property">class </em><tt class="descclassname">pcapng.scanner.</tt><tt class="descname">FileScanner</tt><big>(</big><em>stream</em><big>)</big><a class="reference internal" href="../_modules/pcapng/scanner.html#FileScanner"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pcapng.scanner.FileScanner" title="Permalink to this definition">¶</a></dt>
+<dd><p>pcap-ng file scanner.</p>
+<p>This object can be iterated to get blocks out of a pcap-ng
+stream (a file or file-like object providing a .read() method).</p>
+<p>Example usage:</p>
+<blockquote>
+<div><div class="highlight-python"><div class="highlight"><pre><span class="kn">from</span> <span class="nn">pcapng</span> <span class="kn">import</span> <span class="n">FileScanner</span>
+
+<span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="s">&#39;/tmp/mycapture.pcap&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">fp</span><span class="p">:</span>
+    <span class="n">scanner</span> <span class="o">=</span> <span class="n">FileScanner</span><span class="p">(</span><span class="n">fp</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">block</span> <span class="ow">in</span> <span class="n">scanner</span><span class="p">:</span>
+        <span class="k">pass</span>  <span class="c"># do something with the block...</span>
+</pre></div>
+</div>
+</div></blockquote>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>stream</strong> &#8211; a file-like object from which to read the data.
+If you need to parse data from some string you have entirely in-memory,
+just wrap it in a <tt class="xref py py-class docutils literal"><span class="pre">io.BytesIO</span></tt> object.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="exceptions.html"
+                        title="previous chapter">pcapng.exceptions</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="structs.html"
+                        title="next chapter">pcapng.structs</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="../_sources/api/scanner.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="structs.html" title="pcapng.structs"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="exceptions.html" title="pcapng.exceptions"
+             >previous</a> |</li>
+        <li><a href="../index.html">python-pcapng 0.1a documentation</a> &raquo;</li>
+          <li><a href="index.html" >API Documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2014, Samuele Santi.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.3.
+    </div>
+  </body>
+</html>

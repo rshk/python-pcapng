@@ -1,0 +1,169 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>pcapng.exceptions &mdash; python-pcapng 0.1a documentation</title>
+    
+    <link rel="stylesheet" href="../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../',
+        VERSION:     '0.1a',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <link rel="top" title="python-pcapng 0.1a documentation" href="../index.html" />
+    <link rel="up" title="API Documentation" href="index.html" />
+    <link rel="next" title="pcapng.scanner" href="scanner.html" />
+    <link rel="prev" title="pcapng.blocks" href="blocks.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="scanner.html" title="pcapng.scanner"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="blocks.html" title="pcapng.blocks"
+             accesskey="P">previous</a> |</li>
+        <li><a href="../index.html">python-pcapng 0.1a documentation</a> &raquo;</li>
+          <li><a href="index.html" accesskey="U">API Documentation</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="module-pcapng.exceptions">
+<span id="pcapng-exceptions"></span><h1>pcapng.exceptions<a class="headerlink" href="#module-pcapng.exceptions" title="Permalink to this headline">¶</a></h1>
+<dl class="exception">
+<dt id="pcapng.exceptions.PcapngException">
+<em class="property">exception </em><tt class="descclassname">pcapng.exceptions.</tt><tt class="descname">PcapngException</tt><a class="reference internal" href="../_modules/pcapng/exceptions.html#PcapngException"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pcapng.exceptions.PcapngException" title="Permalink to this definition">¶</a></dt>
+<dd><p>Base for all the pcapng exceptions</p>
+</dd></dl>
+
+<dl class="exception">
+<dt id="pcapng.exceptions.PcapngLoadError">
+<em class="property">exception </em><tt class="descclassname">pcapng.exceptions.</tt><tt class="descname">PcapngLoadError</tt><a class="reference internal" href="../_modules/pcapng/exceptions.html#PcapngLoadError"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pcapng.exceptions.PcapngLoadError" title="Permalink to this definition">¶</a></dt>
+<dd><p>Indicate an error while loading a pcapng file</p>
+</dd></dl>
+
+<dl class="exception">
+<dt id="pcapng.exceptions.PcapngDumpError">
+<em class="property">exception </em><tt class="descclassname">pcapng.exceptions.</tt><tt class="descname">PcapngDumpError</tt><a class="reference internal" href="../_modules/pcapng/exceptions.html#PcapngDumpError"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pcapng.exceptions.PcapngDumpError" title="Permalink to this definition">¶</a></dt>
+<dd><p>Indicate an error while writing a pcapng file</p>
+</dd></dl>
+
+<dl class="exception">
+<dt id="pcapng.exceptions.StreamEmpty">
+<em class="property">exception </em><tt class="descclassname">pcapng.exceptions.</tt><tt class="descname">StreamEmpty</tt><a class="reference internal" href="../_modules/pcapng/exceptions.html#StreamEmpty"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pcapng.exceptions.StreamEmpty" title="Permalink to this definition">¶</a></dt>
+<dd><p>Exception indicating that the end of the stream was reached
+and exactly zero bytes were read; usually it simply indicates
+we reached the end of the stream and no further content is
+available for reading.</p>
+</dd></dl>
+
+<dl class="exception">
+<dt id="pcapng.exceptions.CorruptedFile">
+<em class="property">exception </em><tt class="descclassname">pcapng.exceptions.</tt><tt class="descname">CorruptedFile</tt><a class="reference internal" href="../_modules/pcapng/exceptions.html#CorruptedFile"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pcapng.exceptions.CorruptedFile" title="Permalink to this definition">¶</a></dt>
+<dd><p>Exception used to indicate that something is wrong with the
+file structure, possibly due to data corruption.</p>
+</dd></dl>
+
+<dl class="exception">
+<dt id="pcapng.exceptions.TruncatedFile">
+<em class="property">exception </em><tt class="descclassname">pcapng.exceptions.</tt><tt class="descname">TruncatedFile</tt><a class="reference internal" href="../_modules/pcapng/exceptions.html#TruncatedFile"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pcapng.exceptions.TruncatedFile" title="Permalink to this definition">¶</a></dt>
+<dd><p>Exception used to indicate that not all the required bytes
+could be read before stream end, but the read length was
+non-zero, indicating a possibly truncated stream.</p>
+</dd></dl>
+
+<dl class="exception">
+<dt id="pcapng.exceptions.BadMagic">
+<em class="property">exception </em><tt class="descclassname">pcapng.exceptions.</tt><tt class="descname">BadMagic</tt><a class="reference internal" href="../_modules/pcapng/exceptions.html#BadMagic"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pcapng.exceptions.BadMagic" title="Permalink to this definition">¶</a></dt>
+<dd><p>Exception used to indicate a failure due to some bad magic
+number encountered (either the file magic or section header
+byte order marker).</p>
+</dd></dl>
+
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="blocks.html"
+                        title="previous chapter">pcapng.blocks</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="scanner.html"
+                        title="next chapter">pcapng.scanner</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="../_sources/api/exceptions.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="scanner.html" title="pcapng.scanner"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="blocks.html" title="pcapng.blocks"
+             >previous</a> |</li>
+        <li><a href="../index.html">python-pcapng 0.1a documentation</a> &raquo;</li>
+          <li><a href="index.html" >API Documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2014, Samuele Santi.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.3.
+    </div>
+  </body>
+</html>

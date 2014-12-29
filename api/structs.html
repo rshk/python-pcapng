@@ -1,0 +1,548 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>pcapng.structs &mdash; python-pcapng 0.1a documentation</title>
+    
+    <link rel="stylesheet" href="../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../',
+        VERSION:     '0.1a',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <link rel="top" title="python-pcapng 0.1a documentation" href="../index.html" />
+    <link rel="up" title="API Documentation" href="index.html" />
+    <link rel="next" title="pcapng.utils" href="utils.html" />
+    <link rel="prev" title="pcapng.scanner" href="scanner.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="utils.html" title="pcapng.utils"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="scanner.html" title="pcapng.scanner"
+             accesskey="P">previous</a> |</li>
+        <li><a href="../index.html">python-pcapng 0.1a documentation</a> &raquo;</li>
+          <li><a href="index.html" accesskey="U">API Documentation</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="module-pcapng.structs">
+<span id="pcapng-structs"></span><h1>pcapng.structs<a class="headerlink" href="#module-pcapng.structs" title="Permalink to this headline">¶</a></h1>
+<p>Module providing facilities for handling struct-like data.</p>
+<dl class="function">
+<dt id="pcapng.structs.read_int">
+<tt class="descclassname">pcapng.structs.</tt><tt class="descname">read_int</tt><big>(</big><em>stream</em>, <em>size</em>, <em>signed=False</em>, <em>endianness='='</em><big>)</big><a class="reference internal" href="../_modules/pcapng/structs.html#read_int"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pcapng.structs.read_int" title="Permalink to this definition">¶</a></dt>
+<dd><p>Read (and decode) an integer number from a binary stream.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>stream</strong> &#8211; an object providing a <tt class="docutils literal"><span class="pre">read()</span></tt> method</li>
+<li><strong>size</strong> &#8211; the size, in bits, of the number to be read.
+Supported sizes are: 8, 16, 32 and 64 bits.</li>
+<li><strong>signed</strong> &#8211; Whether a signed or unsigned number is required.
+Defaults to <tt class="docutils literal"><span class="pre">False</span></tt> (unsigned int).</li>
+<li><strong>endianness</strong> &#8211; specify the endianness to use to decode the number,
+in the same format used by Python <tt class="xref py py-mod docutils literal"><span class="pre">struct</span></tt> module.
+Defaults to &#8216;=&#8217; (native endianness). &#8216;!&#8217; means &#8220;network&#8221; endianness
+(big endian), &#8216;&lt;&#8217; little endian, &#8216;&gt;&#8217; big endian.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">the read integer number</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="pcapng.structs.read_section_header">
+<tt class="descclassname">pcapng.structs.</tt><tt class="descname">read_section_header</tt><big>(</big><em>stream</em><big>)</big><a class="reference internal" href="../_modules/pcapng/structs.html#read_section_header"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pcapng.structs.read_section_header" title="Permalink to this definition">¶</a></dt>
+<dd><p>Read a section header block from a stream.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">The byte order magic will be removed from the returned data
+This is ok as we don&#8217;t need it anymore once we determined
+the correct endianness of the section.</p>
+</div>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">a dict containing the <tt class="docutils literal"><span class="pre">'endianness'</span></tt> and <tt class="docutils literal"><span class="pre">'data'</span></tt> keys
+that will be used to construct a <a class="reference internal" href="blocks.html#pcapng.blocks.SectionHeader" title="pcapng.blocks.SectionHeader"><tt class="xref py py-mod docutils literal"><span class="pre">SectionHeader</span></tt></a>
+instance.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="pcapng.structs.read_block_data">
+<tt class="descclassname">pcapng.structs.</tt><tt class="descname">read_block_data</tt><big>(</big><em>stream</em>, <em>endianness</em><big>)</big><a class="reference internal" href="../_modules/pcapng/structs.html#read_block_data"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pcapng.structs.read_block_data" title="Permalink to this definition">¶</a></dt>
+<dd><p>Read block data from a stream.</p>
+<p>Each &#8220;block&#8221; is in the form:</p>
+<ul class="simple">
+<li>32bit integer indicating the size (including header and size)</li>
+<li>block payload (the above-specified number of bytes minus 12)</li>
+<li>32bit integer indicating the size (again)</li>
+</ul>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>stream</strong> &#8211; the stream from which to read data</li>
+<li><strong>endianness</strong> &#8211; Endianness marker, one of &#8216;&lt;&#8217;, &#8216;&gt;&#8217;, &#8216;!&#8217;, &#8216;=&#8217;.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="pcapng.structs.read_bytes">
+<tt class="descclassname">pcapng.structs.</tt><tt class="descname">read_bytes</tt><big>(</big><em>stream</em>, <em>size</em><big>)</big><a class="reference internal" href="../_modules/pcapng/structs.html#read_bytes"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pcapng.structs.read_bytes" title="Permalink to this definition">¶</a></dt>
+<dd><p>Read the given amount of raw bytes from a stream.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>stream</strong> &#8211; the stream from which to read data</li>
+<li><strong>size</strong> &#8211; the size to read, in bytes</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">the read data</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Raises:</th><td class="field-body"><p class="first"><a class="reference internal" href="exceptions.html#pcapng.exceptions.StreamEmpty" title="pcapng.exceptions.StreamEmpty"><tt class="xref py py-exc docutils literal"><span class="pre">StreamEmpty</span></tt></a> if zero bytes were read</p>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Raises:</th><td class="field-body"><p class="first last"><a class="reference internal" href="exceptions.html#pcapng.exceptions.TruncatedFile" title="pcapng.exceptions.TruncatedFile"><tt class="xref py py-exc docutils literal"><span class="pre">TruncatedFile</span></tt></a> if 0 &lt; bytes &lt; size
+were read</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="pcapng.structs.read_bytes_padded">
+<tt class="descclassname">pcapng.structs.</tt><tt class="descname">read_bytes_padded</tt><big>(</big><em>stream</em>, <em>size</em>, <em>pad_block_size=4</em><big>)</big><a class="reference internal" href="../_modules/pcapng/structs.html#read_bytes_padded"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pcapng.structs.read_bytes_padded" title="Permalink to this definition">¶</a></dt>
+<dd><p>Read the given amount of bytes from a stream, plus read and discard
+any necessary extra byte to align up to the pad_block_size-sized
+next block.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>stream</strong> &#8211; the stream from which to read data</li>
+<li><strong>size</strong> &#8211; the size to read, in bytes</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">the read data</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Raises:</th><td class="field-body"><p class="first"><a class="reference internal" href="exceptions.html#pcapng.exceptions.StreamEmpty" title="pcapng.exceptions.StreamEmpty"><tt class="xref py py-exc docutils literal"><span class="pre">StreamEmpty</span></tt></a> if zero bytes were read</p>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Raises:</th><td class="field-body"><p class="first last"><a class="reference internal" href="exceptions.html#pcapng.exceptions.TruncatedFile" title="pcapng.exceptions.TruncatedFile"><tt class="xref py py-exc docutils literal"><span class="pre">TruncatedFile</span></tt></a> if 0 &lt; bytes &lt; size
+were read</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="class">
+<dt id="pcapng.structs.StructField">
+<em class="property">class </em><tt class="descclassname">pcapng.structs.</tt><tt class="descname">StructField</tt><a class="reference internal" href="../_modules/pcapng/structs.html#StructField"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pcapng.structs.StructField" title="Permalink to this definition">¶</a></dt>
+<dd><p>Abstract base class for struct fields</p>
+<dl class="method">
+<dt id="pcapng.structs.StructField.load">
+<tt class="descname">load</tt><big>(</big><em>stream</em>, <em>endianness</em><big>)</big><a class="reference internal" href="../_modules/pcapng/structs.html#StructField.load"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pcapng.structs.StructField.load" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="pcapng.structs.RawBytes">
+<em class="property">class </em><tt class="descclassname">pcapng.structs.</tt><tt class="descname">RawBytes</tt><big>(</big><em>size</em><big>)</big><a class="reference internal" href="../_modules/pcapng/structs.html#RawBytes"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pcapng.structs.RawBytes" title="Permalink to this definition">¶</a></dt>
+<dd><p>Field containing a fixed-width amount of raw bytes</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>size</strong> &#8211; field size, in bytes</td>
+</tr>
+</tbody>
+</table>
+<dl class="method">
+<dt id="pcapng.structs.RawBytes.load">
+<tt class="descname">load</tt><big>(</big><em>stream</em>, <em>endianness</em><big>)</big><a class="reference internal" href="../_modules/pcapng/structs.html#RawBytes.load"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pcapng.structs.RawBytes.load" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="pcapng.structs.IntField">
+<em class="property">class </em><tt class="descclassname">pcapng.structs.</tt><tt class="descname">IntField</tt><big>(</big><em>size</em>, <em>signed=False</em><big>)</big><a class="reference internal" href="../_modules/pcapng/structs.html#IntField"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pcapng.structs.IntField" title="Permalink to this definition">¶</a></dt>
+<dd><p>Field containing an integer number.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>size</strong> &#8211; number size, in bits. Currently supported
+are 8, 16, 32 and 64-bit integers</li>
+<li><strong>signed</strong> &#8211; whether the number is a signed or unsigned
+integer. Defaults to False (unsigned)</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<dl class="method">
+<dt id="pcapng.structs.IntField.load">
+<tt class="descname">load</tt><big>(</big><em>stream</em>, <em>endianness</em><big>)</big><a class="reference internal" href="../_modules/pcapng/structs.html#IntField.load"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pcapng.structs.IntField.load" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="pcapng.structs.OptionsField">
+<em class="property">class </em><tt class="descclassname">pcapng.structs.</tt><tt class="descname">OptionsField</tt><big>(</big><em>options_schema</em><big>)</big><a class="reference internal" href="../_modules/pcapng/structs.html#OptionsField"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pcapng.structs.OptionsField" title="Permalink to this definition">¶</a></dt>
+<dd><p>Field containing some options.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>options_schema</strong> &#8211; Same as the <tt class="docutils literal"><span class="pre">schema</span></tt> parameter to <a class="reference internal" href="#pcapng.structs.Options" title="pcapng.structs.Options"><tt class="xref py py-class docutils literal"><span class="pre">Options</span></tt></a> class
+constructor.</td>
+</tr>
+</tbody>
+</table>
+<dl class="method">
+<dt id="pcapng.structs.OptionsField.load">
+<tt class="descname">load</tt><big>(</big><em>stream</em>, <em>endianness</em><big>)</big><a class="reference internal" href="../_modules/pcapng/structs.html#OptionsField.load"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pcapng.structs.OptionsField.load" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="pcapng.structs.PacketDataField">
+<em class="property">class </em><tt class="descclassname">pcapng.structs.</tt><tt class="descname">PacketDataField</tt><a class="reference internal" href="../_modules/pcapng/structs.html#PacketDataField"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pcapng.structs.PacketDataField" title="Permalink to this definition">¶</a></dt>
+<dd><p>Field containing some &#8220;packet data&#8221;, used in the Packet
+and EnhancedPacket blocks.</p>
+<p>The packet data is composed of three fields (returned in a tuple):</p>
+<ul class="simple">
+<li>captured len (uint32)</li>
+<li>packet len (uint32)</li>
+<li>packet data (captured_len-sized binary data)</li>
+</ul>
+<dl class="method">
+<dt id="pcapng.structs.PacketDataField.load">
+<tt class="descname">load</tt><big>(</big><em>stream</em>, <em>endianness</em><big>)</big><a class="reference internal" href="../_modules/pcapng/structs.html#PacketDataField.load"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pcapng.structs.PacketDataField.load" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="pcapng.structs.SimplePacketDataField">
+<em class="property">class </em><tt class="descclassname">pcapng.structs.</tt><tt class="descname">SimplePacketDataField</tt><a class="reference internal" href="../_modules/pcapng/structs.html#SimplePacketDataField"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pcapng.structs.SimplePacketDataField" title="Permalink to this definition">¶</a></dt>
+<dd><p>Field containing packet data from a SimplePacket object.</p>
+<p>The packet data is represented by two fields (returned as a tuple):</p>
+<ul class="simple">
+<li>packet_len (uint32)</li>
+<li>packet_data (packet_len-sized binary data)</li>
+</ul>
+<dl class="method">
+<dt id="pcapng.structs.SimplePacketDataField.load">
+<tt class="descname">load</tt><big>(</big><em>stream</em>, <em>endianness</em><big>)</big><a class="reference internal" href="../_modules/pcapng/structs.html#SimplePacketDataField.load"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pcapng.structs.SimplePacketDataField.load" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="pcapng.structs.ListField">
+<em class="property">class </em><tt class="descclassname">pcapng.structs.</tt><tt class="descname">ListField</tt><big>(</big><em>subfield</em><big>)</big><a class="reference internal" href="../_modules/pcapng/structs.html#ListField"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pcapng.structs.ListField" title="Permalink to this definition">¶</a></dt>
+<dd><p>A list field is a variable amount of fields of some other type.
+Used for packets containing multiple &#8220;items&#8221;, such as
+<a class="reference internal" href="blocks.html#pcapng.blocks.NameResolution" title="pcapng.blocks.NameResolution"><tt class="xref py py-class docutils literal"><span class="pre">NameResolution</span></tt></a>.</p>
+<p>It will keep loading data using a subfield until a
+<a class="reference internal" href="exceptions.html#pcapng.exceptions.StreamEmpty" title="pcapng.exceptions.StreamEmpty"><tt class="xref py py-exc docutils literal"><span class="pre">StreamEmpty</span></tt></a> excaption is raised, indicating
+we reached the end of data (note that a sub-field might even &#8220;simulate&#8221;
+a stream end once it reaches some end marker in the file).</p>
+<p>Values are returned in a list.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>subfield</strong> &#8211; a <a class="reference internal" href="#pcapng.structs.StructField" title="pcapng.structs.StructField"><tt class="xref py py-class docutils literal"><span class="pre">StructField</span></tt></a> sub-class instance to be
+used to read values from the stream.</td>
+</tr>
+</tbody>
+</table>
+<dl class="method">
+<dt id="pcapng.structs.ListField.load">
+<tt class="descname">load</tt><big>(</big><em>stream</em>, <em>endianness</em><big>)</big><a class="reference internal" href="../_modules/pcapng/structs.html#ListField.load"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pcapng.structs.ListField.load" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="pcapng.structs.NameResolutionRecordField">
+<em class="property">class </em><tt class="descclassname">pcapng.structs.</tt><tt class="descname">NameResolutionRecordField</tt><a class="reference internal" href="../_modules/pcapng/structs.html#NameResolutionRecordField"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pcapng.structs.NameResolutionRecordField" title="Permalink to this definition">¶</a></dt>
+<dd><p>A name resolution record field contains an item of data used in
+the <a class="reference internal" href="blocks.html#pcapng.blocks.NameResolution" title="pcapng.blocks.NameResolution"><tt class="xref py py-class docutils literal"><span class="pre">NameResolution</span></tt></a> block.</p>
+<p>it is composed of three fields:</p>
+<ul class="simple">
+<li>record type (uint16)</li>
+<li>record length (uint16)</li>
+<li>payload</li>
+</ul>
+<p>Accepted types are:</p>
+<ul class="simple">
+<li><tt class="docutils literal"><span class="pre">0x00</span></tt> - end marker</li>
+<li><tt class="docutils literal"><span class="pre">0x01</span></tt> - ipv4 address resolution</li>
+<li><tt class="docutils literal"><span class="pre">0x02</span></tt> - ipv6 address resolution</li>
+</ul>
+<p>In both cases, the payload is composed of a valid address in the
+selected IP version, followed by domain name up to the field end.</p>
+<dl class="method">
+<dt id="pcapng.structs.NameResolutionRecordField.load">
+<tt class="descname">load</tt><big>(</big><em>stream</em>, <em>endianness</em><big>)</big><a class="reference internal" href="../_modules/pcapng/structs.html#NameResolutionRecordField.load"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pcapng.structs.NameResolutionRecordField.load" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="function">
+<dt id="pcapng.structs.read_options">
+<tt class="descclassname">pcapng.structs.</tt><tt class="descname">read_options</tt><big>(</big><em>stream</em>, <em>endianness</em><big>)</big><a class="reference internal" href="../_modules/pcapng/structs.html#read_options"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pcapng.structs.read_options" title="Permalink to this definition">¶</a></dt>
+<dd><p>Read &#8220;options&#8221; from an &#8220;options block&#8221; in a stream, until a
+<tt class="docutils literal"><span class="pre">StreamEmpty</span></tt> exception is caught, or an end marker is reached.</p>
+<p>Each option is composed by:</p>
+<ul class="simple">
+<li>option_code (uint16)</li>
+<li>value_length (uint16)</li>
+<li>value (value_length-sized binary data)</li>
+</ul>
+<p>The end marker is simply an option with code <tt class="docutils literal"><span class="pre">0x0000</span></tt> and no payload</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="pcapng.structs.Options">
+<em class="property">class </em><tt class="descclassname">pcapng.structs.</tt><tt class="descname">Options</tt><big>(</big><em>schema</em>, <em>data</em>, <em>endianness</em><big>)</big><a class="reference internal" href="../_modules/pcapng/structs.html#Options"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pcapng.structs.Options" title="Permalink to this definition">¶</a></dt>
+<dd><p>Wrapper object used to easily access the contents of an &#8220;options&#8221;
+field.</p>
+<p>Fields can be accessed either by numerical id or by name (if one was
+specified in the schema).</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">When iterating the object (or calling <tt class="xref py py-meth docutils literal"><span class="pre">keys()</span></tt> /
+<tt class="xref py py-meth docutils literal"><span class="pre">iterkeys()</span></tt> / <tt class="xref py py-meth docutils literal"><span class="pre">viewkeys()</span></tt>) string keys will be
+returned if possible in place of numeric keys.  (The purpose of this
+is to achieve better readability, for example, when converting
+to a dictionary).</p>
+</div>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>schema</strong> &#8211; <p>Definition of the known options: a list of 2- or 3-tuples
+(the third argument is optional) representing, respectively,
+the numeric option code, the option name and the value type.</p>
+<p>The following value types are currently supported:</p>
+<ul>
+<li><tt class="docutils literal"><span class="pre">string</span></tt>: convert value to a unicode string, using utf-8 encoding</li>
+<li><tt class="docutils literal"><span class="pre">{u,i}{8,16,32,64}</span></tt>: (un)signed integer of the specified length</li>
+<li><tt class="docutils literal"><span class="pre">ipv4</span></tt>: a single ipv4 address [4 bytes]</li>
+<li><tt class="docutils literal"><span class="pre">ipv4+mask</span></tt>: an ipv4 address followed by a netmask [8 bytes]</li>
+<li><tt class="docutils literal"><span class="pre">ipv6</span></tt>: a single ipv6 address [16 bytes]</li>
+<li><tt class="docutils literal"><span class="pre">ipv6+prefix</span></tt>: an ipv6 address followed by prefix length [17 bytes]</li>
+<li><tt class="docutils literal"><span class="pre">macaddr</span></tt>: a mac address [6 bytes]</li>
+<li><tt class="docutils literal"><span class="pre">euiaddr</span></tt>: a eui address [8 bytes]</li>
+</ul>
+</li>
+<li><strong>data</strong> &#8211; Initial data for the options. A list of two-tuples: <tt class="docutils literal"><span class="pre">(code,</span> <span class="pre">value)</span></tt>.
+Items with the same code may be repeated; only the first one will be
+accessible using subscript <tt class="docutils literal"><span class="pre">options[code]</span></tt>; the others can be
+accessed using <a class="reference internal" href="#pcapng.structs.Options.get_all" title="pcapng.structs.Options.get_all"><tt class="xref py py-meth docutils literal"><span class="pre">get_all()</span></tt></a> and related methods</li>
+<li><strong>endianness</strong> &#8211; The current endianness of the section these options came from.
+Required in order to load numeric fields.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<dl class="method">
+<dt id="pcapng.structs.Options.get_all">
+<tt class="descname">get_all</tt><big>(</big><em>name</em><big>)</big><a class="reference internal" href="../_modules/pcapng/structs.html#Options.get_all"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pcapng.structs.Options.get_all" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get all values for the given option</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="pcapng.structs.Options.get_raw">
+<tt class="descname">get_raw</tt><big>(</big><em>name</em><big>)</big><a class="reference internal" href="../_modules/pcapng/structs.html#Options.get_raw"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pcapng.structs.Options.get_raw" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get raw value for the given option</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="pcapng.structs.Options.get_all_raw">
+<tt class="descname">get_all_raw</tt><big>(</big><em>name</em><big>)</big><a class="reference internal" href="../_modules/pcapng/structs.html#Options.get_all_raw"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pcapng.structs.Options.get_all_raw" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get all raw values for the given option</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="pcapng.structs.Options.iter_all_items">
+<tt class="descname">iter_all_items</tt><big>(</big><big>)</big><a class="reference internal" href="../_modules/pcapng/structs.html#Options.iter_all_items"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pcapng.structs.Options.iter_all_items" title="Permalink to this definition">¶</a></dt>
+<dd><p>Similar to <tt class="xref py py-meth docutils literal"><span class="pre">iteritems()</span></tt> but will yield a list of values
+as the second tuple field.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="function">
+<dt id="pcapng.structs.struct_decode">
+<tt class="descclassname">pcapng.structs.</tt><tt class="descname">struct_decode</tt><big>(</big><em>schema</em>, <em>stream</em>, <em>endianness='='</em><big>)</big><a class="reference internal" href="../_modules/pcapng/structs.html#struct_decode"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pcapng.structs.struct_decode" title="Permalink to this definition">¶</a></dt>
+<dd><p>Decode structured data from a stream, following a schema.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>schema</strong> &#8211; a list of two tuples: <tt class="docutils literal"><span class="pre">``(name,</span> <span class="pre">field)</span></tt>, where <tt class="docutils literal"><span class="pre">name</span></tt> is a string
+representing the attribute name, and <tt class="docutils literal"><span class="pre">field</span></tt> is an instance of a
+<a class="reference internal" href="#pcapng.structs.StructField" title="pcapng.structs.StructField"><tt class="xref py py-class docutils literal"><span class="pre">StructField</span></tt></a> sub-class, providing a <tt class="docutils literal"><span class="pre">.load()</span></tt> method
+to be called on the stream to get the field value.</li>
+<li><strong>stream</strong> &#8211; a file-like object, providing a <tt class="docutils literal"><span class="pre">.read()</span></tt> method, from which data
+will be read.</li>
+<li><strong>endianness</strong> &#8211; endianness specifier, as accepted by Python struct module
+(one of <tt class="docutils literal"><span class="pre">&lt;&gt;!=</span></tt>, defaults to <tt class="docutils literal"><span class="pre">=</span></tt>).</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">a dictionary mapping the field names to decoded data</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="pcapng.structs.struct_encode">
+<tt class="descclassname">pcapng.structs.</tt><tt class="descname">struct_encode</tt><big>(</big><em>schema</em>, <em>obj</em>, <em>outstream</em>, <em>endianness='='</em><big>)</big><a class="reference internal" href="../_modules/pcapng/structs.html#struct_encode"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pcapng.structs.struct_encode" title="Permalink to this definition">¶</a></dt>
+<dd><p>In the future, this function will be used to encode a structure into
+a stream. For the moment, it just raises <tt class="xref py py-exc docutils literal"><span class="pre">NotImplementedError</span></tt>.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="pcapng.structs.struct_decode_string">
+<tt class="descclassname">pcapng.structs.</tt><tt class="descname">struct_decode_string</tt><big>(</big><em>schema</em>, <em>data</em><big>)</big><a class="reference internal" href="../_modules/pcapng/structs.html#struct_decode_string"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pcapng.structs.struct_decode_string" title="Permalink to this definition">¶</a></dt>
+<dd><p>Utility function to pass a string to <a class="reference internal" href="#pcapng.structs.struct_decode" title="pcapng.structs.struct_decode"><tt class="xref py py-func docutils literal"><span class="pre">struct_decode()</span></tt></a></p>
+</dd></dl>
+
+<dl class="function">
+<dt id="pcapng.structs.struct_encode_string">
+<tt class="descclassname">pcapng.structs.</tt><tt class="descname">struct_encode_string</tt><big>(</big><em>schema</em>, <em>obj</em><big>)</big><a class="reference internal" href="../_modules/pcapng/structs.html#struct_encode_string"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pcapng.structs.struct_encode_string" title="Permalink to this definition">¶</a></dt>
+<dd><p>Utility function to pass a string to <a class="reference internal" href="#pcapng.structs.struct_encode" title="pcapng.structs.struct_encode"><tt class="xref py py-func docutils literal"><span class="pre">struct_encode()</span></tt></a>
+and get the result back as a bytes string.</p>
+</dd></dl>
+
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="scanner.html"
+                        title="previous chapter">pcapng.scanner</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="utils.html"
+                        title="next chapter">pcapng.utils</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="../_sources/api/structs.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="utils.html" title="pcapng.utils"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="scanner.html" title="pcapng.scanner"
+             >previous</a> |</li>
+        <li><a href="../index.html">python-pcapng 0.1a documentation</a> &raquo;</li>
+          <li><a href="index.html" >API Documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2014, Samuele Santi.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.3.
+    </div>
+  </body>
+</html>

@@ -1,0 +1,420 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>pcapng.blocks &mdash; python-pcapng 0.1a documentation</title>
+    
+    <link rel="stylesheet" href="../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../',
+        VERSION:     '0.1a',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <link rel="top" title="python-pcapng 0.1a documentation" href="../../index.html" />
+    <link rel="up" title="Module code" href="../index.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../index.html">python-pcapng 0.1a documentation</a> &raquo;</li>
+          <li><a href="../index.html" accesskey="U">Module code</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for pcapng.blocks</h1><div class="highlight"><pre>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Module containing the definition of known / supported &quot;blocks&quot; of the</span>
+<span class="sd">pcap-ng format.</span>
+
+<span class="sd">Each block is a struct-like object with some fields and possibly</span>
+<span class="sd">a variable amount of &quot;items&quot; (usually options).</span>
+
+<span class="sd">They can optionally expose some other properties, used eg. to provide</span>
+<span class="sd">better access to decoded information, ...</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+
+<span class="kn">import</span> <span class="nn">io</span>
+<span class="kn">import</span> <span class="nn">itertools</span>
+<span class="kn">import</span> <span class="nn">struct</span>
+
+<span class="kn">from</span> <span class="nn">pcapng.structs</span> <span class="kn">import</span> <span class="p">(</span>
+    <span class="n">struct_decode</span><span class="p">,</span> <span class="n">RawBytes</span><span class="p">,</span> <span class="n">IntField</span><span class="p">,</span> <span class="n">OptionsField</span><span class="p">,</span> <span class="n">PacketDataField</span><span class="p">,</span>
+    <span class="n">ListField</span><span class="p">,</span> <span class="n">NameResolutionRecordField</span><span class="p">,</span> <span class="n">SimplePacketDataField</span><span class="p">)</span>
+<span class="kn">from</span> <span class="nn">pcapng.constants</span> <span class="kn">import</span> <span class="n">link_types</span>
+
+
+<span class="n">KNOWN_BLOCKS</span> <span class="o">=</span> <span class="p">{}</span>
+
+
+<div class="viewcode-block" id="Block"><a class="viewcode-back" href="../../api/blocks.html#pcapng.blocks.Block">[docs]</a><span class="k">class</span> <span class="nc">Block</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Base class for blocks&quot;&quot;&quot;</span>
+
+    <span class="n">schema</span> <span class="o">=</span> <span class="p">[]</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">raw</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_raw</span> <span class="o">=</span> <span class="n">raw</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_decoded</span> <span class="o">=</span> <span class="bp">None</span>
+
+    <span class="nd">@classmethod</span>
+<div class="viewcode-block" id="Block.from_context"><a class="viewcode-back" href="../../api/blocks.html#pcapng.blocks.Block.from_context">[docs]</a>    <span class="k">def</span> <span class="nf">from_context</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">raw</span><span class="p">,</span> <span class="n">ctx</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">cls</span><span class="p">(</span><span class="n">raw</span><span class="p">)</span>
+</div>
+    <span class="k">def</span> <span class="nf">_decode</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">struct_decode</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">schema</span><span class="p">,</span> <span class="n">io</span><span class="o">.</span><span class="n">BytesIO</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_raw</span><span class="p">),</span>
+                             <span class="n">endianness</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">section</span><span class="o">.</span><span class="n">endianness</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__getattr__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_decoded</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_decoded</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_decode</span><span class="p">()</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_decoded</span><span class="p">[</span><span class="n">name</span><span class="p">]</span>
+        <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">AttributeError</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">args</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">schema</span><span class="p">:</span>
+            <span class="n">name</span> <span class="o">=</span> <span class="n">item</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="n">value</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">)</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">value</span> <span class="o">=</span> <span class="nb">repr</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+            <span class="k">except</span><span class="p">:</span>
+                <span class="n">value</span> <span class="o">=</span> <span class="s">&#39;&lt;{0} (repr failed)&gt;&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">value</span><span class="p">)</span><span class="o">.</span><span class="n">__name__</span><span class="p">)</span>
+            <span class="n">args</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s">&#39;{0}={1}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">value</span><span class="p">))</span>
+        <span class="k">return</span> <span class="s">&#39;{0}({1})&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">__class__</span><span class="o">.</span><span class="n">__name__</span><span class="p">,</span> <span class="s">&#39;, &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">args</span><span class="p">))</span>
+
+</div>
+<div class="viewcode-block" id="SectionMemberBlock"><a class="viewcode-back" href="../../api/blocks.html#pcapng.blocks.SectionMemberBlock">[docs]</a><span class="k">class</span> <span class="nc">SectionMemberBlock</span><span class="p">(</span><span class="n">Block</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">raw</span><span class="p">,</span> <span class="n">section</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">SectionMemberBlock</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="n">raw</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">section</span> <span class="o">=</span> <span class="n">section</span>
+
+    <span class="nd">@classmethod</span>
+<div class="viewcode-block" id="SectionMemberBlock.from_context"><a class="viewcode-back" href="../../api/blocks.html#pcapng.blocks.SectionMemberBlock.from_context">[docs]</a>    <span class="k">def</span> <span class="nf">from_context</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">raw</span><span class="p">,</span> <span class="n">ctx</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">cls</span><span class="p">(</span><span class="n">raw</span><span class="p">,</span> <span class="n">section</span><span class="o">=</span><span class="n">ctx</span><span class="o">.</span><span class="n">current_section</span><span class="p">)</span>
+
+</div></div>
+<div class="viewcode-block" id="register_block"><a class="viewcode-back" href="../../api/blocks.html#pcapng.blocks.register_block">[docs]</a><span class="k">def</span> <span class="nf">register_block</span><span class="p">(</span><span class="n">block</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Handy decorator to register a new known block type&quot;&quot;&quot;</span>
+    <span class="n">KNOWN_BLOCKS</span><span class="p">[</span><span class="n">block</span><span class="o">.</span><span class="n">magic_number</span><span class="p">]</span> <span class="o">=</span> <span class="n">block</span>
+    <span class="k">return</span> <span class="n">block</span>
+
+</div>
+<span class="nd">@register_block</span>
+<div class="viewcode-block" id="SectionHeader"><a class="viewcode-back" href="../../api/blocks.html#pcapng.blocks.SectionHeader">[docs]</a><span class="k">class</span> <span class="nc">SectionHeader</span><span class="p">(</span><span class="n">Block</span><span class="p">):</span>
+    <span class="n">magic_number</span> <span class="o">=</span> <span class="mh">0x0a0d0d0a</span>
+    <span class="n">schema</span> <span class="o">=</span> <span class="p">[</span>
+        <span class="p">(</span><span class="s">&#39;version_major&#39;</span><span class="p">,</span> <span class="n">IntField</span><span class="p">(</span><span class="mi">16</span><span class="p">,</span> <span class="bp">False</span><span class="p">)),</span>
+        <span class="p">(</span><span class="s">&#39;version_minor&#39;</span><span class="p">,</span> <span class="n">IntField</span><span class="p">(</span><span class="mi">16</span><span class="p">,</span> <span class="bp">False</span><span class="p">)),</span>
+        <span class="p">(</span><span class="s">&#39;section_length&#39;</span><span class="p">,</span> <span class="n">IntField</span><span class="p">(</span><span class="mi">64</span><span class="p">,</span> <span class="bp">True</span><span class="p">)),</span>
+        <span class="p">(</span><span class="s">&#39;options&#39;</span><span class="p">,</span> <span class="n">OptionsField</span><span class="p">([</span>
+            <span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="s">&#39;shb_hardware&#39;</span><span class="p">,</span> <span class="s">&#39;string&#39;</span><span class="p">),</span>
+            <span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="s">&#39;shb_os&#39;</span><span class="p">,</span> <span class="s">&#39;string&#39;</span><span class="p">),</span>
+            <span class="p">(</span><span class="mi">4</span><span class="p">,</span> <span class="s">&#39;shb_userappl&#39;</span><span class="p">,</span> <span class="s">&#39;string&#39;</span><span class="p">),</span>
+        <span class="p">]))]</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">raw</span><span class="p">,</span> <span class="n">endianness</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_raw</span> <span class="o">=</span> <span class="n">raw</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_decoded</span> <span class="o">=</span> <span class="bp">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">endianness</span> <span class="o">=</span> <span class="n">endianness</span>
+        <span class="c"># self.version = version</span>
+        <span class="c"># self.length = length</span>
+        <span class="c"># self.options = options</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_interfaces_id</span> <span class="o">=</span> <span class="n">itertools</span><span class="o">.</span><span class="n">count</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">interfaces</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">interface_stats</span> <span class="o">=</span> <span class="p">{}</span>
+
+    <span class="k">def</span> <span class="nf">_decode</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">struct_decode</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">schema</span><span class="p">,</span> <span class="n">io</span><span class="o">.</span><span class="n">BytesIO</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_raw</span><span class="p">),</span>
+                             <span class="n">endianness</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">endianness</span><span class="p">)</span>
+
+<div class="viewcode-block" id="SectionHeader.register_interface"><a class="viewcode-back" href="../../api/blocks.html#pcapng.blocks.SectionHeader.register_interface">[docs]</a>    <span class="k">def</span> <span class="nf">register_interface</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">interface</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Helper method to register an interface within this section&quot;&quot;&quot;</span>
+        <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">interface</span><span class="p">,</span> <span class="n">InterfaceDescription</span><span class="p">)</span>
+        <span class="n">interface_id</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_interfaces_id</span><span class="o">.</span><span class="n">next</span><span class="p">()</span>
+        <span class="n">interface</span><span class="o">.</span><span class="n">interface_id</span> <span class="o">=</span> <span class="n">interface_id</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">interfaces</span><span class="p">[</span><span class="n">interface_id</span><span class="p">]</span> <span class="o">=</span> <span class="n">interface</span>
+</div>
+<div class="viewcode-block" id="SectionHeader.add_interface_stats"><a class="viewcode-back" href="../../api/blocks.html#pcapng.blocks.SectionHeader.add_interface_stats">[docs]</a>    <span class="k">def</span> <span class="nf">add_interface_stats</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">interface_stats</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Helper method to register interface stats within this section&quot;&quot;&quot;</span>
+        <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">interface_stats</span><span class="p">,</span> <span class="n">InterfaceStatistics</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">interface_stats</span><span class="p">[</span><span class="n">interface_stats</span><span class="o">.</span><span class="n">interface_id</span><span class="p">]</span> <span class="o">=</span> <span class="n">interface_stats</span>
+</div>
+    <span class="nd">@property</span>
+<div class="viewcode-block" id="SectionHeader.version"><a class="viewcode-back" href="../../api/blocks.html#pcapng.blocks.SectionHeader.version">[docs]</a>    <span class="k">def</span> <span class="nf">version</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">version_major</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">version_minor</span><span class="p">)</span>
+</div>
+    <span class="nd">@property</span>
+<div class="viewcode-block" id="SectionHeader.length"><a class="viewcode-back" href="../../api/blocks.html#pcapng.blocks.SectionHeader.length">[docs]</a>    <span class="k">def</span> <span class="nf">length</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">section_length</span>
+
+</div></div>
+<span class="nd">@register_block</span>
+<div class="viewcode-block" id="InterfaceDescription"><a class="viewcode-back" href="../../api/blocks.html#pcapng.blocks.InterfaceDescription">[docs]</a><span class="k">class</span> <span class="nc">InterfaceDescription</span><span class="p">(</span><span class="n">SectionMemberBlock</span><span class="p">):</span>
+    <span class="n">magic_number</span> <span class="o">=</span> <span class="mh">0x00000001</span>
+    <span class="n">schema</span> <span class="o">=</span> <span class="p">[</span>
+        <span class="p">(</span><span class="s">&#39;link_type&#39;</span><span class="p">,</span> <span class="n">IntField</span><span class="p">(</span><span class="mi">16</span><span class="p">,</span> <span class="bp">False</span><span class="p">)),</span>  <span class="c"># todo: enc/decode</span>
+        <span class="p">(</span><span class="s">&#39;reserved&#39;</span><span class="p">,</span> <span class="n">RawBytes</span><span class="p">(</span><span class="mi">2</span><span class="p">)),</span>
+        <span class="p">(</span><span class="s">&#39;snaplen&#39;</span><span class="p">,</span> <span class="n">IntField</span><span class="p">(</span><span class="mi">32</span><span class="p">,</span> <span class="bp">False</span><span class="p">)),</span>
+        <span class="p">(</span><span class="s">&#39;options&#39;</span><span class="p">,</span> <span class="n">OptionsField</span><span class="p">([</span>
+            <span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="s">&#39;if_name&#39;</span><span class="p">,</span> <span class="s">&#39;string&#39;</span><span class="p">),</span>
+            <span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="s">&#39;if_description&#39;</span><span class="p">,</span> <span class="s">&#39;string&#39;</span><span class="p">),</span>
+            <span class="p">(</span><span class="mi">4</span><span class="p">,</span> <span class="s">&#39;if_IPv4addr&#39;</span><span class="p">,</span> <span class="s">&#39;ipv4+mask&#39;</span><span class="p">),</span>
+            <span class="p">(</span><span class="mi">5</span><span class="p">,</span> <span class="s">&#39;if_IPv6addr&#39;</span><span class="p">,</span> <span class="s">&#39;ipv6+prefix&#39;</span><span class="p">),</span>
+            <span class="p">(</span><span class="mi">6</span><span class="p">,</span> <span class="s">&#39;if_MACaddr&#39;</span><span class="p">,</span> <span class="s">&#39;macaddr&#39;</span><span class="p">),</span>
+            <span class="p">(</span><span class="mi">7</span><span class="p">,</span> <span class="s">&#39;if_EUIaddr&#39;</span><span class="p">,</span> <span class="s">&#39;euiaddr&#39;</span><span class="p">),</span>
+            <span class="p">(</span><span class="mi">8</span><span class="p">,</span> <span class="s">&#39;if_speed&#39;</span><span class="p">,</span> <span class="s">&#39;u64&#39;</span><span class="p">),</span>
+            <span class="p">(</span><span class="mi">9</span><span class="p">,</span> <span class="s">&#39;if_tsresol&#39;</span><span class="p">,</span> <span class="s">&#39;u8&#39;</span><span class="p">),</span>
+            <span class="p">(</span><span class="mi">10</span><span class="p">,</span> <span class="s">&#39;if_tzone&#39;</span><span class="p">,</span> <span class="s">&#39;u32&#39;</span><span class="p">),</span>
+            <span class="p">(</span><span class="mi">11</span><span class="p">,</span> <span class="s">&#39;if_filter&#39;</span><span class="p">,</span> <span class="s">&#39;string&#39;</span><span class="p">),</span>
+            <span class="p">(</span><span class="mi">12</span><span class="p">,</span> <span class="s">&#39;if_os&#39;</span><span class="p">,</span> <span class="s">&#39;string&#39;</span><span class="p">),</span>
+            <span class="p">(</span><span class="mi">13</span><span class="p">,</span> <span class="s">&#39;if_fcslen&#39;</span><span class="p">,</span> <span class="s">&#39;u8&#39;</span><span class="p">),</span>
+            <span class="p">(</span><span class="mi">14</span><span class="p">,</span> <span class="s">&#39;if_tsoffset&#39;</span><span class="p">,</span> <span class="s">&#39;i64&#39;</span><span class="p">),</span>
+        <span class="p">]))]</span>
+
+    <span class="nd">@property</span>  <span class="c"># todo: cache this property</span>
+<div class="viewcode-block" id="InterfaceDescription.timestamp_resolution"><a class="viewcode-back" href="../../api/blocks.html#pcapng.blocks.InterfaceDescription.timestamp_resolution">[docs]</a>    <span class="k">def</span> <span class="nf">timestamp_resolution</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c"># ts_resol is a 8-bit integer representing the power of ten</span>
+        <span class="c"># of the timestamp multiplier. If not specified, -6 is assumed</span>
+        <span class="k">if</span> <span class="s">&#39;ts_resol&#39;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">options</span><span class="p">:</span>
+            <span class="n">resol</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">options</span><span class="p">[</span><span class="s">&#39;ts_resol&#39;</span><span class="p">]</span>
+            <span class="k">return</span> <span class="n">struct</span><span class="o">.</span><span class="n">unpack</span><span class="p">(</span><span class="s">&#39;b&#39;</span><span class="p">,</span> <span class="n">resol</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="k">return</span> <span class="o">-</span><span class="mi">6</span>
+</div>
+    <span class="nd">@property</span>
+<div class="viewcode-block" id="InterfaceDescription.statistics"><a class="viewcode-back" href="../../api/blocks.html#pcapng.blocks.InterfaceDescription.statistics">[docs]</a>    <span class="k">def</span> <span class="nf">statistics</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c"># todo: ensure we always have an interface id -&gt; how??</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">section</span><span class="o">.</span><span class="n">interface_stats</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">interface_id</span><span class="p">)</span>
+</div>
+    <span class="nd">@property</span>
+<div class="viewcode-block" id="InterfaceDescription.link_type_description"><a class="viewcode-back" href="../../api/blocks.html#pcapng.blocks.InterfaceDescription.link_type_description">[docs]</a>    <span class="k">def</span> <span class="nf">link_type_description</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">link_types</span><span class="o">.</span><span class="n">LINKTYPE_DESCRIPTIONS</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">link_type</span><span class="p">]</span>
+        <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+            <span class="k">return</span> <span class="s">&#39;Unknown link type: 0x{0:04X}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">link_type</span><span class="p">)</span>
+
+</div></div>
+<div class="viewcode-block" id="BlockWithTimestampMixin"><a class="viewcode-back" href="../../api/blocks.html#pcapng.blocks.BlockWithTimestampMixin">[docs]</a><span class="k">class</span> <span class="nc">BlockWithTimestampMixin</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Block mixin adding properties to better access timestamps</span>
+<span class="sd">    of blocks that provide one.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="nd">@property</span>
+<div class="viewcode-block" id="BlockWithTimestampMixin.timestamp"><a class="viewcode-back" href="../../api/blocks.html#pcapng.blocks.BlockWithTimestampMixin.timestamp">[docs]</a>    <span class="k">def</span> <span class="nf">timestamp</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c"># First, get the accuracy from the ts_resol option</span>
+        <span class="k">return</span> <span class="p">(((</span><span class="bp">self</span><span class="o">.</span><span class="n">timestamp_high</span> <span class="o">&lt;&lt;</span> <span class="mi">32</span><span class="p">)</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">timestamp_low</span><span class="p">)</span>
+                <span class="o">*</span> <span class="p">(</span><span class="mi">10</span> <span class="o">**</span> <span class="bp">self</span><span class="o">.</span><span class="n">timestamp_resolution</span><span class="p">))</span>
+</div>
+    <span class="nd">@property</span>
+<div class="viewcode-block" id="BlockWithTimestampMixin.timestamp_resolution"><a class="viewcode-back" href="../../api/blocks.html#pcapng.blocks.BlockWithTimestampMixin.timestamp_resolution">[docs]</a>    <span class="k">def</span> <span class="nf">timestamp_resolution</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">interface</span><span class="o">.</span><span class="n">timestamp_resolution</span>
+
+    <span class="c"># todo: add some property returning a datetime() with timezone..</span>
+
+</div></div>
+<div class="viewcode-block" id="BlockWithInterfaceMixin"><a class="viewcode-back" href="../../api/blocks.html#pcapng.blocks.BlockWithInterfaceMixin">[docs]</a><span class="k">class</span> <span class="nc">BlockWithInterfaceMixin</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="nd">@property</span>
+<div class="viewcode-block" id="BlockWithInterfaceMixin.interface"><a class="viewcode-back" href="../../api/blocks.html#pcapng.blocks.BlockWithInterfaceMixin.interface">[docs]</a>    <span class="k">def</span> <span class="nf">interface</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c"># We need to get the correct interface from the section</span>
+        <span class="c"># by looking up the interface_id</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">section</span><span class="o">.</span><span class="n">interfaces</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">interface_id</span><span class="p">]</span>
+
+</div></div>
+<div class="viewcode-block" id="BasePacketBlock"><a class="viewcode-back" href="../../api/blocks.html#pcapng.blocks.BasePacketBlock">[docs]</a><span class="k">class</span> <span class="nc">BasePacketBlock</span><span class="p">(</span>
+        <span class="n">SectionMemberBlock</span><span class="p">,</span>
+        <span class="n">BlockWithInterfaceMixin</span><span class="p">,</span>
+        <span class="n">BlockWithTimestampMixin</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Base class for the &quot;EnhancedPacket&quot; and &quot;Packet&quot; blocks&quot;&quot;&quot;</span>
+    <span class="k">pass</span>
+
+</div>
+<span class="nd">@register_block</span>
+<div class="viewcode-block" id="EnhancedPacket"><a class="viewcode-back" href="../../api/blocks.html#pcapng.blocks.EnhancedPacket">[docs]</a><span class="k">class</span> <span class="nc">EnhancedPacket</span><span class="p">(</span><span class="n">BasePacketBlock</span><span class="p">):</span>
+    <span class="n">magic_number</span> <span class="o">=</span> <span class="mh">0x00000006</span>
+    <span class="n">schema</span> <span class="o">=</span> <span class="p">[</span>
+        <span class="p">(</span><span class="s">&#39;interface_id&#39;</span><span class="p">,</span> <span class="n">IntField</span><span class="p">(</span><span class="mi">32</span><span class="p">,</span> <span class="bp">False</span><span class="p">)),</span>
+        <span class="p">(</span><span class="s">&#39;timestamp_high&#39;</span><span class="p">,</span> <span class="n">IntField</span><span class="p">(</span><span class="mi">32</span><span class="p">,</span> <span class="bp">False</span><span class="p">)),</span>
+        <span class="p">(</span><span class="s">&#39;timestamp_low&#39;</span><span class="p">,</span> <span class="n">IntField</span><span class="p">(</span><span class="mi">32</span><span class="p">,</span> <span class="bp">False</span><span class="p">)),</span>
+        <span class="p">(</span><span class="s">&#39;packet_payload_info&#39;</span><span class="p">,</span> <span class="n">PacketDataField</span><span class="p">()),</span>
+        <span class="p">(</span><span class="s">&#39;options&#39;</span><span class="p">,</span> <span class="n">OptionsField</span><span class="p">([</span>
+            <span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="s">&#39;epb_flags&#39;</span><span class="p">),</span>  <span class="c"># todo: is this endianness dependent?</span>
+            <span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="s">&#39;epb_hash&#39;</span><span class="p">),</span>  <span class="c"># todo: process the hash value</span>
+            <span class="p">(</span><span class="mi">4</span><span class="p">,</span> <span class="s">&#39;epb_dropcount&#39;</span><span class="p">,</span> <span class="s">&#39;u64&#39;</span><span class="p">),</span>
+        <span class="p">]))</span>
+    <span class="p">]</span>
+
+    <span class="nd">@property</span>
+<div class="viewcode-block" id="EnhancedPacket.captured_len"><a class="viewcode-back" href="../../api/blocks.html#pcapng.blocks.EnhancedPacket.captured_len">[docs]</a>    <span class="k">def</span> <span class="nf">captured_len</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">packet_payload_info</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+</div>
+    <span class="nd">@property</span>
+<div class="viewcode-block" id="EnhancedPacket.packet_len"><a class="viewcode-back" href="../../api/blocks.html#pcapng.blocks.EnhancedPacket.packet_len">[docs]</a>    <span class="k">def</span> <span class="nf">packet_len</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">packet_payload_info</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+</div>
+    <span class="nd">@property</span>
+<div class="viewcode-block" id="EnhancedPacket.packet_data"><a class="viewcode-back" href="../../api/blocks.html#pcapng.blocks.EnhancedPacket.packet_data">[docs]</a>    <span class="k">def</span> <span class="nf">packet_data</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">packet_payload_info</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>
+
+</div></div>
+<span class="nd">@register_block</span>
+<div class="viewcode-block" id="SimplePacket"><a class="viewcode-back" href="../../api/blocks.html#pcapng.blocks.SimplePacket">[docs]</a><span class="k">class</span> <span class="nc">SimplePacket</span><span class="p">(</span><span class="n">SectionMemberBlock</span><span class="p">):</span>
+    <span class="n">magic_number</span> <span class="o">=</span> <span class="mh">0x00000003</span>
+    <span class="n">schema</span> <span class="o">=</span> <span class="p">[</span>
+        <span class="p">(</span><span class="s">&#39;packet_simple_payload_info&#39;</span><span class="p">,</span> <span class="n">SimplePacketDataField</span><span class="p">()),</span>
+    <span class="p">]</span>
+
+    <span class="nd">@property</span>
+<div class="viewcode-block" id="SimplePacket.packet_len"><a class="viewcode-back" href="../../api/blocks.html#pcapng.blocks.SimplePacket.packet_len">[docs]</a>    <span class="k">def</span> <span class="nf">packet_len</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">packet_simple_payload_info</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+</div>
+    <span class="nd">@property</span>
+<div class="viewcode-block" id="SimplePacket.packet_data"><a class="viewcode-back" href="../../api/blocks.html#pcapng.blocks.SimplePacket.packet_data">[docs]</a>    <span class="k">def</span> <span class="nf">packet_data</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">packet_simple_payload_info</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>
+
+</div></div>
+<span class="nd">@register_block</span>
+<div class="viewcode-block" id="Packet"><a class="viewcode-back" href="../../api/blocks.html#pcapng.blocks.Packet">[docs]</a><span class="k">class</span> <span class="nc">Packet</span><span class="p">(</span><span class="n">BasePacketBlock</span><span class="p">):</span>
+    <span class="n">magic_number</span> <span class="o">=</span> <span class="mh">0x00000002</span>
+    <span class="n">schema</span> <span class="o">=</span> <span class="p">[</span>
+        <span class="p">(</span><span class="s">&#39;interface_id&#39;</span><span class="p">,</span> <span class="n">IntField</span><span class="p">(</span><span class="mi">16</span><span class="p">,</span> <span class="bp">False</span><span class="p">)),</span>
+        <span class="p">(</span><span class="s">&#39;drops_count&#39;</span><span class="p">,</span> <span class="n">IntField</span><span class="p">(</span><span class="mi">16</span><span class="p">,</span> <span class="bp">False</span><span class="p">)),</span>
+        <span class="p">(</span><span class="s">&#39;timestamp_high&#39;</span><span class="p">,</span> <span class="n">IntField</span><span class="p">(</span><span class="mi">32</span><span class="p">,</span> <span class="bp">False</span><span class="p">)),</span>
+        <span class="p">(</span><span class="s">&#39;timestamp_low&#39;</span><span class="p">,</span> <span class="n">IntField</span><span class="p">(</span><span class="mi">32</span><span class="p">,</span> <span class="bp">False</span><span class="p">)),</span>
+        <span class="p">(</span><span class="s">&#39;packet_payload_info&#39;</span><span class="p">,</span> <span class="n">PacketDataField</span><span class="p">()),</span>
+        <span class="p">(</span><span class="s">&#39;options&#39;</span><span class="p">,</span> <span class="n">OptionsField</span><span class="p">([</span>
+            <span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="s">&#39;epb_flags&#39;</span><span class="p">,</span> <span class="s">&#39;u32&#39;</span><span class="p">),</span>  <span class="c"># A flag!</span>
+            <span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="s">&#39;epb_hash&#39;</span><span class="p">),</span>  <span class="c"># Variable size!</span>
+        <span class="p">]))</span>
+    <span class="p">]</span>
+
+    <span class="nd">@property</span>
+<div class="viewcode-block" id="Packet.captured_len"><a class="viewcode-back" href="../../api/blocks.html#pcapng.blocks.Packet.captured_len">[docs]</a>    <span class="k">def</span> <span class="nf">captured_len</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">packet_payload_info</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+</div>
+    <span class="nd">@property</span>
+<div class="viewcode-block" id="Packet.packet_len"><a class="viewcode-back" href="../../api/blocks.html#pcapng.blocks.Packet.packet_len">[docs]</a>    <span class="k">def</span> <span class="nf">packet_len</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">packet_payload_info</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+</div>
+    <span class="nd">@property</span>
+<div class="viewcode-block" id="Packet.packet_data"><a class="viewcode-back" href="../../api/blocks.html#pcapng.blocks.Packet.packet_data">[docs]</a>    <span class="k">def</span> <span class="nf">packet_data</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">packet_payload_info</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>
+
+</div></div>
+<span class="nd">@register_block</span>
+<div class="viewcode-block" id="NameResolution"><a class="viewcode-back" href="../../api/blocks.html#pcapng.blocks.NameResolution">[docs]</a><span class="k">class</span> <span class="nc">NameResolution</span><span class="p">(</span><span class="n">SectionMemberBlock</span><span class="p">):</span>
+    <span class="n">magic_number</span> <span class="o">=</span> <span class="mh">0x00000004</span>
+    <span class="n">schema</span> <span class="o">=</span> <span class="p">[</span>
+        <span class="p">(</span><span class="s">&#39;records&#39;</span><span class="p">,</span> <span class="n">ListField</span><span class="p">(</span><span class="n">NameResolutionRecordField</span><span class="p">())),</span>
+        <span class="p">(</span><span class="s">&#39;options&#39;</span><span class="p">,</span> <span class="n">OptionsField</span><span class="p">([</span>
+            <span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="s">&#39;ns_dnsname&#39;</span><span class="p">,</span> <span class="s">&#39;string&#39;</span><span class="p">),</span>
+            <span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="s">&#39;ns_dnsIP4addr&#39;</span><span class="p">,</span> <span class="s">&#39;ipv4&#39;</span><span class="p">),</span>
+            <span class="p">(</span><span class="mi">4</span><span class="p">,</span> <span class="s">&#39;ns_dnsIP6addr&#39;</span><span class="p">,</span> <span class="s">&#39;ipv6&#39;</span><span class="p">),</span>
+        <span class="p">])),</span>
+    <span class="p">]</span>
+
+</div>
+<span class="nd">@register_block</span>
+<div class="viewcode-block" id="InterfaceStatistics"><a class="viewcode-back" href="../../api/blocks.html#pcapng.blocks.InterfaceStatistics">[docs]</a><span class="k">class</span> <span class="nc">InterfaceStatistics</span><span class="p">(</span><span class="n">SectionMemberBlock</span><span class="p">,</span> <span class="n">BlockWithTimestampMixin</span><span class="p">,</span>
+                          <span class="n">BlockWithInterfaceMixin</span><span class="p">):</span>
+    <span class="n">magic_number</span> <span class="o">=</span> <span class="mh">0x00000005</span>
+    <span class="n">schema</span> <span class="o">=</span> <span class="p">[</span>
+        <span class="p">(</span><span class="s">&#39;interface_id&#39;</span><span class="p">,</span> <span class="n">IntField</span><span class="p">(</span><span class="mi">32</span><span class="p">,</span> <span class="bp">False</span><span class="p">)),</span>
+        <span class="p">(</span><span class="s">&#39;timestamp_high&#39;</span><span class="p">,</span> <span class="n">IntField</span><span class="p">(</span><span class="mi">32</span><span class="p">,</span> <span class="bp">False</span><span class="p">)),</span>
+        <span class="p">(</span><span class="s">&#39;timestamp_low&#39;</span><span class="p">,</span> <span class="n">IntField</span><span class="p">(</span><span class="mi">32</span><span class="p">,</span> <span class="bp">False</span><span class="p">)),</span>
+        <span class="p">(</span><span class="s">&#39;options&#39;</span><span class="p">,</span> <span class="n">OptionsField</span><span class="p">([</span>
+            <span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="s">&#39;isb_starttime&#39;</span><span class="p">,</span> <span class="s">&#39;u64&#39;</span><span class="p">),</span>  <span class="c"># todo: consider resolution</span>
+            <span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="s">&#39;isb_endtime&#39;</span><span class="p">,</span> <span class="s">&#39;u64&#39;</span><span class="p">),</span>
+            <span class="p">(</span><span class="mi">4</span><span class="p">,</span> <span class="s">&#39;isb_ifrecv&#39;</span><span class="p">,</span> <span class="s">&#39;u64&#39;</span><span class="p">),</span>
+            <span class="p">(</span><span class="mi">5</span><span class="p">,</span> <span class="s">&#39;isb_ifdrop&#39;</span><span class="p">,</span> <span class="s">&#39;u64&#39;</span><span class="p">),</span>
+            <span class="p">(</span><span class="mi">6</span><span class="p">,</span> <span class="s">&#39;isb_filteraccept&#39;</span><span class="p">,</span> <span class="s">&#39;u64&#39;</span><span class="p">),</span>
+            <span class="p">(</span><span class="mi">7</span><span class="p">,</span> <span class="s">&#39;isb_osdrop&#39;</span><span class="p">,</span> <span class="s">&#39;u64&#39;</span><span class="p">),</span>
+            <span class="p">(</span><span class="mi">8</span><span class="p">,</span> <span class="s">&#39;isb_usrdeliv&#39;</span><span class="p">,</span> <span class="s">&#39;u64&#39;</span><span class="p">),</span>
+        <span class="p">])),</span>
+    <span class="p">]</span>
+
+</div>
+<div class="viewcode-block" id="UnknownBlock"><a class="viewcode-back" href="../../api/blocks.html#pcapng.blocks.UnknownBlock">[docs]</a><span class="k">class</span> <span class="nc">UnknownBlock</span><span class="p">(</span><span class="n">Block</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Class used to represent an unknown block.</span>
+
+<span class="sd">    Its block type and raw data will be stored directly with no further</span>
+<span class="sd">    processing.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">block_type</span><span class="p">,</span> <span class="n">data</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">block_type</span> <span class="o">=</span> <span class="n">block_type</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">data</span> <span class="o">=</span> <span class="n">data</span>
+
+    <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">(</span><span class="s">&#39;UnknownBlock(0x{0:08X}, {1!r})&#39;</span>
+                <span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">block_type</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">))</span></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../index.html">python-pcapng 0.1a documentation</a> &raquo;</li>
+          <li><a href="../index.html" >Module code</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2014, Samuele Santi.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.3.
+    </div>
+  </body>
+</html>

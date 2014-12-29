@@ -1,0 +1,141 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>pcapng.exceptions &mdash; python-pcapng 0.1a documentation</title>
+    
+    <link rel="stylesheet" href="../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../',
+        VERSION:     '0.1a',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <link rel="top" title="python-pcapng 0.1a documentation" href="../../index.html" />
+    <link rel="up" title="Module code" href="../index.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../index.html">python-pcapng 0.1a documentation</a> &raquo;</li>
+          <li><a href="../index.html" accesskey="U">Module code</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for pcapng.exceptions</h1><div class="highlight"><pre>
+<div class="viewcode-block" id="PcapngException"><a class="viewcode-back" href="../../api/exceptions.html#pcapng.exceptions.PcapngException">[docs]</a><span class="k">class</span> <span class="nc">PcapngException</span><span class="p">(</span><span class="ne">Exception</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Base for all the pcapng exceptions&quot;&quot;&quot;</span>
+    <span class="k">pass</span>
+
+</div>
+<div class="viewcode-block" id="PcapngLoadError"><a class="viewcode-back" href="../../api/exceptions.html#pcapng.exceptions.PcapngLoadError">[docs]</a><span class="k">class</span> <span class="nc">PcapngLoadError</span><span class="p">(</span><span class="n">PcapngException</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Indicate an error while loading a pcapng file&quot;&quot;&quot;</span>
+    <span class="k">pass</span>
+
+</div>
+<div class="viewcode-block" id="PcapngDumpError"><a class="viewcode-back" href="../../api/exceptions.html#pcapng.exceptions.PcapngDumpError">[docs]</a><span class="k">class</span> <span class="nc">PcapngDumpError</span><span class="p">(</span><span class="n">PcapngException</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Indicate an error while writing a pcapng file&quot;&quot;&quot;</span>
+    <span class="k">pass</span>
+
+</div>
+<div class="viewcode-block" id="StreamEmpty"><a class="viewcode-back" href="../../api/exceptions.html#pcapng.exceptions.StreamEmpty">[docs]</a><span class="k">class</span> <span class="nc">StreamEmpty</span><span class="p">(</span><span class="n">PcapngLoadError</span><span class="p">):</span>  <span class="c"># End of stream</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Exception indicating that the end of the stream was reached</span>
+<span class="sd">    and exactly zero bytes were read; usually it simply indicates</span>
+<span class="sd">    we reached the end of the stream and no further content is</span>
+<span class="sd">    available for reading.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">pass</span>
+
+</div>
+<div class="viewcode-block" id="CorruptedFile"><a class="viewcode-back" href="../../api/exceptions.html#pcapng.exceptions.CorruptedFile">[docs]</a><span class="k">class</span> <span class="nc">CorruptedFile</span><span class="p">(</span><span class="n">PcapngLoadError</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Exception used to indicate that something is wrong with the</span>
+<span class="sd">    file structure, possibly due to data corruption.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">pass</span>
+
+</div>
+<div class="viewcode-block" id="TruncatedFile"><a class="viewcode-back" href="../../api/exceptions.html#pcapng.exceptions.TruncatedFile">[docs]</a><span class="k">class</span> <span class="nc">TruncatedFile</span><span class="p">(</span><span class="n">PcapngLoadError</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Exception used to indicate that not all the required bytes</span>
+<span class="sd">    could be read before stream end, but the read length was</span>
+<span class="sd">    non-zero, indicating a possibly truncated stream.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">pass</span>
+
+</div>
+<div class="viewcode-block" id="BadMagic"><a class="viewcode-back" href="../../api/exceptions.html#pcapng.exceptions.BadMagic">[docs]</a><span class="k">class</span> <span class="nc">BadMagic</span><span class="p">(</span><span class="n">PcapngLoadError</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Exception used to indicate a failure due to some bad magic</span>
+<span class="sd">    number encountered (either the file magic or section header</span>
+<span class="sd">    byte order marker).</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">pass</span></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../index.html">python-pcapng 0.1a documentation</a> &raquo;</li>
+          <li><a href="../index.html" >Module code</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2014, Samuele Santi.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.3.
+    </div>
+  </body>
+</html>
