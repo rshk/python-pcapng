@@ -5,10 +5,13 @@ from __future__ import print_function
 import sys
 import io
 from datetime import datetime
-import binascii
 
 import pcapng
 from pcapng.blocks import SectionHeader, InterfaceDescription, EnhancedPacket
+from scapy.layers.l2 import Ether
+import scapy.packet
+# To make sure all packet types are available
+import scapy.all  # noqa
 
 
 def col256(text, fg=None, bg=None, bold=False):
@@ -23,6 +26,9 @@ def col256(text, fg=None, bg=None, bold=False):
             return 16 + int(num, 6)
 
         raise ValueError("Invalid color: {0!r}".format(num))
+
+    if not isinstance(text, basestring):
+        text = repr(text)
 
     if not isinstance(text, unicode):
         text = unicode(text, encoding='utf-8')
@@ -96,7 +102,6 @@ def pprint_sectionheader(block):
 
 def pprint_interfacedesc(block):
     text = [
-        '   ',
         col256(' Interface #{0} '.format(block.interface_id),
                bg='010', fg='453'),
         col256('Link type:', bold=True),
@@ -111,7 +116,6 @@ def pprint_interfacedesc(block):
 
 def pprint_enhanced_packet(block):
     text = [
-        '   ',
         col256(' Packet+ ', bg='001', fg='345'),
 
         # col256('NIC:', bold=True),
@@ -124,18 +128,85 @@ def pprint_enhanced_packet(block):
 
     text.extend([
         # col256('Size:', bold=True),
-        col256(unicode(block.packet_len) + u' bytes', fg='025'),
-    ])
+        col256(unicode(block.packet_len) + u' bytes', fg='025')])
+
     if block.captured_len != block.packet_len:
         text.extend([
             col256('Truncated to:', bold=True),
-            col256(unicode(block.captured_len) + u'bytes', fg='145'),
-        ])
+            col256(unicode(block.captured_len) + u'bytes', fg='145')])
 
     text.extend(pprint_options(block.options))
     print(' '.join(text))
+
+    if block.interface.link_type == 1:
+        # print(repr(block.packet_data))
+        # print(col256(repr(Ether(block.packet_data)), fg='255'))
+
+        _info = format_packet_information(block.packet_data)
+        print('\n'.join('    ' + line for line in _info))
+
+    else:
+        print('        Printing information for non-ethernet packets')
+        print('        is not supported yet.')
+
     # print('\n'.join('        ' + line
     #                 for line in format_binary_data(block.packet_data)))
+
+
+def format_packet_information(packet_data):
+    decoded = Ether(packet_data)
+    return format_scapy_packet(decoded)
+
+
+def format_scapy_packet(packet):
+    fields = []
+    for f in packet.fields_desc:
+        # if isinstance(f, ConditionalField) and not f._evalcond(self):
+        #     continue
+        if f.name in packet.fields:
+            val = f.i2repr(packet, packet.fields[f.name])
+
+        elif f.name in packet.overloaded_fields:
+            val = f.i2repr(packet, packet.overloaded_fields[f.name])
+
+        else:
+            continue
+
+        fields.append('{0}={1}'.format(col256(f.name, '542'),
+                                       col256(val, '352')))
+
+    yield '{0} {1}'.format(
+        col256(packet.__class__.__name__, '501'),
+        ' '.join(fields))
+
+    if packet.payload:
+        if isinstance(packet.payload, scapy.packet.Raw):
+            raw_data = str(packet.payload)
+            for line in make_printable(raw_data).splitlines():
+                yield '    ' + line
+
+            #     for line in format_binary_data(raw_data):
+            #         yield '    ' + line
+
+        elif isinstance(packet.payload, scapy.packet.Packet):
+            for line in format_scapy_packet(packet.payload):
+                yield '    ' + line
+
+        else:
+            for line in repr(packet.payload).splitlines():
+                yield '    ' + line
+
+
+def make_printable(data):  # todo: preserve unicode
+    stream = io.BytesIO(data)
+    for ch in data:
+        if ch == '\\':
+            stream.write('\\\\')
+        elif ch in '\n\r' or (32 <= ord(ch) <= 126):
+            stream.write(ch)
+        else:
+            stream.write('\\x{0:02x}'.format(ord(ch)))
+    return stream.getvalue()
 
 
 def format_binary_data(data):
