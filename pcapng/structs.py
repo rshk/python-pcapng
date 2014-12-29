@@ -531,12 +531,18 @@ class Options(Mapping):
         return code
 
     def _get_raw(self, name):
-        name = self._resolve_name(name)
-        return self.raw_data[name][0]
+        _name = self._resolve_name(name)
+        try:
+            return self.raw_data[_name][0]
+        except KeyError:
+            raise KeyError(name)
 
     def _get_all_raw(self, name):
-        name = self._resolve_name(name)
-        return list(self.raw_data[name])
+        _name = self._resolve_name(name)
+        try:
+            return list(self.raw_data[_name])
+        except KeyError:
+            raise KeyError(name)
 
     def _get_converted(self, name):
         value = self._get_raw(name)
