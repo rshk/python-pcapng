@@ -59,7 +59,7 @@ class FileScanner(object):
             self.current_section.register_interface(block)
 
         elif isinstance(block, blocks.InterfaceStatistics):
-            self.current_section.interface_stats[block.interface_id] = block
+            self.current_section.add_interface_stats(block)
 
         return block
 
