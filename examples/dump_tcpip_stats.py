@@ -1,4 +1,6 @@
-from __future__ import print_function
+#!/usr/bin/env python
+
+from __future__ import print_function, division
 
 import logging
 import sys
@@ -7,8 +9,8 @@ from collections import Counter
 from scapy.layers.l2 import Ether
 from scapy.layers.inet import IP, TCP
 
-from pcapng import PcapngReader
-from pcapng.objects import EnhancedPacket
+from pcapng import FileScanner
+from pcapng.blocks import EnhancedPacket
 
 
 logger = logging.getLogger('pcapng')
@@ -21,9 +23,24 @@ handler.setFormatter(formatter)
 logger.addHandler(handler)
 
 
+def title(text):
+    print(u'-' * 60)
+    print(u'\033[1m{0}\033[0m'.format(text))
+    print(u'-' * 60)
+
+
+def human_number(num, k=1000):
+    powers = [''] + list('kMGTPEY')
+    assert isinstance(num, (int, long))
+    for i, suffix in enumerate(powers):
+        if (num < (k ** (i + 1))) or (i == len(powers) - 1):
+            return '{0:d}{1}'.format(int(round(num / (k ** i))), suffix)
+    raise AssertionError('Should never reach this')
+
+
 if __name__ == '__main__':
     import sys
-    rdr = PcapngReader(sys.stdin)
+    rdr = FileScanner(sys.stdin)
 
     ip_src_count = Counter()
     ip_dst_count = Counter()
@@ -39,7 +56,7 @@ if __name__ == '__main__':
         # print(repr(block))
 
         if isinstance(block, EnhancedPacket):
-            assert block._interface.link_type == 1  # must be ethernet!
+            assert block.interface.link_type == 1  # must be ethernet!
 
             decoded = Ether(block.packet_data)
             # print(repr(Ether(block.packet_data))[:400] + '...')
@@ -63,55 +80,47 @@ if __name__ == '__main__':
     # Print report
     # ------------------------------------------------------------
 
-    def _rsic(o):
-        return sorted(o.iteritems(), key=lambda x: x[1], reverse=True)
+    # def _rsic(o):
+    #     return sorted(o.iteritems(), key=lambda x: x[1], reverse=True)
 
-    print('\n\n')
+    _rsic = lambda o: sorted(o.iteritems(), key=lambda x: x[1], reverse=True)
 
-    print('IP Sources (count)')
-    print('-' * 60)
+    title('IP Sources (by packet count)')
     for key, val in _rsic(ip_src_count)[:30]:
-        print("{1:15d} {0}".format(key, val))
+        print("\033[1m{1:>5s}\033[0m {0}".format(key, human_number(val)))
     print()
 
-    print('IP Sources (size)')
-    print('-' * 60)
+    title('IP Sources (by total size)')
     for key, val in _rsic(ip_src_size)[:30]:
-        print("{1:15d} {0}".format(key, val))
+        print("\033[1m{1:>5s}B\033[0m {0}".format(key, human_number(val, k=1024)))
     print()
 
-    print('IP Destinations (count)')
-    print('-' * 60)
+    title('IP Destinations (by packet count)')
     for key, val in _rsic(ip_dst_count)[:30]:
-        print("{1:15d} {0}".format(key, val))
+        print("\033[1m{1:>5s}\033[0m {0}".format(key, human_number(val)))
     print()
 
-    print('IP Destinations (size)')
-    print('-' * 60)
+    title('IP Destinations (by total size)')
     for key, val in _rsic(ip_dst_size)[:30]:
-        print("{1:15d} {0}".format(key, val))
+        print("\033[1m{1:>5s}B\033[0m {0}".format(key, human_number(val, k=1024)))
     print()
 
-    print('TCP Sources (count)')
-    print('-' * 60)
+    title('TCP Sources (by packet count)')
     for key, val in _rsic(tcp_src_count)[:30]:
-        print("{1:15d} {0}".format(key, val))
+        print("\033[1m{1:>5s}\033[0m {0}".format(key, human_number(val)))
     print()
 
-    print('TCP Sources (size)')
-    print('-' * 60)
+    title('TCP Sources (by total size)')
     for key, val in _rsic(tcp_src_size)[:30]:
-        print("{1:15d} {0}".format(key, val))
+        print("\033[1m{1:>5s}B\033[0m {0}".format(key, human_number(val, k=1024)))
     print()
 
-    print('TCP Destinations (count)')
-    print('-' * 60)
+    title('TCP Destinations (by packet count)')
     for key, val in _rsic(tcp_dst_count)[:30]:
-        print("{1:15d} {0}".format(key, val))
+        print("\033[1m{1:>5s}\033[0m {0}".format(key, human_number(val)))
     print()
 
-    print('TCP Destinations (size)')
-    print('-' * 60)
+    title('TCP Destinations (by total size)')
     for key, val in _rsic(tcp_dst_size)[:30]:
-        print("{1:15d} {0}".format(key, val))
+        print("\033[1m{1:>5s}B\033[0m {0}".format(key, human_number(val, k=1024)))
     print()
