@@ -12,12 +12,12 @@ better access to decoded information, ...
 
 import io
 import itertools
-import struct
 
 from pcapng.structs import (
     struct_decode, RawBytes, IntField, OptionsField, PacketDataField,
     ListField, NameResolutionRecordField, SimplePacketDataField)
 from pcapng.constants import link_types
+from pcapng.utils import unpack_timestamp_resolution
 
 
 KNOWN_BLOCKS = {}
@@ -34,7 +34,7 @@ class Block(object):
 
     @classmethod
     def from_context(cls, raw, ctx):
-        return cls(raw)
+        return cls(raw)  # no context needed by default
 
     def _decode(self):
         return struct_decode(self.schema, io.BytesIO(self._raw),
@@ -58,7 +58,7 @@ class Block(object):
             except:
                 value = '<{0} (repr failed)>'.format(type(value).__name__)
             args.append('{0}={1}'.format(name, value))
-        return '{0}({1})'.format(self.__class__.__name__, ', '.join(args))
+        return '<{0} {1}>'.format(self.__class__.__name__, ' '.join(args))
 
 
 class SectionMemberBlock(Block):
@@ -122,6 +122,15 @@ class SectionHeader(Block):
     def length(self):
         return self.section_length
 
+    def __repr__(self):
+        return ('<{name} version={version} endianness={endianness} '
+                'length={length} options={options}>').format(
+            name=self.__class__.__name__,
+            version='.'.join(str(x) for x in self.version),
+            endianness=repr(self.endianness),
+            length=self.length,
+            options=repr(self.options))
+
 
 @register_block
 class InterfaceDescription(SectionMemberBlock):
@@ -138,7 +147,7 @@ class InterfaceDescription(SectionMemberBlock):
             (6, 'if_MACaddr', 'macaddr'),
             (7, 'if_EUIaddr', 'euiaddr'),
             (8, 'if_speed', 'u64'),
-            (9, 'if_tsresol', 'u8'),
+            (9, 'if_tsresol'),  # Just keep the raw data
             (10, 'if_tzone', 'u32'),
             (11, 'if_filter', 'string'),
             (12, 'if_os', 'string'),
@@ -148,12 +157,23 @@ class InterfaceDescription(SectionMemberBlock):
 
     @property  # todo: cache this property
     def timestamp_resolution(self):
-        # ts_resol is a 8-bit integer representing the power of ten
-        # of the timestamp multiplier. If not specified, -6 is assumed
-        if 'ts_resol' in self.options:
-            resol = self.options['ts_resol']
-            return struct.unpack('b', resol)[0]
-        return -6
+        # ------------------------------------------------------------
+        # Resolution of timestamps. If the Most Significant Bit is
+        # equal to zero, the remaining bits indicates the resolution
+        # of the timestamp as as a negative power of 10 (e.g. 6 means
+        # microsecond resolution, timestamps are the number of
+        # microseconds since 1/1/1970). If the Most Significant Bit is
+        # equal to one, the remaining bits indicates the resolution as
+        # as negative power of 2 (e.g. 10 means 1/1024 of second). If
+        # this option is not present, a resolution of 10^-6 is assumed
+        # (i.e. timestamps have the same resolution of the standard
+        # 'libpcap' timestamps).
+        # ------------------------------------------------------------
+
+        if 'if_tsresol' in self.options:
+            return unpack_timestamp_resolution(self.options['if_tsresol'])
+
+        return 1e-6
 
     @property
     def statistics(self):
@@ -178,7 +198,7 @@ class BlockWithTimestampMixin(object):
     def timestamp(self):
         # First, get the accuracy from the ts_resol option
         return (((self.timestamp_high << 32) + self.timestamp_low)
-                * (10 ** self.timestamp_resolution))
+                * self.timestamp_resolution)
 
     @property
     def timestamp_resolution(self):

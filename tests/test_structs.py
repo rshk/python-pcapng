@@ -296,6 +296,21 @@ def test_options_object():
     assert sorted(options.iterkeys()) == sorted([
         'opt_comment', 'spam', 'eggs', 'bacon', 20])
 
+    # Check "in" and "not in"
+    assert 'opt_comment' in options
+    assert 'spam' in options
+    assert 'eggs' in options
+    assert 'bacon' in options
+    assert 'missing' not in options
+    assert 'something different' not in options
+
+    assert 1 in options
+    assert 2 in options
+    assert 3 in options
+    assert 4 in options
+    assert 5 not in options
+    assert 12345 not in options
+
 
 def test_unpack_dummy_packet():
     schema = [

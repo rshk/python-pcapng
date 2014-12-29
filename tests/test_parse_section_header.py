@@ -132,6 +132,10 @@ def test_read_block_sectionheader_bigendian_with_options():
     assert block.options['opt_comment'] == 'Just a comment'
     assert block.interfaces == {}
 
+    assert repr(block) == (
+        "<SectionHeader version=1.0 endianness='>' length=-1 options={0}>"
+        .format(repr(block.options)))
+
 
 def test_read_block_sectionheader_littleendian_with_options():
     scanner = FileScanner(io.BytesIO(
@@ -163,3 +167,7 @@ def test_read_block_sectionheader_littleendian_with_options():
     assert len(block.options) == 4
     assert block.options['opt_comment'] == 'Just a comment'
     assert block.interfaces == {}
+
+    assert repr(block) == (
+        "<SectionHeader version=1.0 endianness='<' length=-1 options={0}>"
+        .format(repr(block.options)))

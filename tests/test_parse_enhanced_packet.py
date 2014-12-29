@@ -1,7 +1,11 @@
 import io
+import struct
+
+import pytest
 
 from pcapng.blocks import SectionHeader, InterfaceDescription, EnhancedPacket
 from pcapng.scanner import FileScanner
+from pcapng.utils import pack_timestamp_resolution
 
 
 def test_read_block_enhanced_packet_bigendian():
@@ -63,7 +67,7 @@ def test_read_block_enhanced_packet_bigendian():
     assert blocks[1].link_type == 0x01
     assert blocks[1].snaplen == 0xffff
     assert blocks[1].options['if_name'] == 'eth0'
-    assert blocks[1].options['if_tsresol'] == 6
+    assert blocks[1].options['if_tsresol'] == '\x06'
 
     assert isinstance(blocks[2], EnhancedPacket)
     assert blocks[2].section == blocks[0]
@@ -72,7 +76,7 @@ def test_read_block_enhanced_packet_bigendian():
 
     assert blocks[2].timestamp_high == 0x0004f81e
     assert blocks[2].timestamp_low == 0x3c3ed5a9
-    assert blocks[2].timestamp_resolution == -6
+    assert blocks[2].timestamp_resolution == 1e-6
     assert blocks[2].timestamp == 1398708650.3008409
 
     assert blocks[2].captured_len == 0x51
@@ -84,3 +88,72 @@ def test_read_block_enhanced_packet_bigendian():
         '\x00\xbb9\x00\x00'  # TCP(cont)
         'GET /index.html HTTP/1.0 \n\n')  # HTTP
     assert len(blocks[2].options) == 0
+
+
+def _generate_file_with_tsresol(base, exponent):
+    tsresol = pack_timestamp_resolution(base, exponent)
+    base_timestamp = 1420070400.0  # 2015-01-01 00:00 UTC
+    timestamp = base_timestamp / (base ** exponent)
+
+    data = (
+        # ---------- Section header
+        "\x0a\x0d\x0d\x0a"  # Magic number
+        "\x00\x00\x00\x20"  # Block size (32 bytes)
+        "\x1a\x2b\x3c\x4d"  # Magic number
+        "\x00\x01\x00\x00"  # Version
+        "\xff\xff\xff\xff\xff\xff\xff\xff"  # Undefined section length
+        "\x00\x00\x00\x00"  # Empty options
+        "\x00\x00\x00\x20"  # Block size (32 bytes)
+
+        # ---------- Interface description
+        '\x00\x00\x00\x01'  # block magic
+        '\x00\x00\x00\x20'  # block syze
+        '\x00\x01'  # link type
+        '\x00\x00'  # reserved block
+        '\x00\x00\xff\xff'  # size limit
+        '\x00\x09\x00\x01''{tsresol}\x00\x00\x00'  # if_tsresol (+padding)
+        '\x00\x00\x00\x00'  # end of options
+        '\x00\x00\x00\x20'  # block syze
+
+        # ---------- Enhanced packet
+        '\x00\x00\x00\x06'  # block magic
+        '\x00\x00\x00\x24'  # block syze
+        '\x00\x00\x00\x00'  # interface id (first one, eth0)
+        '{timestamp}'  # timestamp
+        '\x00\x00\x00\x00'  # Captured length
+        '\x00\x00\x00\x00'  # Original length
+        # no packet data
+        '\x00\x00\x00\x00'  # Empty options
+        '\x00\x00\x00\x24'  # block syze
+    ).format(timestamp=struct.pack('>Q', timestamp), tsresol=tsresol)
+
+    return data
+
+
+@pytest.mark.parametrize('tsr_base,tsr_exp', [
+    (10, -6), (10, 0), (10, -3), (10, -9),  # Bigger than this won't even fit..
+    (2, 0), (2, -5), (2, -10), (2, -20)])
+def test_read_block_enhanced_packet_tsresol_bigendian(tsr_base, tsr_exp):
+    data = _generate_file_with_tsresol(tsr_base, tsr_exp)
+    scanner = FileScanner(io.BytesIO(data))
+
+    blocks = list(scanner)
+    assert len(blocks) == 3
+
+    assert isinstance(blocks[0], SectionHeader)
+    assert blocks[0].endianness == '>'
+    assert blocks[0].interfaces == {0: blocks[1]}
+
+    assert isinstance(blocks[1], InterfaceDescription)
+    assert len(blocks[1].options) == 1  # Just if_tsresol
+    assert blocks[1].options['if_tsresol'] == \
+        pack_timestamp_resolution(tsr_base, tsr_exp)
+
+    assert isinstance(blocks[2], EnhancedPacket)
+    assert blocks[2].section == blocks[0]
+    assert blocks[2].interface_id == 0
+    assert blocks[2].interface == blocks[1]
+
+    resol = tsr_base ** tsr_exp
+    assert blocks[2].timestamp_resolution == resol
+    assert blocks[2].timestamp == 1420070400.0
