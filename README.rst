@@ -4,9 +4,91 @@ Python-pcapng
 Python library to parse the pcap-ng format used by newer versions
 of dumpcap & similar tools (wireshark, winpcap, ...).
 
-Format specification is here:
 
-http://www.winpcap.org/ntar/draft/PCAP-DumpFileFormat.html
+Documentation
+=============
+
+If you prefer the RTD theme, or want documentation for any version
+other than the latest, head here:
+
+http://python-pcapng.readthedocs.org/en/latest/
+
+If you prefer the more comfortable, page-wide, default sphinx theme,
+a documentation mirror is hosted on GitHub pages:
+
+http://rshk.github.io/python-pcapng/
+
+
+CI build status
+===============
+
++----------+--------------------------------------------------------------------------+
+| Branch   | Status                                                                   |
++==========+==========================================================================+
+| master   | .. image:: https://travis-ci.org/rshk/python-pcapng.svg?branch=master    |
+|          |     :target: https://travis-ci.org/rshk/python-pcapng                    |
++----------+--------------------------------------------------------------------------+
+| develop  | .. image:: https://travis-ci.org/rshk/python-pcapng.svg?branch=develop   |
+|          |     :target: https://travis-ci.org/rshk/python-pcapng                    |
++----------+--------------------------------------------------------------------------+
+
+
+Source code
+===========
+
+Source, issue tracker etc. on GitHub: https://github.com/rshk/python-pcapng
+
+Get the source from git::
+
+    git clone https://github.com/rshk/python-pcapng
+
+Download zip of the latest version:
+
+https://github.com/rshk/python-pcapng/archive/master.zip
+
+Install from pypi::
+
+    pip install python-pcapng
+
+
+PyPI status
+===========
+
+The official page on the Python Package Index is: https://pypi.python.org/pypi/python-pcapng
+
+.. image:: https://pypip.in/version/python-pcapng/badge.svg?text=version
+    :target: https://github.com/rshk/python-pcapng.git
+    :alt: Latest PyPI version
+
+.. image:: https://pypip.in/download/python-pcapng/badge.svg?period=month
+    :target: https://github.com/rshk/python-pcapng.git
+    :alt: Number of PyPI downloads
+
+.. image:: https://pypip.in/py_versions/python-pcapng/badge.svg
+    :target: https://pypi.python.org/pypi/python-pcapng/
+    :alt: Supported Python versions
+
+.. image:: https://pypip.in/status/python-pcapng/badge.svg
+    :target: https://pypi.python.org/pypi/python-pcapng/
+    :alt: Development Status
+
+.. image:: https://pypip.in/license/python-pcapng/badge.svg
+    :target: https://pypi.python.org/pypi/python-pcapng/
+    :alt: License
+
+..
+   .. image:: https://pypip.in/wheel/python-pcapng/badge.svg
+       :target: https://pypi.python.org/pypi/python-pcapng/
+       :alt: Wheel Status
+
+   .. image:: https://pypip.in/egg/python-pcapng/badge.svg
+       :target: https://pypi.python.org/pypi/python-pcapng/
+       :alt: Egg Status
+
+   .. image:: https://pypip.in/format/python-pcapng/badge.svg
+       :target: https://pypi.python.org/pypi/python-pcapng/
+       :alt: Download format
+
 
 
 Why this library?
@@ -21,9 +103,7 @@ Why this library?
 - In general, it appears there are (quite a bunch of!) Python modules
   to parse the old (much simpler) format, but nothing for the new one.
 
-  And, they usually completely lack any form of documentation.
-  I promise this thing will be 100% documented, once I get to a stable
-  enough architecture for it :)
+- And, they usually completely lack any form of documentation.
 
 
 Isn't it slow?
@@ -32,7 +112,7 @@ Isn't it slow?
 Yes, I guess it would be much slower than something written in C,
 but I'm much better at Python than C.
 
-But I need to get things done, and CPU time is not that expensive :)
+..and I need to get things done, and CPU time is not that expensive :)
 
 (Maybe I'll give a try porting the thing to Cython to speed it up, but
 anyways, pure-Python libraries are always useful, eg. for PyPy).
@@ -41,10 +121,30 @@ anyways, pure-Python libraries are always useful, eg. for PyPy).
 How do I use it?
 ================
 
-An usage example is contained in ``example.py``, but the project is
-still very young, so things might change completely.
+Basic usage is as simple as:
 
-Proper documentation is coming as soon as architecture is stable enough
-(aka, there is something to document).
+.. code-block:: python
 
-Keep tuned, and suggestions / contributions are welcome.
+    from pcapng import FileScanner
+
+    with open('/tmp/mycapture.pcap') as fp:
+        scanner = FileScanner(fp)
+        for block in scanner:
+            pass  # do something with the block...
+
+Have a look at the blocks documentation to see what they do; also, the
+``examples`` directory contains some example scripts using the library.
+
+
+Hacking
+=======
+
+Format specification is here:
+
+http://www.winpcap.org/ntar/draft/PCAP-DumpFileFormat.html
+
+Contributions are welcome, please contact me if you're planning to do
+some big change, so that we can sort out the best way to integrate it.
+
+Or even better, open an issue so the whole world can partecipate in
+the discussion :)
