@@ -57,6 +57,7 @@ def test_read_block_interface_stats_bigendian():
     assert blocks[0].interfaces == {0: blocks[1]}
 
     assert isinstance(blocks[1], InterfaceDescription)
+    assert blocks[1].statistics is blocks[2]
 
     assert isinstance(blocks[2], InterfaceStatistics)
     assert blocks[2].timestamp == 0x050b5f61f81440 / 1e6

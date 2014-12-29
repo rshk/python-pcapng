@@ -185,7 +185,7 @@ class InterfaceDescription(SectionMemberBlock):
         try:
             return link_types.LINKTYPE_DESCRIPTIONS[self.link_type]
         except KeyError:
-            return 'Unknown link type: 0x{0:04X}'.format(self.link_type)
+            return 'Unknown link type: 0x{0:04x}'.format(self.link_type)
 
 
 class BlockWithTimestampMixin(object):
