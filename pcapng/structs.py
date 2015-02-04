@@ -186,7 +186,7 @@ class StructField(object):
         return '{0}()'.format(self.__class__.__name__)
 
     def __unicode__(self):
-        return unicode(self.__repr__())
+        return self.__repr__().encode('UTF-8')
 
 
 class RawBytes(StructField):
@@ -573,7 +573,7 @@ class Options(Mapping):
             return ftype(value, self.endianness)
 
         if ftype in ('str', 'string', 'unicode'):
-            return unicode(value, encoding='utf-8')
+            return value.decode('utf-8')
 
         _numeric_types = {
             'u8': 'B', 'i8': 'b',
