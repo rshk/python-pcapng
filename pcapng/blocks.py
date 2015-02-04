@@ -105,7 +105,7 @@ class SectionHeader(Block):
     def register_interface(self, interface):
         """Helper method to register an interface within this section"""
         assert isinstance(interface, InterfaceDescription)
-        interface_id = self._interfaces_id.next()
+        interface_id = next(self._interfaces_id)
         interface.interface_id = interface_id
         self.interfaces[interface_id] = interface
 
