@@ -7,6 +7,5 @@ exclude_lines =
     pass
     raise AssertionError
     raise NotImplementedError
-source = pcapng
 show_missing = True
 omit = .venv*
