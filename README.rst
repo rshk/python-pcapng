@@ -56,23 +56,23 @@ PyPI status
 
 The official page on the Python Package Index is: https://pypi.python.org/pypi/python-pcapng
 
-.. image:: https://pypip.in/version/python-pcapng/badge.svg?text=version
-    :target: https://github.com/rshk/python-pcapng.git
+.. image:: https://img.shields.io/pypi/v/python-pcapng.svg
+    :target: https://pypi.python.org/pypi/python-pcapng
     :alt: Latest PyPI version
 
-.. image:: https://pypip.in/download/python-pcapng/badge.svg?period=month
+.. image:: https://img.shields.io/pypi/dm/python-pcapng.svg
     :target: https://github.com/rshk/python-pcapng.git
     :alt: Number of PyPI downloads
 
-.. image:: https://pypip.in/py_versions/python-pcapng/badge.svg
+.. image:: https://img.shields.io/pypi/pyversions/python-pcapng.svg
     :target: https://pypi.python.org/pypi/python-pcapng/
     :alt: Supported Python versions
 
-.. image:: https://pypip.in/status/python-pcapng/badge.svg
+.. image:: https://img.shields.io/pypi/status/python-pcapng.svg
     :target: https://pypi.python.org/pypi/python-pcapng/
     :alt: Development Status
 
-.. image:: https://pypip.in/license/python-pcapng/badge.svg
+.. image:: https://img.shields.io/pypi/l/python-pcapng.svg
     :target: https://pypi.python.org/pypi/python-pcapng/
     :alt: License
 
