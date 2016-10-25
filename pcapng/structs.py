@@ -2,16 +2,18 @@
 Module providing facilities for handling struct-like data.
 """
 
-from collections import Mapping
 import abc
 import io
 import struct
+import warnings
+from collections import Mapping
 
-from pcapng.utils import (
-    unpack_ipv4, unpack_ipv6, unpack_macaddr, unpack_euiaddr)
+import six
+
 from pcapng.exceptions import (
-    BadMagic, StreamEmpty, CorruptedFile, TruncatedFile)
-
+    BadMagic, CorruptedFile, StreamEmpty, TruncatedFile)
+from pcapng.utils import (
+    unpack_euiaddr, unpack_ipv4, unpack_ipv6, unpack_macaddr)
 
 SECTION_HEADER_MAGIC = 0x0a0d0d0a
 BYTE_ORDER_MAGIC = 0x1a2b3c4d
@@ -23,6 +25,25 @@ CURRENT_SUPPORTED_VERSION = (1, 0)
 
 
 INT_FORMATS = {8: 'b', 16: 'h', 32: 'i', 64: 'q'}
+
+# Type name constants, to keep a list and prevent typos
+TYPE_BYTES = 'bytes'
+TYPE_STRING = 'string'
+TYPE_IPV4 = 'ipv4'
+TYPE_IPV4_MASK = 'ipv4+mask'
+TYPE_IPV6 = 'ipv6'
+TYPE_IPV6_PREFIX = 'ipv6+prefix'
+TYPE_MACADDR = 'macaddr'
+TYPE_EUIADDR = 'euiaddr'
+
+TYPE_U8 = 'u8'  # Unsigned integer, 8 bits
+TYPE_U16 = 'u16'
+TYPE_U32 = 'u32'
+TYPE_U64 = 'u64'
+TYPE_I8 = 'i8'  # Signed integer, 8 bits
+TYPE_I16 = 'i16'
+TYPE_I32 = 'i32'
+TYPE_I64 = 'i64'
 
 
 def read_int(stream, size, signed=False, endianness='='):
@@ -138,7 +159,7 @@ def read_bytes(stream, size):
     """
 
     if size == 0:
-        return ''
+        return b''
 
     data = stream.read(size)
     if len(data) == 0:
@@ -452,7 +473,7 @@ class Options(Mapping):
         # This is the default schema, common to all objects
         self._update_schema([
             (0, 'opt_endofopt'),
-            (1, 'opt_comment', 'string'),
+            (1, 'opt_comment', TYPE_STRING),
         ])
         self._update_schema(schema)
 
@@ -499,15 +520,16 @@ class Options(Mapping):
     # -------------------- Internal methods --------------------
 
     def _update_schema(self, schema):
+
+        def _make_option(code, name, ftype=TYPE_BYTES):
+            return code, name, ftype
+
         for item in schema:
-            if len(item) == 2:
-                code, name = item
-                ftype = None
+            try:
+                code, name, ftype = _make_option(*item)
 
-            elif len(item) == 3:
-                code, name, ftype = item
-
-            else:
+            except TypeError:
+                # Better error message
                 raise TypeError('Options schema item must be a 2- or 3-tuple')
 
             self.schema[code] = {'name': name, 'ftype': ftype}
@@ -566,42 +588,57 @@ class Options(Mapping):
         return values
 
     def _convert_value(self, value, ftype):
+        assert isinstance(value, six.binary_type)
+
         if ftype is None:
+            warnings.warn(DeprecationWarning(
+                'Field type should not be "None". Please explicitly '
+                'use TYPE_BYTES instead.'))
+            return value
+
+        if ftype == TYPE_BYTES:
             return value
 
         if hasattr(ftype, '__call__'):
             return ftype(value, self.endianness)
 
-        if ftype in ('str', 'string', 'unicode'):
+        if ftype == TYPE_STRING:
             return value.decode('utf-8')
 
+        if ftype in ('str', 'unicode'):
+            warnings.warn(DeprecationWarning(
+                'The "{ftype}" field type is deprecated. Please use "string" '
+                '(TYPE_STRING) instead.'
+                .format(ftype=ftype)))
+            return six.u(value)
+
         _numeric_types = {
-            'u8': 'B', 'i8': 'b',
-            'u16': 'H', 'i16': 'h',
-            'u32': 'I', 'i32': 'i',
-            'u64': 'Q', 'i64': 'q',
+            TYPE_U8: 'B', TYPE_I8: 'b',
+            TYPE_U16: 'H', TYPE_I16: 'h',
+            TYPE_U32: 'I', TYPE_I32: 'i',
+            TYPE_U64: 'Q', TYPE_I64: 'q',
         }
         if ftype in _numeric_types:
-            return struct.unpack(
-                self.endianness + _numeric_types[ftype], value)[0]
+            fmt = self.endianness + _numeric_types[ftype]
+            return struct.unpack(fmt, value)[0]
 
-        if ftype == 'ipv4':
+        if ftype == TYPE_IPV4:
             return unpack_ipv4(value)
 
-        if ftype == 'ipv4+mask':
+        if ftype == TYPE_IPV4_MASK:
             return unpack_ipv4(value[:4]), unpack_ipv4(value[4:8])
 
-        if ftype == 'ipv6':
+        if ftype == TYPE_IPV6:
             return unpack_ipv6(value)
 
-        if ftype == 'ipv6+prefix':
+        if ftype == TYPE_IPV6_PREFIX:
             return (unpack_ipv6(value[:16]),
                     struct.unpack(self.endianness + 'B', value[16]))
 
-        if ftype == 'macaddr':
+        if ftype == TYPE_MACADDR:
             return unpack_macaddr(value)
 
-        if ftype == 'euiaddr':
+        if ftype == TYPE_EUIADDR:
             return unpack_euiaddr(value)
 
         raise ValueError('Unsupported field type: {0}'.format(ftype))
