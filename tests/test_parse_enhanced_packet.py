@@ -2,14 +2,15 @@ import io
 import struct
 
 import pytest
+import six
 
-from pcapng.blocks import SectionHeader, InterfaceDescription, EnhancedPacket
+from pcapng.blocks import EnhancedPacket, InterfaceDescription, SectionHeader
 from pcapng.scanner import FileScanner
 from pcapng.utils import pack_timestamp_resolution
 
 
 def test_read_block_enhanced_packet_bigendian():
-    scanner = FileScanner(io.BytesIO(
+    scanner = FileScanner(io.BytesIO(six.b(
         # ---------- Section header
         "\x0a\x0d\x0d\x0a"  # Magic number
         "\x00\x00\x00\x20"  # Block size (32 bytes)
@@ -53,7 +54,7 @@ def test_read_block_enhanced_packet_bigendian():
         '\x00\x00\x00\x00'  # Empty options
 
         '\x00\x00\x00\x78'  # block syze (120 bytes)
-        ))
+        )))
 
     blocks = list(scanner)
     assert len(blocks) == 3
@@ -67,7 +68,7 @@ def test_read_block_enhanced_packet_bigendian():
     assert blocks[1].link_type == 0x01
     assert blocks[1].snaplen == 0xffff
     assert blocks[1].options['if_name'] == 'eth0'
-    assert blocks[1].options['if_tsresol'] == '\x06'
+    assert blocks[1].options['if_tsresol'] == b'\x06'
 
     assert isinstance(blocks[2], EnhancedPacket)
     assert blocks[2].section == blocks[0]
@@ -82,11 +83,11 @@ def test_read_block_enhanced_packet_bigendian():
     assert blocks[2].captured_len == 0x51
     assert blocks[2].packet_len == 0x51
     assert blocks[2].packet_data == (
-        '\x00\x02\x157\xa2D\x00\xae\xf3R\xaa\xd1\x08\x00'  # Ethernet
-        'E\x00\x00C\x00\x01\x00\x00@\x06x<\xc0\xa8\x05\x15B#\xfa\x97'  # IP
-        '\x00\x14\x00P\x00\x00\x00\x00\x00\x00\x00\x00P\x02 '  # TCP
-        '\x00\xbb9\x00\x00'  # TCP(cont)
-        'GET /index.html HTTP/1.0 \n\n')  # HTTP
+        b'\x00\x02\x157\xa2D\x00\xae\xf3R\xaa\xd1\x08\x00'  # Ethernet
+        b'E\x00\x00C\x00\x01\x00\x00@\x06x<\xc0\xa8\x05\x15B#\xfa\x97'  # IP
+        b'\x00\x14\x00P\x00\x00\x00\x00\x00\x00\x00\x00P\x02 '  # TCP
+        b'\x00\xbb9\x00\x00'  # TCP(cont)
+        b'GET /index.html HTTP/1.0 \n\n')  # HTTP
     assert len(blocks[2].options) == 0
 
 
@@ -95,39 +96,41 @@ def _generate_file_with_tsresol(base, exponent):
     base_timestamp = 1420070400.0  # 2015-01-01 00:00 UTC
     timestamp = base_timestamp / (base ** exponent)
 
-    data = (
-        # ---------- Section header
-        "\x0a\x0d\x0d\x0a"  # Magic number
-        "\x00\x00\x00\x20"  # Block size (32 bytes)
-        "\x1a\x2b\x3c\x4d"  # Magic number
-        "\x00\x01\x00\x00"  # Version
-        "\xff\xff\xff\xff\xff\xff\xff\xff"  # Undefined section length
-        "\x00\x00\x00\x00"  # Empty options
-        "\x00\x00\x00\x20"  # Block size (32 bytes)
+    stream = io.BytesIO()
 
-        # ---------- Interface description
-        '\x00\x00\x00\x01'  # block magic
-        '\x00\x00\x00\x20'  # block syze
-        '\x00\x01'  # link type
-        '\x00\x00'  # reserved block
-        '\x00\x00\xff\xff'  # size limit
-        '\x00\x09\x00\x01''{tsresol}\x00\x00\x00'  # if_tsresol (+padding)
-        '\x00\x00\x00\x00'  # end of options
-        '\x00\x00\x00\x20'  # block syze
+    # ---------- Section header
+    stream.write(b"\x0a\x0d\x0d\x0a")  # Magic number
+    stream.write(b"\x00\x00\x00\x20")  # Block size (32 bytes)
+    stream.write(b"\x1a\x2b\x3c\x4d")  # Magic number
+    stream.write(b"\x00\x01\x00\x00")  # Version
+    stream.write(b"\xff\xff\xff\xff\xff\xff\xff\xff")  # Undefined length
+    stream.write(b"\x00\x00\x00\x00")  # Empty options
+    stream.write(b"\x00\x00\x00\x20")  # Block size (32 bytes)
 
-        # ---------- Enhanced packet
-        '\x00\x00\x00\x06'  # block magic
-        '\x00\x00\x00\x24'  # block syze
-        '\x00\x00\x00\x00'  # interface id (first one, eth0)
-        '{timestamp}'  # timestamp
-        '\x00\x00\x00\x00'  # Captured length
-        '\x00\x00\x00\x00'  # Original length
-        # no packet data
-        '\x00\x00\x00\x00'  # Empty options
-        '\x00\x00\x00\x24'  # block syze
-    ).format(timestamp=struct.pack('>Q', timestamp), tsresol=tsresol)
+    # ---------- Interface description
+    stream.write(b'\x00\x00\x00\x01')  # block magic
+    stream.write(b'\x00\x00\x00\x20')  # block syze
+    stream.write(b'\x00\x01')  # link type
+    stream.write(b'\x00\x00')  # reserved block
+    stream.write(b'\x00\x00\xff\xff')  # size limit
+    stream.write(b'\x00\x09\x00\x01')
+    stream.write(tsresol)
+    stream.write(b'\x00\x00\x00')  # if_tsresol (+padding)
+    stream.write(b'\x00\x00\x00\x00')  # end of options
+    stream.write(b'\x00\x00\x00\x20')  # block syze
 
-    return data
+    # ---------- Enhanced packet
+    stream.write(b'\x00\x00\x00\x06')  # block magic
+    stream.write(b'\x00\x00\x00\x24')  # block syze
+    stream.write(b'\x00\x00\x00\x00')  # interface id (first one, eth0)
+    stream.write(struct.pack('>Q', int(timestamp)))  # timestamp
+    stream.write(b'\x00\x00\x00\x00')  # Captured length
+    stream.write(b'\x00\x00\x00\x00')  # Original length
+    # no packet data
+    stream.write(b'\x00\x00\x00\x00')  # Empty options
+    stream.write(b'\x00\x00\x00\x24')  # block syze
+
+    return stream.getvalue()
 
 
 @pytest.mark.parametrize('tsr_base,tsr_exp', [

@@ -10,6 +10,8 @@ python:
   - "3.2"
   - "3.3"
   - "3.4"
+  - "3.5"
+  - "3.6"
   - "pypy"
 
 
@@ -25,5 +27,4 @@ matrix:
     - python: "2.6"
     - python: "3.2"
     - python: "3.3"
-    - python: "3.4"
     - python: "pypy"
