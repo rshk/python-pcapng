@@ -9,7 +9,6 @@ import warnings
 from collections import Mapping
 
 import six
-
 from pcapng.exceptions import (
     BadMagic, CorruptedFile, StreamEmpty, TruncatedFile)
 from pcapng.utils import (

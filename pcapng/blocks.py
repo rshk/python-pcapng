@@ -13,12 +13,11 @@ better access to decoded information, ...
 import io
 import itertools
 
-from pcapng.structs import (
-    struct_decode, RawBytes, IntField, OptionsField, PacketDataField,
-    ListField, NameResolutionRecordField, SimplePacketDataField)
 from pcapng.constants import link_types
+from pcapng.structs import (
+    IntField, ListField, NameResolutionRecordField, OptionsField,
+    PacketDataField, RawBytes, SimplePacketDataField, struct_decode)
 from pcapng.utils import unpack_timestamp_resolution
-
 
 KNOWN_BLOCKS = {}
 
