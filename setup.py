@@ -15,7 +15,7 @@ setup(
     name='python-pcapng',
     version=version,
     packages=find_packages(),
-    url='https://github.com/rhsk/python-pcapng',
+    url='https://github.com/rshk/python-pcapng',
     license='Apache Software License 2.0',
     author='Samuele Santi',
     author_email='samuele@samuelesanti.com',
