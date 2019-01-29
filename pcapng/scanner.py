@@ -18,7 +18,7 @@ class FileScanner(object):
 
             from pcapng import FileScanner
 
-            with open('/tmp/mycapture.pcap') as fp:
+            with open('/tmp/mycapture.pcap', 'rb') as fp:
                 scanner = FileScanner(fp)
                 for block in scanner:
                     pass  # do something with the block...
