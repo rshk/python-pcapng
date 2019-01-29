@@ -1,4 +1,6 @@
-# Extracted from:
+# Canonical list maintained at https://www.tcpdump.org/linktypes.html
+#
+# Some of the reserved values integrated with
 # http://www.winpcap.org/ntar/draft/PCAP-DumpFileFormat.html#appendixLinkTypes
 
 # No link layer information. A packet saved with this link layer
