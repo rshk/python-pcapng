@@ -110,7 +110,7 @@ def test_sample_test005_ntar():
 
 
 @pytest.mark.parametrize('filename', [
-    pytest.mark.xfail('test_data/test006.ntar'),
+    pytest.param('test_data/test006.ntar', marks=pytest.mark.xfail),
     'test_data/test006-fixed.ntar'])
 def test_sample_test006_ntar(filename):
 
