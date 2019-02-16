@@ -213,6 +213,11 @@ LINKTYPE_IBM_SN = 146
 
 # USB packets, beginning with a Linux USB header, as specified by the
 # struct usbmon_packet in the Documentation/usb/usbmon.txt file in the
+# Linux source tree. Only the first 48 bytes of that header are present.
+LINKTYPE_USB_LINUX = 189
+
+# USB packets, beginning with a Linux USB header, as specified by the
+# struct usbmon_packet in the Documentation/usb/usbmon.txt file in the
 # Linux source tree. All 64 bytes of the header are present.
 LINKTYPE_USB_LINUX_MMAPPED = 220
 
@@ -279,5 +284,6 @@ LINKTYPE_DESCRIPTIONS = {
     LINKTYPE_LINUX_IRDA: 'Linux-IrDA',
     LINKTYPE_IBM_SP: 'Reserved for IBM SP switch and IBM Next Federation switch.',  # noqa
     LINKTYPE_IBM_SN: 'Reserved for IBM SP switch and IBM Next Federation switch.',  # noqa
-    LINKTYPE_USB_LINUX_MMAPPED: 'USB packets, beginning with a Linux USB header.',
+    LINKTYPE_USB_LINUX: 'USB packets, beginning with a 48-bytes Linux USB header.',  # noqa
+    LINKTYPE_USB_LINUX_MMAPPED: 'USB packets, beginning with a 64-bytes Linux USB header.',  # noqa
 }
