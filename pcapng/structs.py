@@ -6,7 +6,11 @@ import abc
 import io
 import struct
 import warnings
-from collections import Mapping
+
+try:
+    from collections.abc import Mapping
+except ImportError:
+    from collections import Mapping
 
 import six
 
