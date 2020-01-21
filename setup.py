@@ -34,14 +34,17 @@ setup(
         # "Development Status :: 6 - Mature",
         # "Development Status :: 7 - Inactive",
 
-        # Support for python 3 is planned, but not tested yet
         "Programming Language :: Python :: 2",
-        # "Programming Language :: Python :: 2.6",
+        "Programming Language :: Python :: 2.6",
         "Programming Language :: Python :: 2.7",
-        # "Programming Language :: Python :: 3.1",
-        # "Programming Language :: Python :: 3.2",
-        # "Programming Language :: Python :: 3.3",
-        # "Programming Language :: Python :: 3.4",
+        "Programming Language :: Python :: 3",
+        "Programming Language :: Python :: 3.2",
+        "Programming Language :: Python :: 3.3",
+        "Programming Language :: Python :: 3.4",
+        "Programming Language :: Python :: 3.5",
+        "Programming Language :: Python :: 3.6",
+        "Programming Language :: Python :: 3.7",
+        "Programming Language :: Python :: 3.8",
 
         # Should work on all implementations, but further
         # testing is still needed..
