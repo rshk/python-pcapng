@@ -5,14 +5,14 @@ from pcapng.blocks import SectionHeader, InterfaceDescription, Packet
 
 
 def test_sample_test001_ntar():
-    with open('test_data/test001.ntar', 'rb') as fp:
+    with open("test_data/test001.ntar", "rb") as fp:
         scanner = FileScanner(fp)
         blocks = list(scanner)
 
         # There is just a section header
         assert len(blocks) == 1
 
-        assert blocks[0].endianness == '<'
+        assert blocks[0].endianness == "<"
         assert blocks[0].version == (1, 0)
         assert blocks[0].length == -1
         assert len(blocks[0].options) == 0
@@ -20,7 +20,7 @@ def test_sample_test001_ntar():
 
 
 def test_sample_test002_ntar():
-    with open('test_data/test002.ntar', 'rb') as fp:
+    with open("test_data/test002.ntar", "rb") as fp:
         scanner = FileScanner(fp)
         blocks = list(scanner)
 
@@ -28,7 +28,7 @@ def test_sample_test002_ntar():
         assert len(blocks) == 2
 
         assert isinstance(blocks[0], SectionHeader)
-        assert blocks[0].endianness == '<'
+        assert blocks[0].endianness == "<"
         assert blocks[0].version == (1, 0)
         assert blocks[0].length == -1
         assert len(blocks[0].options) == 0
@@ -41,7 +41,7 @@ def test_sample_test002_ntar():
 
 
 def test_sample_test003_ntar():
-    with open('test_data/test003.ntar', 'rb') as fp:
+    with open("test_data/test003.ntar", "rb") as fp:
         scanner = FileScanner(fp)
         blocks = list(scanner)
 
@@ -49,20 +49,20 @@ def test_sample_test003_ntar():
         assert len(blocks) == 2
 
         assert isinstance(blocks[0], SectionHeader)
-        assert blocks[0].endianness == '<'
+        assert blocks[0].endianness == "<"
         assert blocks[0].version == (1, 0)
         assert blocks[0].length == -1
         assert len(blocks[0].options) == 0
         assert len(blocks[0].interfaces) == 1
 
         assert isinstance(blocks[1], InterfaceDescription)
-        assert blocks[1].link_type == 0x04d8  # ???
-        assert blocks[1].snaplen == 0x7c
+        assert blocks[1].link_type == 0x04D8  # ???
+        assert blocks[1].snaplen == 0x7C
         assert len(blocks[1].options) == 0
 
 
 def test_sample_test004_ntar():
-    with open('test_data/test004.ntar', 'rb') as fp:
+    with open("test_data/test004.ntar", "rb") as fp:
         scanner = FileScanner(fp)
         blocks = list(scanner)
 
@@ -70,19 +70,19 @@ def test_sample_test004_ntar():
         assert len(blocks) == 1
 
         assert isinstance(blocks[0], SectionHeader)
-        assert blocks[0].endianness == '<'
+        assert blocks[0].endianness == "<"
         assert blocks[0].version == (1, 0)
         assert blocks[0].length == -1
 
         assert len(blocks[0].options) == 2
-        assert blocks[0].options['shb_os'] == 'Windows XP\x00'  # (why NULL?)
-        assert blocks[0].options['shb_userappl'] == 'Test004.exe\x00'
+        assert blocks[0].options["shb_os"] == "Windows XP\x00"  # (why NULL?)
+        assert blocks[0].options["shb_userappl"] == "Test004.exe\x00"
 
         assert len(blocks[0].interfaces) == 0
 
 
 def test_sample_test005_ntar():
-    with open('test_data/test005.ntar', 'rb') as fp:
+    with open("test_data/test005.ntar", "rb") as fp:
         scanner = FileScanner(fp)
         blocks = list(scanner)
 
@@ -90,35 +90,40 @@ def test_sample_test005_ntar():
         assert len(blocks) == 2
 
         assert isinstance(blocks[0], SectionHeader)
-        assert blocks[0].endianness == '<'
+        assert blocks[0].endianness == "<"
         assert blocks[0].version == (1, 0)
         assert blocks[0].length == -1
         assert len(blocks[0].options) == 0
         assert len(blocks[0].interfaces) == 1
 
         assert isinstance(blocks[1], InterfaceDescription)
-        assert blocks[1].link_type == 0x04d8  # ???
-        assert blocks[1].snaplen == 0x7c
+        assert blocks[1].link_type == 0x04D8  # ???
+        assert blocks[1].snaplen == 0x7C
         assert len(blocks[1].options) == 2
 
-        assert blocks[1].options.get_raw('if_speed') == b'\x00\xe4\x0b\x54\x02\x00\x00\x00'  # noqa
-        assert blocks[1].options['if_speed'] == 0x00000002540be400
-        assert blocks[1].options['if_speed'] == (10 ** 10)  # 10Gbit
+        assert (
+            blocks[1].options.get_raw("if_speed") == b"\x00\xe4\x0b\x54\x02\x00\x00\x00"
+        )  # noqa
+        assert blocks[1].options["if_speed"] == 0x00000002540BE400
+        assert blocks[1].options["if_speed"] == (10 ** 10)  # 10Gbit
 
-        assert blocks[1].options['if_description'] == \
-            'Stupid ethernet interface\x00'
+        assert blocks[1].options["if_description"] == "Stupid ethernet interface\x00"
 
 
-@pytest.mark.parametrize('filename', [
-    pytest.param('test_data/test006.ntar', marks=pytest.mark.xfail),
-    'test_data/test006-fixed.ntar'])
+@pytest.mark.parametrize(
+    "filename",
+    [
+        pytest.param("test_data/test006.ntar", marks=pytest.mark.xfail),
+        "test_data/test006-fixed.ntar",
+    ],
+)
 def test_sample_test006_ntar(filename):
 
     # Note: See the comment below this function
     # test006.ntar is reporting an incorrect size, which causes the
     # test to fail. Is this the expected behavior?
 
-    with open(filename, 'rb') as fp:
+    with open(filename, "rb") as fp:
         scanner = FileScanner(fp)
 
         blocks = list(scanner)
@@ -127,7 +132,7 @@ def test_sample_test006_ntar(filename):
         assert len(blocks) == 3
 
         assert isinstance(blocks[0], SectionHeader)
-        assert blocks[0].endianness == '<'
+        assert blocks[0].endianness == "<"
         assert blocks[0].version == (1, 0)
         assert blocks[0].length == -1
         assert len(blocks[0].options) == 0
@@ -138,13 +143,13 @@ def test_sample_test006_ntar(filename):
         assert blocks[1].snaplen == 96
         assert len(blocks[1].options) == 2
 
-        assert blocks[1].options['if_speed'] == (10 ** 8)  # 100Mbit
+        assert blocks[1].options["if_speed"] == (10 ** 8)  # 100Mbit
 
-        assert blocks[1].options['if_description'] == \
-            'Stupid ethernet interface\x00'
+        assert blocks[1].options["if_description"] == "Stupid ethernet interface\x00"
 
         assert isinstance(blocks[2], Packet)
         assert blocks[2].interface_id == 0
+
 
 # ============================================================
 # Dissection of test006.ntar
@@ -211,28 +216,28 @@ def test_sample_test006_ntar(filename):
 
 
 def test_sample_test007_ntar():
-    with open('test_data/test007.ntar', 'rb') as fp:
+    with open("test_data/test007.ntar", "rb") as fp:
         scanner = FileScanner(fp)
         for entry in scanner:
             pass
 
 
 def test_sample_test008_ntar():
-    with open('test_data/test008.ntar', 'rb') as fp:
+    with open("test_data/test008.ntar", "rb") as fp:
         scanner = FileScanner(fp)
         for entry in scanner:
             pass
 
 
 def test_sample_test009_ntar():
-    with open('test_data/test009.ntar', 'rb') as fp:
+    with open("test_data/test009.ntar", "rb") as fp:
         scanner = FileScanner(fp)
         for entry in scanner:
             pass
 
 
 def test_sample_test010_ntar():
-    with open('test_data/test010.ntar', 'rb') as fp:
+    with open("test_data/test010.ntar", "rb") as fp:
         scanner = FileScanner(fp)
         for entry in scanner:
             pass

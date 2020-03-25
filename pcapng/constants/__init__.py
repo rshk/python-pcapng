@@ -3,10 +3,10 @@
 # Byte order magic numbers
 # ----------------------------------------
 
-ORDER_MAGIC_LE = 0x1a2b3c4d
-ORDER_MAGIC_BE = 0x4d3c2b1a
+ORDER_MAGIC_LE = 0x1A2B3C4D
+ORDER_MAGIC_BE = 0x4D3C2B1A
 
-SIZE_NOTSET = 0xffffffffffffffff  # 64bit "-1"
+SIZE_NOTSET = 0xFFFFFFFFFFFFFFFF  # 64bit "-1"
 
 # Endianness constants
 

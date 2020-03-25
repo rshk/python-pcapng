@@ -22,19 +22,19 @@ def _get_pairs(data):
         [(1, 2), (3, 4)]
 
     """
-    return list(zip(*((iter(data),)*2)))
+    return list(zip(*((iter(data),) * 2)))
 
 
 def unpack_ipv6(data):
     data = six.b(data)
-    return ':'.join(
-        '{0:02x}{1:02x}'.format(x, y)
-        for (x, y) in _get_pairs(six.iterbytes(data)))
+    return ":".join(
+        "{0:02x}{1:02x}".format(x, y) for (x, y) in _get_pairs(six.iterbytes(data))
+    )
 
 
 def unpack_macaddr(data):
     data = six.b(data)
-    return ':'.join(format(x, '02x') for x in six.iterbytes(data))
+    return ":".join(format(x, "02x") for x in six.iterbytes(data))
 
 
 def unpack_euiaddr(data):
@@ -49,7 +49,7 @@ def unpack_timestamp_resolution(data):
     resolution (multiplier).
     """
     if len(data) != 1:
-        raise ValueError('Data must be exactly one byte')
+        raise ValueError("Data must be exactly one byte")
     num = byte2int(data)
     base = 2 if (num >> 7 & 1) else 10
     exponent = num & 0b01111111
@@ -65,7 +65,7 @@ def pack_timestamp_resolution(base, exponent):
     """
     exponent = abs(exponent)
     if base == 2:
-        return struct.pack('B', exponent | 0b10000000)
+        return struct.pack("B", exponent | 0b10000000)
     if base == 10:
-        return struct.pack('B', exponent)
-    raise ValueError('Supported bases are: 2, 10')
+        return struct.pack("B", exponent)
+    raise ValueError("Supported bases are: 2, 10")

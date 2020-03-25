@@ -14,43 +14,41 @@ except ImportError:
 
 import six
 
-from pcapng.exceptions import (
-    BadMagic, CorruptedFile, StreamEmpty, TruncatedFile)
-from pcapng.utils import (
-    unpack_euiaddr, unpack_ipv4, unpack_ipv6, unpack_macaddr)
+from pcapng.exceptions import BadMagic, CorruptedFile, StreamEmpty, TruncatedFile
+from pcapng.utils import unpack_euiaddr, unpack_ipv4, unpack_ipv6, unpack_macaddr
 
-SECTION_HEADER_MAGIC = 0x0a0d0d0a
-BYTE_ORDER_MAGIC = 0x1a2b3c4d
-BYTE_ORDER_MAGIC_INVERSE = 0x4d3c2b1a
+SECTION_HEADER_MAGIC = 0x0A0D0D0A
+BYTE_ORDER_MAGIC = 0x1A2B3C4D
+BYTE_ORDER_MAGIC_INVERSE = 0x4D3C2B1A
 
 # Anything greater and we cannot safely read
 # todo: add support for this!
 CURRENT_SUPPORTED_VERSION = (1, 0)
 
 
-INT_FORMATS = {8: 'b', 16: 'h', 32: 'i', 64: 'q'}
+INT_FORMATS = {8: "b", 16: "h", 32: "i", 64: "q"}
 
 # Type name constants, to keep a list and prevent typos
-TYPE_BYTES = 'bytes'
-TYPE_STRING = 'string'
-TYPE_IPV4 = 'ipv4'
-TYPE_IPV4_MASK = 'ipv4+mask'
-TYPE_IPV6 = 'ipv6'
-TYPE_IPV6_PREFIX = 'ipv6+prefix'
-TYPE_MACADDR = 'macaddr'
-TYPE_EUIADDR = 'euiaddr'
+TYPE_BYTES = "bytes"
+TYPE_STRING = "string"
+TYPE_IPV4 = "ipv4"
+TYPE_IPV4_MASK = "ipv4+mask"
+TYPE_IPV6 = "ipv6"
+TYPE_IPV6_PREFIX = "ipv6+prefix"
+TYPE_MACADDR = "macaddr"
+TYPE_EUIADDR = "euiaddr"
 
-TYPE_U8 = 'u8'  # Unsigned integer, 8 bits
-TYPE_U16 = 'u16'
-TYPE_U32 = 'u32'
-TYPE_U64 = 'u64'
-TYPE_I8 = 'i8'  # Signed integer, 8 bits
-TYPE_I16 = 'i16'
-TYPE_I32 = 'i32'
-TYPE_I64 = 'i64'
+TYPE_U8 = "u8"  # Unsigned integer, 8 bits
+TYPE_U16 = "u16"
+TYPE_U32 = "u32"
+TYPE_U64 = "u64"
+TYPE_I8 = "i8"  # Signed integer, 8 bits
+TYPE_I16 = "i16"
+TYPE_I32 = "i32"
+TYPE_I64 = "i64"
 
 
-def read_int(stream, size, signed=False, endianness='='):
+def read_int(stream, size, signed=False, endianness="="):
     """
     Read (and decode) an integer number from a binary stream.
 
@@ -67,7 +65,7 @@ def read_int(stream, size, signed=False, endianness='='):
     """
     fmt = INT_FORMATS.get(size)
     fmt = fmt.lower() if signed else fmt.upper()
-    assert endianness in '<>!='
+    assert endianness in "<>!="
     fmt = endianness + fmt
     size_bytes = size // 8
     data = read_bytes(stream, size_bytes)
@@ -94,20 +92,22 @@ def read_section_header(stream):
 
     # Read the "byte order magic" and see which endianness reports
     # it correctly (should be 0x1a2b3c4d)
-    byte_order_magic = read_int(stream, 32, False, '>')  # Default BIG
+    byte_order_magic = read_int(stream, 32, False, ">")  # Default BIG
     if byte_order_magic == BYTE_ORDER_MAGIC:
-        endianness = '>'  # BIG
+        endianness = ">"  # BIG
     else:
         if byte_order_magic != BYTE_ORDER_MAGIC_INVERSE:
             # We got an invalid number..
-            raise BadMagic('Wrong byte order magic: got 0x{0:08X}, expected '
-                           '0x{1:08X} or 0x{2:08X}'
-                           .format(byte_order_magic, BYTE_ORDER_MAGIC,
-                                   BYTE_ORDER_MAGIC_INVERSE))
-        endianness = '<'  # LITTLE
+            raise BadMagic(
+                "Wrong byte order magic: got 0x{0:08X}, expected "
+                "0x{1:08X} or 0x{2:08X}".format(
+                    byte_order_magic, BYTE_ORDER_MAGIC, BYTE_ORDER_MAGIC_INVERSE
+                )
+            )
+        endianness = "<"  # LITTLE
 
     # Now we can safely decode the block length from the bytes we read earlier
-    blk_len = struct.unpack(endianness + 'I', blk_len_raw)[0]
+    blk_len = struct.unpack(endianness + "I", blk_len_raw)[0]
 
     # ..and we then just want to read the appropriate amount of raw data.
     # Exclude: magic, len, bom, len (16 bytes)
@@ -117,12 +117,13 @@ def read_section_header(stream):
     # Double-check lenght at block end
     blk_len2 = read_int(stream, 32, False, endianness)
     if blk_len != blk_len2:
-        raise CorruptedFile('Mismatching block lengths: {0} and {1}'
-                            .format(blk_len, blk_len2))
+        raise CorruptedFile(
+            "Mismatching block lengths: {0} and {1}".format(blk_len, blk_len2)
+        )
 
     return {
-        'endianness': endianness,
-        'data': block_data,
+        "endianness": endianness,
+        "data": block_data,
     }
 
 
@@ -145,8 +146,9 @@ def read_block_data(stream, endianness):
     block_data = read_bytes_padded(stream, payload_length)
     block_length2 = read_int(stream, 32, signed=False, endianness=endianness)
     if block_length != block_length2:
-        raise CorruptedFile('Mismatching block lengths: {0} and {1}'
-                            .format(block_length, block_length2))
+        raise CorruptedFile(
+            "Mismatching block lengths: {0} and {1}".format(block_length, block_length2)
+        )
     return block_data
 
 
@@ -163,14 +165,15 @@ def read_bytes(stream, size):
     """
 
     if size == 0:
-        return b''
+        return b""
 
     data = stream.read(size)
     if len(data) == 0:
-        raise StreamEmpty('Zero bytes read from stream')
+        raise StreamEmpty("Zero bytes read from stream")
     if len(data) < size:
-        raise TruncatedFile('Trying to read {0} bytes, only got {1}'
-                            .format(size, len(data)))
+        raise TruncatedFile(
+            "Trying to read {0} bytes, only got {1}".format(size, len(data))
+        )
     return data
 
 
@@ -189,7 +192,7 @@ def read_bytes_padded(stream, size, pad_block_size=4):
     """
 
     if stream.tell() % pad_block_size != 0:
-        raise RuntimeError('Stream is misaligned!')
+        raise RuntimeError("Stream is misaligned!")
 
     data = read_bytes(stream, size)
     padding = (pad_block_size - (size % pad_block_size)) % pad_block_size
@@ -208,10 +211,10 @@ class StructField(object):
         pass
 
     def __repr__(self):
-        return '{0}()'.format(self.__class__.__name__)
+        return "{0}()".format(self.__class__.__name__)
 
     def __unicode__(self):
-        return self.__repr__().encode('UTF-8')
+        return self.__repr__().encode("UTF-8")
 
 
 class RawBytes(StructField):
@@ -228,7 +231,7 @@ class RawBytes(StructField):
         return read_bytes(stream, self.size)
 
     def __repr__(self):
-        return ('{0}(size={1!r})'.format(self.__class__.__name__, self.size))
+        return "{0}(size={1!r})".format(self.__class__.__name__, self.size)
 
 
 class IntField(StructField):
@@ -246,13 +249,13 @@ class IntField(StructField):
         self.signed = signed
 
     def load(self, stream, endianness):
-        number = read_int(stream, self.size, signed=self.signed,
-                          endianness=endianness)
+        number = read_int(stream, self.size, signed=self.signed, endianness=endianness)
         return number
 
     def __repr__(self):
-        return ('{0}(size={1!r}, signed={2!r})'
-                .format(self.__class__.__name__, self.size, self.signed))
+        return "{0}(size={1!r}, signed={2!r})".format(
+            self.__class__.__name__, self.size, self.signed
+        )
 
 
 class OptionsField(StructField):
@@ -269,12 +272,10 @@ class OptionsField(StructField):
 
     def load(self, stream, endianness):
         options = read_options(stream, endianness)
-        return Options(schema=self.options_schema, data=options,
-                       endianness=endianness)
+        return Options(schema=self.options_schema, data=options, endianness=endianness)
 
     def __repr__(self):
-        return ('{0}({1!r})'
-                .format(self.__class__.__name__, self.options_schema))
+        return "{0}({1!r})".format(self.__class__.__name__, self.options_schema)
 
 
 class PacketDataField(StructField):
@@ -343,7 +344,7 @@ class ListField(StructField):
                 return
 
     def __repr__(self):
-        return ('{0}({1!r})'.format(self.__class__.__name__, self.subfield))
+        return "{0}({1!r})".format(self.__class__.__name__, self.subfield)
 
 
 class NameResolutionRecordField(StructField):
@@ -372,25 +373,25 @@ class NameResolutionRecordField(StructField):
         record_length = read_int(stream, 16, False, endianness)
 
         if record_type == 0:
-            raise StreamEmpty('End marker reached')
+            raise StreamEmpty("End marker reached")
 
         data = read_bytes_padded(stream, record_length)
 
         if record_type == 1:  # IPv4
             return {
-                'type': record_type,
-                'address': data[:4],
-                'name': data[4:],
+                "type": record_type,
+                "address": data[:4],
+                "name": data[4:],
             }
 
         if record_type == 2:  # IPv6
             return {
-                'type': record_type,
-                'address': data[:16],
-                'name': data[16:],
+                "type": record_type,
+                "address": data[:16],
+                "name": data[16:],
             }
 
-        return {'type': record_type, 'raw': data}
+        return {"type": record_type, "raw": data}
 
 
 def read_options(stream, endianness):
@@ -475,10 +476,7 @@ class Options(Mapping):
         self.endianness = endianness  # one of '<>!='
 
         # This is the default schema, common to all objects
-        self._update_schema([
-            (0, 'opt_endofopt'),
-            (1, 'opt_comment', TYPE_STRING),
-        ])
+        self._update_schema([(0, "opt_endofopt"), (1, "opt_comment", TYPE_STRING)])
         self._update_schema(schema)
 
         # Update raw data with current values
@@ -519,12 +517,11 @@ class Options(Mapping):
     def __repr__(self):
         args = dict(self.iter_all_items())
         name = self.__class__.__name__
-        return '{0}({1!r})'.format(name, args)
+        return "{0}({1!r})".format(name, args)
 
     # -------------------- Internal methods --------------------
 
     def _update_schema(self, schema):
-
         def _make_option(code, name, ftype=TYPE_BYTES):
             return code, name, ftype
 
@@ -534,9 +531,9 @@ class Options(Mapping):
 
             except TypeError:
                 # Better error message
-                raise TypeError('Options schema item must be a 2- or 3-tuple')
+                raise TypeError("Options schema item must be a 2- or 3-tuple")
 
-            self.schema[code] = {'name': name, 'ftype': ftype}
+            self.schema[code] = {"name": name, "ftype": ftype}
             self._field_names[name] = code
 
     def _update_data(self, data):
@@ -553,7 +550,7 @@ class Options(Mapping):
 
     def _get_name_alias(self, code):
         if code in self.schema:
-            return self.schema[code]['name']
+            return self.schema[code]["name"]
         return code
 
     def _get_raw(self, name):
@@ -581,46 +578,57 @@ class Options(Mapping):
     def _convert(self, code, value):
         code = self._resolve_name(code)
         if code in self.schema:
-            return self._convert_value(value, self.schema[code]['ftype'])
+            return self._convert_value(value, self.schema[code]["ftype"])
         return value
 
     def _convert_all(self, code, values):
         code = self._resolve_name(code)
         if code in self.schema:
-            return [self._convert_value(value, self.schema[code]['ftype'])
-                    for value in values]
+            return [
+                self._convert_value(value, self.schema[code]["ftype"])
+                for value in values
+            ]
         return values
 
     def _convert_value(self, value, ftype):
         assert isinstance(value, six.binary_type)
 
         if ftype is None:
-            warnings.warn(DeprecationWarning(
-                'Field type should not be "None". Please explicitly '
-                'use TYPE_BYTES instead.'))
+            warnings.warn(
+                DeprecationWarning(
+                    'Field type should not be "None". Please explicitly '
+                    "use TYPE_BYTES instead."
+                )
+            )
             return value
 
         if ftype == TYPE_BYTES:
             return value
 
-        if hasattr(ftype, '__call__'):
+        if hasattr(ftype, "__call__"):
             return ftype(value, self.endianness)
 
         if ftype == TYPE_STRING:
-            return value.decode('utf-8')
+            return value.decode("utf-8")
 
-        if ftype in ('str', 'unicode'):
-            warnings.warn(DeprecationWarning(
-                'The "{ftype}" field type is deprecated. Please use "string" '
-                '(TYPE_STRING) instead.'
-                .format(ftype=ftype)))
+        if ftype in ("str", "unicode"):
+            warnings.warn(
+                DeprecationWarning(
+                    'The "{ftype}" field type is deprecated. Please use "string" '
+                    "(TYPE_STRING) instead.".format(ftype=ftype)
+                )
+            )
             return six.u(value)
 
         _numeric_types = {
-            TYPE_U8: 'B', TYPE_I8: 'b',
-            TYPE_U16: 'H', TYPE_I16: 'h',
-            TYPE_U32: 'I', TYPE_I32: 'i',
-            TYPE_U64: 'Q', TYPE_I64: 'q',
+            TYPE_U8: "B",
+            TYPE_I8: "b",
+            TYPE_U16: "H",
+            TYPE_I16: "h",
+            TYPE_U32: "I",
+            TYPE_I32: "i",
+            TYPE_U64: "Q",
+            TYPE_I64: "q",
         }
         if ftype in _numeric_types:
             fmt = self.endianness + _numeric_types[ftype]
@@ -636,8 +644,10 @@ class Options(Mapping):
             return unpack_ipv6(value)
 
         if ftype == TYPE_IPV6_PREFIX:
-            return (unpack_ipv6(value[:16]),
-                    struct.unpack(self.endianness + 'B', value[16]))
+            return (
+                unpack_ipv6(value[:16]),
+                struct.unpack(self.endianness + "B", value[16]),
+            )
 
         if ftype == TYPE_MACADDR:
             return unpack_macaddr(value)
@@ -645,10 +655,10 @@ class Options(Mapping):
         if ftype == TYPE_EUIADDR:
             return unpack_euiaddr(value)
 
-        raise ValueError('Unsupported field type: {0}'.format(ftype))
+        raise ValueError("Unsupported field type: {0}".format(ftype))
 
 
-def struct_decode(schema, stream, endianness='='):
+def struct_decode(schema, stream, endianness="="):
     """
     Decode structured data from a stream, following a schema.
 
@@ -676,7 +686,7 @@ def struct_decode(schema, stream, endianness='='):
     return decoded
 
 
-def struct_encode(schema, obj, outstream, endianness='='):
+def struct_encode(schema, obj, outstream, endianness="="):
     """
     In the future, this function will be used to encode a structure into
     a stream. For the moment, it just raises :py:exc:`NotImplementedError`.

@@ -11,9 +11,9 @@ def dump_information(scanner):
         print(block)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     if len(sys.argv) > 1:
-        with open(sys.argv[1], 'rb') as fp:
+        with open(sys.argv[1], "rb") as fp:
             scanner = pcapng.FileScanner(fp)
             dump_information(scanner)
 

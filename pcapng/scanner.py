@@ -1,5 +1,9 @@
 from pcapng.structs import (
-    read_int, read_block_data, read_section_header, SECTION_HEADER_MAGIC)
+    read_int,
+    read_block_data,
+    read_section_header,
+    SECTION_HEADER_MAGIC,
+)
 from pcapng.constants.block_types import BLK_RESERVED, BLK_RESERVED_CORRUPTED
 from pcapng.exceptions import StreamEmpty, CorruptedFile
 import pcapng.blocks as blocks
@@ -32,7 +36,7 @@ class FileScanner(object):
     def __init__(self, stream):
         self.stream = stream
         self.current_section = None
-        self.endianness = '='
+        self.endianness = "="
 
     def __iter__(self):
         while True:
@@ -51,7 +55,7 @@ class FileScanner(object):
             return block
 
         if self.current_section is None:
-            raise ValueError('File not starting with a proper section header')
+            raise ValueError("File not starting with a proper section header")
 
         block = self._read_block(block_type)
 
@@ -71,12 +75,12 @@ class FileScanner(object):
         """
 
         section_info = read_section_header(self.stream)
-        self.endianness = section_info['endianness']  # todo: use property?
+        self.endianness = section_info["endianness"]  # todo: use property?
 
         # todo: make this use the standard schema facilities as well!
         return blocks.SectionHeader(
-            raw=section_info['data'],
-            endianness=section_info['endianness'])
+            raw=section_info["data"], endianness=section_info["endianness"]
+        )
 
     def _read_block(self, block_type):
         """
@@ -90,13 +94,16 @@ class FileScanner(object):
 
         if block_type in BLK_RESERVED_CORRUPTED:
             raise CorruptedFile(
-                'Block type 0x{0:08X} is reserved to detect a corrupted file'
-                .format(block_type))
+                "Block type 0x{0:08X} is reserved to detect a corrupted file".format(
+                    block_type
+                )
+            )
 
         if block_type == BLK_RESERVED:
             raise CorruptedFile(
-                'Block type 0x00000000 is reserved and should not be used '
-                'in capture files!')
+                "Block type 0x00000000 is reserved and should not be used "
+                "in capture files!"
+            )
 
         return blocks.UnknownBlock(block_type, data)
 
@@ -104,5 +111,4 @@ class FileScanner(object):
         """
         Read an integer from the stream, using current endianness
         """
-        return read_int(self.stream, size, signed=signed,
-                        endianness=self.endianness)
+        return read_int(self.stream, size, signed=signed, endianness=self.endianness)
