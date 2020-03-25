@@ -12,6 +12,7 @@ setup(
             "pytest-cov",
             "pytest-pycodestyle",
             "flake8",
+            "pre-commit",
             "setuptools_scm[toml]",
             "sphinx",
             "sphinx-rtd-theme",
