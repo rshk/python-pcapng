@@ -1,9 +1,8 @@
 from setuptools import find_packages, setup
 
-version = "1.0"
+import setuptools_scm  # noqa: F401
 
 setup(
-    version=version,
     packages=find_packages(),
     install_requires=["six"],
     extras_require={
@@ -13,6 +12,7 @@ setup(
             "pytest-cov",
             "pytest-pycodestyle",
             "flake8",
+            "setuptools_scm[toml]",
             "sphinx",
             "sphinx-rtd-theme",
         ],
