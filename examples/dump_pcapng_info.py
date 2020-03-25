@@ -2,8 +2,9 @@
 
 from __future__ import print_function
 
-import pcapng
 import sys
+
+import pcapng
 
 
 def dump_information(scanner):

@@ -8,12 +8,11 @@ import logging
 import sys
 from collections import Counter, defaultdict
 
-from scapy.layers.l2 import Ether
 from scapy.layers.inet import IP, TCP, UDP
+from scapy.layers.l2 import Ether
 
 from pcapng import PcapngReader
 from pcapng.objects import EnhancedPacket
-
 
 logger = logging.getLogger("pcapng")
 logger.setLevel(logging.INFO)  # Debug will slow things down a lot!

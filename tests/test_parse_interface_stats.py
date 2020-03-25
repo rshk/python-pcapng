@@ -1,6 +1,6 @@
 import io
 
-from pcapng.blocks import SectionHeader, InterfaceDescription, InterfaceStatistics
+from pcapng.blocks import InterfaceDescription, InterfaceStatistics, SectionHeader
 from pcapng.scanner import FileScanner
 
 

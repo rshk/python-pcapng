@@ -1,12 +1,12 @@
-from pcapng.structs import (
-    read_int,
-    read_block_data,
-    read_section_header,
-    SECTION_HEADER_MAGIC,
-)
-from pcapng.constants.block_types import BLK_RESERVED, BLK_RESERVED_CORRUPTED
-from pcapng.exceptions import StreamEmpty, CorruptedFile
 import pcapng.blocks as blocks
+from pcapng.constants.block_types import BLK_RESERVED, BLK_RESERVED_CORRUPTED
+from pcapng.exceptions import CorruptedFile, StreamEmpty
+from pcapng.structs import (
+    SECTION_HEADER_MAGIC,
+    read_block_data,
+    read_int,
+    read_section_header,
+)
 
 
 class FileScanner(object):

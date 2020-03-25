@@ -1,17 +1,16 @@
 #!/usr/bin/env python
 
-from __future__ import print_function, division
+from __future__ import division, print_function
 
 import logging
 import sys
 from collections import Counter
 
-from scapy.layers.l2 import Ether
 from scapy.layers.inet import IP, TCP
+from scapy.layers.l2 import Ether
 
 from pcapng import FileScanner
 from pcapng.blocks import EnhancedPacket
-
 
 logger = logging.getLogger("pcapng")
 logger.setLevel(logging.INFO)  # Debug will slow things down a lot!

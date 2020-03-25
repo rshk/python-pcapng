@@ -7,15 +7,16 @@ import io
 import struct
 import warnings
 
+import six
+
+from pcapng.exceptions import BadMagic, CorruptedFile, StreamEmpty, TruncatedFile
+from pcapng.utils import unpack_euiaddr, unpack_ipv4, unpack_ipv6, unpack_macaddr
+
 try:
     from collections.abc import Mapping
 except ImportError:
     from collections import Mapping
 
-import six
-
-from pcapng.exceptions import BadMagic, CorruptedFile, StreamEmpty, TruncatedFile
-from pcapng.utils import unpack_euiaddr, unpack_ipv4, unpack_ipv6, unpack_macaddr
 
 SECTION_HEADER_MAGIC = 0x0A0D0D0A
 BYTE_ORDER_MAGIC = 0x1A2B3C4D

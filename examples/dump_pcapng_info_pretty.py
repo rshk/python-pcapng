@@ -1,16 +1,16 @@
 #!/usr/bin/env python
 
-import sys
 import io
+import sys
 from datetime import datetime
-
-import pcapng
-from pcapng.blocks import SectionHeader, InterfaceDescription, EnhancedPacket
-from scapy.layers.l2 import Ether
-import scapy.packet
 
 # To make sure all packet types are available
 import scapy.all  # noqa
+import scapy.packet
+from scapy.layers.l2 import Ether
+
+import pcapng
+from pcapng.blocks import EnhancedPacket, InterfaceDescription, SectionHeader
 
 
 def col256(text, fg=None, bg=None, bold=False):

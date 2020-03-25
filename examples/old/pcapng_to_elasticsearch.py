@@ -25,15 +25,15 @@ curl -XPUT localhost:9200/net-traffic -d '{"packet": {
 curl -XPUT localhost:9200/net-traffic/_bulk --data-binary @capture.json
 """
 
-from __future__ import print_function, division
+from __future__ import division, print_function
 
+import hashlib
+import json
 import logging
 import sys
-import json
-import hashlib
 
-from scapy.layers.l2 import Ether
 from scapy.layers.all import *  # Needed for decode!  # noqa
+from scapy.layers.l2 import Ether
 from scapy.packet import Raw
 
 from pcapng import PcapngReader

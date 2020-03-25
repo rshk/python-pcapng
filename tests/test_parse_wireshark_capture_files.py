@@ -1,7 +1,7 @@
 import pytest
 
+from pcapng.blocks import InterfaceDescription, Packet, SectionHeader
 from pcapng.scanner import FileScanner
-from pcapng.blocks import SectionHeader, InterfaceDescription, Packet
 
 
 def test_sample_test001_ntar():

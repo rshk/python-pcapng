@@ -1,4 +1,4 @@
-from setuptools import setup, find_packages
+from setuptools import find_packages, setup
 
 version = "1.0"
 
@@ -8,6 +8,7 @@ setup(
     install_requires=["six"],
     extras_require={
         "dev": [
+            "isort",
             "pytest>=5.4",
             "pytest-cov",
             "pytest-pycodestyle",
