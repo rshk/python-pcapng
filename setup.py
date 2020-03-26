@@ -34,13 +34,6 @@ setup(
         # "Development Status :: 6 - Mature",
         # "Development Status :: 7 - Inactive",
 
-        "Programming Language :: Python :: 2",
-        "Programming Language :: Python :: 2.6",
-        "Programming Language :: Python :: 2.7",
-        "Programming Language :: Python :: 3",
-        "Programming Language :: Python :: 3.2",
-        "Programming Language :: Python :: 3.3",
-        "Programming Language :: Python :: 3.4",
         "Programming Language :: Python :: 3.5",
         "Programming Language :: Python :: 3.6",
         "Programming Language :: Python :: 3.7",
@@ -49,7 +42,6 @@ setup(
         # Should work on all implementations, but further
         # testing is still needed..
         "Programming Language :: Python :: Implementation :: CPython",
-        # "Programming Language :: Python :: Implementation :: PyPy",
     ],
     package_data={'': ['README.rst', 'CHANGELOG.rst', 'LICENSE']},
     zip_safe=False)
