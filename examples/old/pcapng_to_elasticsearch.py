@@ -110,7 +110,7 @@ if __name__ == '__main__':
             try:
                 _pkt_json = json.dumps(packet_record, cls=SaferJsonEncoder)
 
-            except:
+            except Exception:
                 logger.exception("Unable to serialize json packet")
 
             else:

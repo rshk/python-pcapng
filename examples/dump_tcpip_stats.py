@@ -31,7 +31,7 @@ def title(text):
 
 def human_number(num, k=1000):
     powers = [''] + list('kMGTPEY')
-    assert isinstance(num, (int, long))
+    assert isinstance(num, int)
     for i, suffix in enumerate(powers):
         if (num < (k ** (i + 1))) or (i == len(powers) - 1):
             return '{0:d}{1}'.format(int(round(num / (k ** i))), suffix)
@@ -80,10 +80,8 @@ if __name__ == '__main__':
     # Print report
     # ------------------------------------------------------------
 
-    # def _rsic(o):
-    #     return sorted(o.iteritems(), key=lambda x: x[1], reverse=True)
-
-    _rsic = lambda o: sorted(o.iteritems(), key=lambda x: x[1], reverse=True)
+    def _rsic(o):
+        return sorted(o.items(), key=lambda x: x[1], reverse=True)
 
     title('IP Sources (by packet count)')
     for key, val in _rsic(ip_src_count)[:30]:

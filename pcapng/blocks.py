@@ -55,7 +55,7 @@ class Block(object):
             value = getattr(self, name)
             try:
                 value = repr(value)
-            except:
+            except Exception:
                 value = '<{0} (repr failed)>'.format(type(value).__name__)
             args.append('{0}={1}'.format(name, value))
         return '<{0} {1}>'.format(self.__class__.__name__, ' '.join(args))
