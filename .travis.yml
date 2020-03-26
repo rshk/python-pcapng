@@ -15,7 +15,7 @@ python:
 
 install:
   - python setup.py install
-  - pip install pytest pytest-cov pytest-pep8
+  - pip install pytest pytest-cov pytest-pycodestyle
 
 script:
-  - py.test -vvv --pep8 --cov=pcapng --cov-report=term-missing tests
+  - py.test -vvv --pycodestyle --cov=pcapng --cov-report=term-missing tests

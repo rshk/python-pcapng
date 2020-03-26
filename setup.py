@@ -8,9 +8,9 @@ setup(
     install_requires=["six"],
     extras_require={
         "dev": [
-            "pytest",
+            "pytest>=5.4",
             "pytest-cov",
-            "pytest-pep8",
+            "pytest-pycodestyle",
             "flake8",
             "sphinx",
             "sphinx-rtd-theme",
