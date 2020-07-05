@@ -181,8 +181,8 @@ Copyright © The Internet Society (2004). All Rights Reserved.</p>
 
 <h3>Abstract</h3>
 
-<p>This document describes a format to dump captured packets on a file. 
-This format is extensible and it is currently proposed for 
+<p>This document describes a format to dump captured packets on a file.
+This format is extensible and it is currently proposed for
 implementation in the libpcap/WinPcap packet capture library.
 </p>
 <h3>Updates</h3>
@@ -192,15 +192,15 @@ implementation in the libpcap/WinPcap packet capture library.
 </li>
 <li>[27 Jul 2009] Guy Harris: fixed a typo in Appendix B. The range of standardized blocks are in the range 0x00000000-0x7FFFFFFF.
 </li>
-<li>[ 8 Feb 2008] Gianluca Varenni: better documentation for the format 
+<li>[ 8 Feb 2008] Gianluca Varenni: better documentation for the format
 of the timestamps. Renamed the if_tsaccur option into if_tsresol.
 </li>
-<li>[22 Oct 2007] Gianluca Varenni: added a note related to 64-bit 
-alignment. Specified that the option length field is the length without 
+<li>[22 Oct 2007] Gianluca Varenni: added a note related to 64-bit
+alignment. Specified that the option length field is the length without
 padding. typos here and there. Added some option examples.
 </li>
 <li>[17 Oct 2007] Ulf Lamping: Major review: "Interface ID" in "ISB" now
- 32 bits. isb_starttime/isb_endtime depends on if_tsaccur. Lot's of 
+ 32 bits. isb_starttime/isb_endtime depends on if_tsaccur. Lot's of
 other editing ...
 </li>
 <li>[ 8 Oct 2007] Ulf Lamping: Fixed several typos. Grouped the block types into mandatory, optional, experimental, obsolete.
@@ -209,16 +209,16 @@ other editing ...
 </li>
 <li>[23 May 2006] Gianluca Varenni: Added the block type code for IRIG Timestamp Block
 </li>
-<li>[23 Apr 2006] Gianluca Varenni: Cleaned up Appendix C a bit: we 
-should use the LINKTYPE_xxx values from libpcap, not the DLT_xxx ones. 
+<li>[23 Apr 2006] Gianluca Varenni: Cleaned up Appendix C a bit: we
+should use the LINKTYPE_xxx values from libpcap, not the DLT_xxx ones.
 Fixed the introduction to the appendix and added some comments.
 </li>
 <li>[21 Mar 2006] Gianluca Varenni: Added a preliminary version of Appendix C, detailing the Standardized Link Types.
 </li>
 <li>[21 Mar 2006] Gianluca Varenni: Added a preliminary version of Appendix B, detailing the Standardized Block Type codes.
 </li>
-<li>[21 Mar 2006] Gianluca Varenni: Added the Enhanced Packet Block in 
-section 2.2. Fixed a typo in the list: it's Interface Statistics Block, 
+<li>[21 Mar 2006] Gianluca Varenni: Added the Enhanced Packet Block in
+section 2.2. Fixed a typo in the list: it's Interface Statistics Block,
 and not Capture Statistics Block.
 </li>
 <li>[21 Mar 2006] Gianluca Varenni: Fixed some minor typos in the document.
@@ -306,23 +306,23 @@ Intellectual Property and Copyright Statements<br>
 <a name="rfc.section.1"></a><h3>1.&nbsp;
 Objectives</h3>
 
-<p>The problem of exchanging packet traces becomes more and more 
-critical every day; unfortunately, no standard solutions exist for this 
-task right now. One of the most accepted packet interchange formats is 
-the one defined by libpcap, which is rather old and does not fit for 
-some of the nowadays applications particularly from the extensibility 
+<p>The problem of exchanging packet traces becomes more and more
+critical every day; unfortunately, no standard solutions exist for this
+task right now. One of the most accepted packet interchange formats is
+the one defined by libpcap, which is rather old and does not fit for
+some of the nowadays applications particularly from the extensibility
 point of view.
 </p>
 <p>This document proposes a new format for dumping packet traces. The following goals are being pursued:
 </p>
 <ul class="text">
-<li>Extensibility: aside of some common functionalities, third parties 
-should be able to enrich the information embedded in the file with 
+<li>Extensibility: aside of some common functionalities, third parties
+should be able to enrich the information embedded in the file with
 proprietary extensions, which will be ignored by tools that are not able
  to understand them.
 </li>
 <li>Portability: a capture trace must contain all the information needed
- to read data independently from network, hardware and operating system 
+ to read data independently from network, hardware and operating system
 of the machine that made the capture.
 </li>
 <li>Merge/Append data: it should be possible to add data at the end of a given file, and the resulting file must still be readable.
@@ -338,7 +338,7 @@ General File Structure</h3>
 <a name="rfc.section.2.1"></a><h3>2.1.&nbsp;
 General Block Structure</h3>
 
-<p>A capture file is organized in blocks, that are appended one to 
+<p>A capture file is organized in blocks, that are appended one to
 another to form the file. All the blocks share a common format, which is
  shown in <a class="info" href="#formatblock">Figure&nbsp;1<span> (</span><span class="info">Basic block structure.</span><span>)</span></a>.
 </p><br><hr class="insert">
@@ -361,8 +361,8 @@ another to form the file. All the blocks share a common format, which is
 </p>
 <ul class="text">
 <li>Block Type (32 bits): unique value that identifies the block. Values
- whose Most Significant Bit (MSB) is equal to 1 are reserved for local 
-use. They allow to save private data to the file and to extend the file 
+ whose Most Significant Bit (MSB) is equal to 1 are reserved for local
+use. They allow to save private data to the file and to extend the file
 format. The list of currently defined types can be found in <a class="info" href="#appendixBlockCodes">Appendix&nbsp;B<span> (</span><span class="info">Standardized Block Type Codes</span><span>)</span></a>
 </li>
 <li>Block Total Length: total size of this block, in bytes. For instance, the length of a block that does not have body is 12 bytes.
@@ -372,10 +372,10 @@ format. The list of currently defined types can be found in <a class="info" href
 <li>Block Total Length: total size of this block, in bytes. This field is duplicated for permitting backward file navigation.
 </li>
 </ul>
-<p>This structure, shared among all blocks, makes it easy to process a 
-file and to skip unneeded or unknown blocks. Some blocks can contain 
-other blocks inside (nested blocks). Some of the blocks are mandatory, 
-i.e. a dump file is not valid if they are not present, other are 
+<p>This structure, shared among all blocks, makes it easy to process a
+file and to skip unneeded or unknown blocks. Some blocks can contain
+other blocks inside (nested blocks). Some of the blocks are mandatory,
+i.e. a dump file is not valid if they are not present, other are
 optional.
 </p>
 <p>The General Block Structure allows defining other blocks if needed. A
@@ -406,8 +406,8 @@ Block Types</h3>
 <li><a class="info" href="#sectionnrb">Name Resolution Block<span> (</span><span class="info">Name Resolution Block (optional)</span><span>)</span></a>: it defines the mapping from numeric addresses present in the packet dump and the canonical name counterpart.
 </li>
 <li><a class="info" href="#sectionisb">Interface Statistics Block<span> (</span><span class="info">Interface Statistics Block (optional)</span><span>)</span></a>:
- it defines how to store some statistical data (e.g. packet dropped, 
-etc) which can be useful to undestand the conditions in which the 
+ it defines how to store some statistical data (e.g. packet dropped,
+etc) which can be useful to undestand the conditions in which the
 capture has been made.
 </li>
 </ul>
@@ -417,7 +417,7 @@ capture has been made.
 <li><a class="info" href="#sectionpb">Packet Block<span> (</span><span class="info">Packet Block (obsolete!)</span><span>)</span></a>: it contains a single captured packet, or a portion of it. It should be considered OBSOLETE, and superseded by the <a class="info" href="#sectionepb">Enhanced Packet Block<span> (</span><span class="info">Enhanced Packet Block (optional)</span><span>)</span></a>.
 </li>
 </ul>
-<p>EXPERIMENTAL blocks are considered interesting but the authors 
+<p>EXPERIMENTAL blocks are considered interesting but the authors
 believe that they deserve more in-depth discussion before being defined:
 </p>
 <ul class="text">
@@ -461,18 +461,18 @@ Logical Block Hierarchy</h3>
 <a name="rfc.section.2.4"></a><h3>2.4.&nbsp;
 Physical File Layout</h3>
 
-<p>The file must begin with a Section Header Block. However, more than 
-one Section Header Block can be present on the dump, each one covering 
-the data following it till the next one (or the end of file). A Section 
-includes the data delimited by two Section Header Blocks (or by a 
-Section Header Block and the end of the file), including the first 
+<p>The file must begin with a Section Header Block. However, more than
+one Section Header Block can be present on the dump, each one covering
+the data following it till the next one (or the end of file). A Section
+includes the data delimited by two Section Header Blocks (or by a
+Section Header Block and the end of the file), including the first
 Section Header Block.
 </p>
-<p>In case an application cannot read a Section because of different 
-version number, it must skip everything until the next Section Header 
-Block. Note that, in order to properly skip the blocks until the next 
-section, all blocks must have the fields Type and Length at the 
-beginning. This is a mandatory requirement that must be maintained in 
+<p>In case an application cannot read a Section because of different
+version number, it must skip everything until the next Section Header
+Block. Note that, in order to properly skip the blocks until the next
+section, all blocks must have the fields Type and Length at the
+beginning. This is a mandatory requirement that must be maintained in
 future versions of the block format.
 </p>
 <p><a class="info" href="#fssample-SHB">Figure&nbsp;3<span> (</span><span class="info">File structure example: Typical configuration with a single Section Header Block.</span><span>)</span></a> shows a typical file configuration, with a single Section Header that covers the whole file.
@@ -486,7 +486,7 @@ future versions of the block format.
 <p><a class="info" href="#fssample-SHB3">Figure&nbsp;4<span> (</span><span class="info">File structure example: three Section Header Blocks in a single file.</span><span>)</span></a>
  shows a file that contains three headers, and is normally the result of
  file concatenation. An application that understands only version 1.0 of
- the file format skips the intermediate section and restart processing 
+ the file format skips the intermediate section and restart processing
 the packets after the third Section Header.
 </p><br><hr class="insert">
 <a name="fssample-SHB3"></a>
@@ -500,7 +500,7 @@ the packets after the third Section Header.
 <p><a class="info" href="#fssample-minimum">Figure&nbsp;5<span> (</span><span class="info">File structure example: a pcapng file similar to a classical libpcap file.</span><span>)</span></a>
  shows a file comparable to a "classic libpcap" file - the minimum for a
  useful capture file. It contains a single Section Header Block (SHB), a
- single Interface Description Block (IDB) and a few Enhanced Packet 
+ single Interface Description Block (IDB) and a few Enhanced Packet
 Blocks (EPB).
 </p><br><hr class="insert">
 <a name="fssample-minimum"></a>
@@ -520,8 +520,8 @@ Blocks (EPB).
 +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 </pre></div><table align="center" border="0" cellpadding="0" cellspacing="2"><tbody><tr><td align="center"><font face="monaco, MS Sans Serif" size="1"><b>&nbsp;Figure&nbsp;6: File structure example: more complex pcapng file.&nbsp;</b></font><br></td></tr></tbody></table><hr class="insert">
 
-<p>The last example should make it obvious, that the block structure 
-makes the file format very flexible compared to the classical libpcap 
+<p>The last example should make it obvious, that the block structure
+makes the file format very flexible compared to the classical libpcap
 format.
 </p>
 <a name="sectionopt"></a><br><hr>
@@ -529,40 +529,40 @@ format.
 <a name="rfc.section.2.5"></a><h3>2.5.&nbsp;
 Options</h3>
 
-<p>All the block bodies have the possibility to embed optional fields. 
-Optional fields can be used to insert some information that may be 
-useful when reading data, but that is not really needed for packet 
-processing. Therefore, each tool can either read the content of the 
+<p>All the block bodies have the possibility to embed optional fields.
+Optional fields can be used to insert some information that may be
+useful when reading data, but that is not really needed for packet
+processing. Therefore, each tool can either read the content of the
 optional fields (if any), or skip some of them or even all at once.
 </p>
-<p>Skipping all the optional fields at once is straightforward because 
-most of the blocks are made of a first part with fixed format, and a 
-second optional part. Therefore, the Block Length field (present in the 
+<p>Skipping all the optional fields at once is straightforward because
+most of the blocks are made of a first part with fixed format, and a
+second optional part. Therefore, the Block Length field (present in the
 General Block Structure, see <a class="info" href="#sectionblock">Section&nbsp;2.1<span> (</span><span class="info">General Block Structure</span><span>)</span></a>) can be used to skip everything till the next block.
 </p>
 <p>Options are a list of Type - Length - Value fields, each one containing a single value:
 </p>
 <ul class="text">
-<li>Option Type (2 bytes): it contains the code that specifies the type 
-of the current TLV record. Option types whose Most Significant Bit is 
-equal to one are reserved for local use; therefore, there is no 
-guarantee that the code used is unique among all capture files 
+<li>Option Type (2 bytes): it contains the code that specifies the type
+of the current TLV record. Option types whose Most Significant Bit is
+equal to one are reserved for local use; therefore, there is no
+guarantee that the code used is unique among all capture files
 (generated by other applications). In case of vendor-specific extensions
- that have to be identified uniquely, vendors must request an Option 
+ that have to be identified uniquely, vendors must request an Option
 Code whose MSB is equal to zero.
 </li>
 <li>Option Length (2 bytes): it contains the actual length of the following 'Option Value' field without the padding bytes.
 </li>
-<li>Option Value (variable length): it contains the value of the given 
-option, aligned to a 32-bit boundary. The actual length of this field 
-(i.e. without the padding bytes) is specified by the Option Length 
+<li>Option Value (variable length): it contains the value of the given
+option, aligned to a 32-bit boundary. The actual length of this field
+(i.e. without the padding bytes) is specified by the Option Length
 field.
 </li>
 </ul>
-<p>Options may be repeated several times (e.g. an interface that has 
+<p>Options may be repeated several times (e.g. an interface that has
 several IP addresses associated to it) TODO: mention for each option, if
- it can/shouldn't appear more than one time. The option list is 
-terminated by a Option which uses the special 'End of Option' code 
+ it can/shouldn't appear more than one time. The option list is
+terminated by a Option which uses the special 'End of Option' code
 (opt_endofopt).
 </p>
 <p>The format of the optional fields is shown in <a class="info" href="#formatopt">Figure&nbsp;7<span> (</span><span class="info">Options format.</span><span>)</span></a>.
@@ -601,7 +601,7 @@ terminated by a Option which uses the special 'End of Option' code
 <td align="left">variable</td>
 <td align="left">A UTF-8 string containing a comment that is associated to the current block.</td>
 <td align="left">"This packet is the beginning of all of our problems" /
- "Packets 17-23 showing a bogus TCP retransmission, as reported in 
+ "Packets 17-23 showing a bogus TCP retransmission, as reported in
 bugzilla entry 1486!" / "Captured at the southern plant" / "I've checked
  again, now it's working ok" / ...</td>
 </tr>
@@ -615,35 +615,35 @@ Data format</h3>
 
 <p>Endianess
 </p>
-<p>Data contained in each section will always be saved according to the 
-characteristics (little endian / big endian) of the dumping machine. 
-This refers to all the fields that are saved as numbers and that span 
+<p>Data contained in each section will always be saved according to the
+characteristics (little endian / big endian) of the dumping machine.
+This refers to all the fields that are saved as numbers and that span
 over two or more bytes.
 </p>
 <p>The approach of having each section saved in the native format of the
  generating host is more efficient because it avoids translation of data
- when reading / writing on the host itself, which is the most common 
+ when reading / writing on the host itself, which is the most common
 case when generating/processing capture dumps.
 </p>
 <p>Please note: The endianess is indicated by the <a class="info" href="#sectionshb">Section Header Block<span> (</span><span class="info">Section Header Block (mandatory)</span><span>)</span></a>. As this block can appear several times in a pcapng file, a single file can contain both endianess variants!
 </p>
 <p>Alignment
 </p>
-<p>Most (all?) fields of this specification uses proper alignment for 
-16- and 32-bit values. This makes it easier and faster to read/write 
+<p>Most (all?) fields of this specification uses proper alignment for
+16- and 32-bit values. This makes it easier and faster to read/write
 file contents if using techniques like memory mapped files.
 </p>
 <p>The alignment bytes (marked in this document e.g. with "aligned to 32
- bits") should be filled with zero bytes (TODO: is this requirement a 
-good idea for the sake of performance / do we want to allow bogus bytes 
+ bits") should be filled with zero bytes (TODO: is this requirement a
+good idea for the sake of performance / do we want to allow bogus bytes
 here?).
 </p>
 <p>Please note: 64-bit values are not aligned to 64-bit boundaries. This
- is because the file is naturally aligned to 32-bit boundaries only. 
+ is because the file is naturally aligned to 32-bit boundaries only.
 Special care should be taken when reading and writing such values. TODO:
- the spec is not too consistent wrt how 64-bit values are saved. in the 
-Packet blocks we clearly specify where the low and high 32-bits of a 
-64-bit timestamp should be saved. In the SHB we do use the endianess of 
+ the spec is not too consistent wrt how 64-bit values are saved. in the
+Packet blocks we clearly specify where the low and high 32-bits of a
+64-bit timestamp should be saved. In the SHB we do use the endianess of
 the machine when we save the section length.
 </p>
 <p>TODO - Maybe we have to specify something more here. Is what we're saying enough to avoid any kind of ambiguity?.
@@ -661,8 +661,8 @@ Block Definition</h3>
 Section Header Block (mandatory)</h3>
 
 <p>The Section Header Block is mandatory. It identifies the beginning of
- a section of the capture dump file. The Section Header Block does not 
-contain data but it rather identifies a list of blocks (interfaces, 
+ a section of the capture dump file. The Section Header Block does not
+contain data but it rather identifies a list of blocks (interfaces,
 packets) that are logically correlated. Its format is shown in <a class="info" href="#formatSHB">Figure&nbsp;8<span> (</span><span class="info">Section Header Block format.</span><span>)</span></a>.
 </p><br><hr class="insert">
 <a name="formatSHB"></a>
@@ -692,20 +692,20 @@ packets) that are logically correlated. Its format is shown in <a class="info" h
 <p>The meaning of the fields is:
 </p>
 <ul class="text">
-<li>Block Type: The block type of the Section Header Block is the 
+<li>Block Type: The block type of the Section Header Block is the
 integer corresponding to the 4-char string "\r\n\n\r" (0x0A0D0D0A). This
  particular value is used for 2 reasons:
 
 <ol class="text">
 <li>This number is used to detect if a file has been transferred via FTP
- or HTTP from a machine to another with an inappropriate ASCII 
-conversion. In this case, the value of this field will differ from the 
+ or HTTP from a machine to another with an inappropriate ASCII
+conversion. In this case, the value of this field will differ from the
 standard one ("\r\n\n\r") and the reader can detect a possibly corrupted
  file.
 </li>
-<li>This value is palindromic, so that the reader is able to recognize 
+<li>This value is palindromic, so that the reader is able to recognize
 the Section Header Block regardless of the endianess of the section. The
- endianess is recognized by reading the Byte Order Magic, that is 
+ endianess is recognized by reading the Byte Order Magic, that is
 located 8 bytes after the Block Type.
 </li>
 </ol>
@@ -713,42 +713,42 @@ located 8 bytes after the Block Type.
 </li>
 <li>Block Total Length: total size of this block, as described in <a class="info" href="#sectionblock">Section&nbsp;2.1<span> (</span><span class="info">General Block Structure</span><span>)</span></a>.
 </li>
-<li>Byte-Order Magic: magic number, whose value is the hexadecimal 
-number 0x1A2B3C4D. This number can be used to distinguish sections that 
-have been saved on little-endian machines from the ones saved on 
+<li>Byte-Order Magic: magic number, whose value is the hexadecimal
+number 0x1A2B3C4D. This number can be used to distinguish sections that
+have been saved on little-endian machines from the ones saved on
 big-endian machines.
 </li>
-<li>Major Version: number of the current mayor version of the format. 
-Current value is 1. This value should change if the format changes in 
-such a way that tools that can read the new format could not read the 
-old format (i.e., the code would have to check the version number to be 
+<li>Major Version: number of the current mayor version of the format.
+Current value is 1. This value should change if the format changes in
+such a way that tools that can read the new format could not read the
+old format (i.e., the code would have to check the version number to be
 able to read both formats).
 </li>
-<li>Minor Version: number of the current minor version of the format. 
-Current value is 0. This value should change if the format changes in 
-such a way that tools that can read the new format can still 
-automatically read the new format but code that can only read the old 
+<li>Minor Version: number of the current minor version of the format.
+Current value is 0. This value should change if the format changes in
+such a way that tools that can read the new format can still
+automatically read the new format but code that can only read the old
 format cannot read the new format.
 </li>
-<li>Section Length: 64-bit value specifying the length in bytes of the 
+<li>Section Length: 64-bit value specifying the length in bytes of the
 following section, excluding the Section Header Block itself. This field
- can be used to skip the section, for faster navigation inside large 
-files. Section Length equal -1 (0xFFFFFFFFFFFFFFFF) means that the size 
+ can be used to skip the section, for faster navigation inside large
+files. Section Length equal -1 (0xFFFFFFFFFFFFFFFF) means that the size
 of the section is not specified, and the only way to skip the section is
  to parse the blocks that it contains. Please note that if this field is
  valid (i.e. not -1), its value is always aligned to 32 bits, as all the
- blocks are aligned to 32-bit boundaries. Also, special care should be 
-taken in accessing this field: since the alignment of all the blocks in 
-the file is 32-bit, this field is not guaranteed to be aligned to a 
+ blocks are aligned to 32-bit boundaries. Also, special care should be
+taken in accessing this field: since the alignment of all the blocks in
+the file is 32-bit, this field is not guaranteed to be aligned to a
 64-bit boundary. This could be a problem on 64-bit workstations.
 </li>
 <li>Options: optionally, a list of options (formatted according to the rules defined in <a class="info" href="#sectionopt">Section&nbsp;2.5<span> (</span><span class="info">Options</span><span>)</span></a>) can be present.
 </li>
 </ul>
-<p>Adding new block types or options would not necessarily require that 
-either Major or Minor numbers be changed, as code that does not know 
-about the block type or option could just skip it; only if skipping a 
-block or option does not work should the minor version number be 
+<p>Adding new block types or options would not necessarily require that
+either Major or Minor numbers be changed, as code that does not know
+about the block type or option could just skip it; only if skipping a
+block or option does not work should the minor version number be
 changed.
 </p>
 <p>Aside from the options defined in <a class="info" href="#sectionopt">Section&nbsp;2.5<span> (</span><span class="info">Options</span><span>)</span></a>, the following options are valid within this block:
@@ -785,14 +785,14 @@ changed.
 Interface Description Block (mandatory)</h3>
 
 <p>The Interface Description Block is mandatory. This block is needed to
- specify the characteristics of the network interface on which the 
-capture has been made. In order to properly associate the captured data 
-to the corresponding interface, the Interface Description Block must be 
-defined before any other block that uses it; therefore, this block is 
+ specify the characteristics of the network interface on which the
+capture has been made. In order to properly associate the captured data
+to the corresponding interface, the Interface Description Block must be
+defined before any other block that uses it; therefore, this block is
 usually placed immediately after the Section Header Block.
 </p>
 <p>An Interface Description Block is valid only inside the section which
- it belongs to. The structure of a Interface Description Block is shown 
+ it belongs to. The structure of a Interface Description Block is shown
 in <a class="info" href="#formatidb">Figure&nbsp;9<span> (</span><span class="info">Interface Description Block format.</span><span>)</span></a>.
 </p><br><hr class="insert">
 <a name="formatidb"></a>
@@ -822,25 +822,25 @@ in <a class="info" href="#formatidb">Figure&nbsp;9<span> (</span><span class="in
 </li>
 <li>Block Total Length: total size of this block, as described in <a class="info" href="#sectionblock">Section&nbsp;2.1<span> (</span><span class="info">General Block Structure</span><span>)</span></a>.
 </li>
-<li>LinkType: a value that defines the link layer type of this 
-interface. The list of Standardized Link Layer Type codes is available 
+<li>LinkType: a value that defines the link layer type of this
+interface. The list of Standardized Link Layer Type codes is available
 in <a class="info" href="#appendixLinkTypes">Appendix&nbsp;C<span> (</span><span class="info">Standardized Link Type Codes</span><span>)</span></a>.
 </li>
-<li>SnapLen: maximum number of bytes dumped from each packet. The 
+<li>SnapLen: maximum number of bytes dumped from each packet. The
 portion of each packet that exceeds this value will not be stored in the
  file. (TODO: Is there a need to signal "no limit"?)
 </li>
 <li>Options: optionally, a list of options (formatted according to the rules defined in <a class="info" href="#sectionopt">Section&nbsp;2.5<span> (</span><span class="info">Options</span><span>)</span></a>) can be present.
 </li>
 </ul>
-<p>Interface ID: Tools that write / read the capture file associate a 
-progressive 16-bit number (starting from '0') to each Interface 
+<p>Interface ID: Tools that write / read the capture file associate a
+progressive 16-bit number (starting from '0') to each Interface
 Definition Block. This number is unique within each Section and uniquely
- identifies the interface (inside the current section); therefore, two 
-Sections can have interfaces identified by the same identifiers. This 
-unique identifier is referenced by other blocks (e.g. Packet Block) to 
+ identifies the interface (inside the current section); therefore, two
+Sections can have interfaces identified by the same identifiers. This
+unique identifier is referenced by other blocks (e.g. Packet Block) to
 point out the interface the block refers to (e.g. the interface that was
- used to capture the packet). (TODO - It would be nice, to have a 
+ used to capture the packet). (TODO - It would be nice, to have a
 "invalid Interface ID" defined, e.g. 0xFFFFFFFF)
 </p>
 <p>In addition to the options defined in <a class="info" href="#sectionopt">Section&nbsp;2.5<span> (</span><span class="info">Options</span><span>)</span></a>, the following options are valid within this block:
@@ -865,8 +865,8 @@ point out the interface the block refers to (e.g. the interface that was
 <td align="left">if_IPv4addr</td>
 <td align="left">4</td>
 <td align="left">8</td>
-<td align="left">Interface network address and netmask. This option can 
-be repeated multiple times within the same Interface Description Block 
+<td align="left">Interface network address and netmask. This option can
+be repeated multiple times within the same Interface Description Block
 when multiple IPv4 addresses are assigned to the interface.</td>
 <td align="left">192 168 1 1 255 255 255 0</td>
 </tr>
@@ -874,9 +874,9 @@ when multiple IPv4 addresses are assigned to the interface.</td>
 <td align="left">if_IPv6addr</td>
 <td align="left">5</td>
 <td align="left">17</td>
-<td align="left">Interface network address and prefix length (stored in 
-the last byte). This option can be repeated multiple times within the 
-same Interface Description Block when multiple IPv6 addresses are 
+<td align="left">Interface network address and prefix length (stored in
+the last byte). This option can be repeated multiple times within the
+same Interface Description Block when multiple IPv6 addresses are
 assigned to the interface.</td>
 <td align="left">2001:0db8:85a3:08d3:1319:8a2e:0370:7344/64 is written (in hex) as "20 01 0d b8 85 a3 08 d3 13 19 8a 2e 03 70 73 44 40"</td>
 </tr>
@@ -905,14 +905,14 @@ assigned to the interface.</td>
 <td align="left">if_tsresol</td>
 <td align="left">9</td>
 <td align="left">1</td>
-<td align="left">Resolution of timestamps. If the Most Significant Bit 
-is equal to zero, the remaining bits indicates the resolution of the 
-timestamp as as a negative power of 10 (e.g. 6 means microsecond 
-resolution, timestamps are the number of microseconds since 1/1/1970). 
-If the Most Significant Bit is equal to one, the remaining bits 
+<td align="left">Resolution of timestamps. If the Most Significant Bit
+is equal to zero, the remaining bits indicates the resolution of the
+timestamp as as a negative power of 10 (e.g. 6 means microsecond
+resolution, timestamps are the number of microseconds since 1/1/1970).
+If the Most Significant Bit is equal to one, the remaining bits
 indicates the resolution as as negative power of 2 (e.g. 10 means 1/1024
- of second). If this option is not present, a resolution of 10^-6 is 
-assumed (i.e. timestamps have the same resolution of the standard 
+ of second). If this option is not present, a resolution of 10^-6 is
+assumed (i.e. timestamps have the same resolution of the standard
 'libpcap' timestamps).</td>
 <td align="left">6</td>
 </tr>
@@ -927,11 +927,11 @@ assumed (i.e. timestamps have the same resolution of the standard
 <td align="left">if_filter</td>
 <td align="left">11</td>
 <td align="left">variable</td>
-<td align="left">The filter (e.g. "capture only TCP traffic") used to 
-capture traffic. The first byte of the Option Data keeps a code of the 
-filter used (e.g. if this is a libpcap string, or BPF bytecode, and 
-more). More details about this format will be presented in Appendix XXX 
-(TODO). (TODO: better use different options for different fields? e.g. 
+<td align="left">The filter (e.g. "capture only TCP traffic") used to
+capture traffic. The first byte of the Option Data keeps a code of the
+filter used (e.g. if this is a libpcap string, or BPF bytecode, and
+more). More details about this format will be presented in Appendix XXX
+(TODO). (TODO: better use different options for different fields? e.g.
 if_filter_pcap, if_filter_bpf, ...)</td>
 <td align="left">00 "tcp port 23 and host 10.0.0.5"</td>
 </tr>
@@ -939,8 +939,8 @@ if_filter_pcap, if_filter_bpf, ...)</td>
 <td align="left">if_os</td>
 <td align="left">12</td>
 <td align="left">variable</td>
-<td align="left">A UTF-8 string containing the name of the operating 
-system of the machine in which this interface is installed. This can be 
+<td align="left">A UTF-8 string containing the name of the operating
+system of the machine in which this interface is installed. This can be
 different from the same information that can be contained by the Section
  Header Block (<a class="info" href="#sectionshb">Section&nbsp;3.1<span> (</span><span class="info">Section Header Block (mandatory)</span><span>)</span></a>) because the capture can have been done on a remote machine.</td>
 <td align="left">"Windows XP SP2" / "openSUSE 10.2" / ...</td>
@@ -950,8 +950,8 @@ different from the same information that can be contained by the Section
 <td align="left">13</td>
 <td align="left">1</td>
 <td align="left">An integer value that specified the length of the Frame
- Check Sequence (in bits) for this interface. For link layers whose FCS 
-length can change during time, the Packet Block Flags Word can be used 
+ Check Sequence (in bits) for this interface. For link layers whose FCS
+length can change during time, the Packet Block Flags Word can be used
 (see <a class="info" href="#appendixPBFM">Appendix&nbsp;A<span> (</span><span class="info">Packet Block Flags Word</span><span>)</span></a>).</td>
 <td align="left">4</td>
 </tr>
@@ -959,12 +959,12 @@ length can change during time, the Packet Block Flags Word can be used
 <td align="left">if_tsoffset</td>
 <td align="left">14</td>
 <td align="left">8</td>
-<td align="left">A 64 bits integer value that specifies an offset (in 
-seconds) that must be added to the timestamp of each packet to obtain 
-the absolute timestamp of a packet. If the option is missing, the 
-timestamps stored in the packet must be considered absolute timestamps. 
-The time zone of the offset can be specified with the option if_tzone. 
-TODO: won't a if_tsoffset_low for fractional second offsets be useful 
+<td align="left">A 64 bits integer value that specifies an offset (in
+seconds) that must be added to the timestamp of each packet to obtain
+the absolute timestamp of a packet. If the option is missing, the
+timestamps stored in the packet must be considered absolute timestamps.
+The time zone of the offset can be specified with the option if_tzone.
+TODO: won't a if_tsoffset_low for fractional second offsets be useful
 for highly syncronized capture systems?</td>
 <td align="left">1234</td>
 </tr>
@@ -976,22 +976,22 @@ for highly syncronized capture systems?</td>
 <a name="rfc.section.3.3"></a><h3>3.3.&nbsp;
 Enhanced Packet Block (optional)</h3>
 
-<p>An Enhanced Packet Block is the standard container for storing the 
-packets coming from the network. The Enhanced Packet Block is optional 
-because packets can be stored either by means of this block or the 
-Simple Packet Block, which can be used to speed up dump generation. The 
+<p>An Enhanced Packet Block is the standard container for storing the
+packets coming from the network. The Enhanced Packet Block is optional
+because packets can be stored either by means of this block or the
+Simple Packet Block, which can be used to speed up dump generation. The
 format of an Enhanced Packet Block is shown in <a class="info" href="#formatepb">Figure&nbsp;10<span> (</span><span class="info">Enhanced Packet Block format.</span><span>)</span></a>.
 </p>
 <p>The Enhanced Packet Block is an improvement over the original <a class="info" href="#sectionpb">Packet Block<span> (</span><span class="info">Packet Block (obsolete!)</span><span>)</span></a>:
 </p>
 <ul class="text">
 <li>it stores the Interface Identifier as a 32bit integer value. This is
- a requirement when a capture stores packets coming from a large number 
+ a requirement when a capture stores packets coming from a large number
 of interfaces
 </li>
 <li>differently from the <a class="info" href="#sectionpb">Packet Block<span> (</span><span class="info">Packet Block (obsolete!)</span><span>)</span></a>,
  the number of packets dropped by the capture system between this packet
- and the previous one is not stored in the header, but rather in an 
+ and the previous one is not stored in the header, but rather in an
 option of the block itself.
 </li>
 </ul><br><hr class="insert">
@@ -1034,36 +1034,36 @@ option of the block itself.
 <li>Block Total Length: total size of this block, as described in <a class="info" href="#sectionblock">Section&nbsp;2.1<span> (</span><span class="info">General Block Structure</span><span>)</span></a>.
 </li>
 <li>Interface ID: it specifies the interface this packet comes from; the
- correct interface will be the one whose Interface Description Block 
-(within the current Section of the file) is identified by the same 
+ correct interface will be the one whose Interface Description Block
+(within the current Section of the file) is identified by the same
 number (see <a class="info" href="#sectionidb">Section&nbsp;3.2<span> (</span><span class="info">Interface Description Block (mandatory)</span><span>)</span></a>) of this field.
 </li>
-<li>Timestamp (High) and Timestamp (Low): high and low 32-bits of a 
-64-bit quantity representing the timestamp. The timestamp is a single 
+<li>Timestamp (High) and Timestamp (Low): high and low 32-bits of a
+64-bit quantity representing the timestamp. The timestamp is a single
 64-bit unsigned integer representing the number of units since 1/1/1970.
- 
-The way to interpret this field is specified by the 'if_tsresol' option 
+
+The way to interpret this field is specified by the 'if_tsresol' option
 (see <a class="info" href="#formatidb">Figure&nbsp;9<span> (</span><span class="info">Interface Description Block format.</span><span>)</span></a>)
- of the Interface Description block referenced by this packet. Please 
-note that differently from the libpcap file format, timestamps are not 
-saved as two 32-bit values accounting for the seconds and microseconds 
-since 1/1/1970. They are saved as a single 64-bit quantity saved as two 
+ of the Interface Description block referenced by this packet. Please
+note that differently from the libpcap file format, timestamps are not
+saved as two 32-bit values accounting for the seconds and microseconds
+since 1/1/1970. They are saved as a single 64-bit quantity saved as two
 32-bit words.
 </li>
-<li>Captured Len: number of bytes captured from the packet (i.e. the 
+<li>Captured Len: number of bytes captured from the packet (i.e. the
 length of the Packet Data field). It will be the minimum value among the
  actual Packet Length and the snapshot length (defined in <a class="info" href="#formatidb">Figure&nbsp;9<span> (</span><span class="info">Interface Description Block format.</span><span>)</span></a>).
  The value of this field does not include the padding bytes added at the
  end of the Packet Data field to align the Packet Data Field to a 32-bit
- boundary 
+ boundary
 </li>
-<li>Packet Len: actual length of the packet when it was transmitted on 
-the network. It can be different from Captured Len if the user wants 
+<li>Packet Len: actual length of the packet when it was transmitted on
+the network. It can be different from Captured Len if the user wants
 only a snapshot of the packet.
 </li>
-<li>Packet Data: the data coming from the network, including link-layer 
-headers. The actual length of this field is Captured Len. The format of 
-the link-layer headers depends on the LinkType field specified in the 
+<li>Packet Data: the data coming from the network, including link-layer
+headers. The actual length of this field is Captured Len. The format of
+the link-layer headers depends on the LinkType field specified in the
 Interface Description Block (see <a class="info" href="#sectionidb">Section&nbsp;3.2<span> (</span><span class="info">Interface Description Block (mandatory)</span><span>)</span></a>) and it is specified in <a class="info" href="#appendixLinkHeaders">Appendix&nbsp;D<span> (</span><span class="info">Link Layer Headers</span><span>)</span></a>.
 </li>
 <li>Options: optionally, a list of options (formatted according to the rules defined in <a class="info" href="#sectionopt">Section&nbsp;2.5<span> (</span><span class="info">Options</span><span>)</span></a>) can be present.
@@ -1084,18 +1084,18 @@ Interface Description Block (see <a class="info" href="#sectionidb">Section&nbsp
 <td align="left">epb_hash</td>
 <td align="left">3</td>
 <td align="left">variable</td>
-<td align="left">This option contains a hash of the packet. The first 
-byte specifies the hashing algorithm, while the following bytes contain 
-the actual hash, whose size depends on the hashing algorithm, and hence 
-from the value in the first bit. The hashing algorithm can be: 2s 
-complement (algorithm byte = 0, size=XXX), XOR (algorithm byte = 1, 
-size=XXX), CRC32 (algorithm byte = 2, size = 4), MD-5 (algorithm byte = 
+<td align="left">This option contains a hash of the packet. The first
+byte specifies the hashing algorithm, while the following bytes contain
+the actual hash, whose size depends on the hashing algorithm, and hence
+from the value in the first bit. The hashing algorithm can be: 2s
+complement (algorithm byte = 0, size=XXX), XOR (algorithm byte = 1,
+size=XXX), CRC32 (algorithm byte = 2, size = 4), MD-5 (algorithm byte =
 3, size=XXX), SHA-1 (algorithm byte = 4, size=XXX). The hash covers only
- the packet, not the header added by the capture driver: this gives the 
-possibility to calculate it inside the network card. The hash allows 
-easier comparison/merging of different capture files, and reliable data 
-transfer between the data acquisition system and the capture library. 
-(TODO: the text above uses "first bit", but shouldn't this be "first 
+ the packet, not the header added by the capture driver: this gives the
+possibility to calculate it inside the network card. The hash allows
+easier comparison/merging of different capture files, and reliable data
+transfer between the data acquisition system and the capture library.
+(TODO: the text above uses "first bit", but shouldn't this be "first
 byte"?!?) </td>
 <td align="left">TODO: give a good example</td>
 </tr>
@@ -1103,7 +1103,7 @@ byte"?!?) </td>
 <td align="left">epb_dropcount</td>
 <td align="left">4</td>
 <td align="left">8</td>
-<td align="left">A 64bit integer value specifying the number of packets 
+<td align="left">A 64bit integer value specifying the number of packets
 lost (by the interface and the operating system) between this packet and
  the preceding one.</td>
 <td align="left">0</td>
@@ -1119,17 +1119,17 @@ Simple Packet Block (optional)</h3>
 <p>The Simple Packet Block is a lightweight container for storing the packets coming from the network. Its presence is optional.
 </p>
 <p>A Simple Packet Block is similar to a Packet Block (see <a class="info" href="#sectionpb">Section&nbsp;3.5<span> (</span><span class="info">Packet Block (obsolete!)</span><span>)</span></a>),
- but it is smaller, simpler to process and contains only a minimal set 
-of information. This block is preferred to the standard Packet Block 
-when performance or space occupation are critical factors, such as in 
-sustained traffic dump applications. A capture file can contain both 
-Packet Blocks and Simple Packet Blocks: for example, a capture tool 
-could switch from Packet Blocks to Simple Packet Blocks when the 
+ but it is smaller, simpler to process and contains only a minimal set
+of information. This block is preferred to the standard Packet Block
+when performance or space occupation are critical factors, such as in
+sustained traffic dump applications. A capture file can contain both
+Packet Blocks and Simple Packet Blocks: for example, a capture tool
+could switch from Packet Blocks to Simple Packet Blocks when the
 hardware resources become critical.
 </p>
-<p>The Simple Packet Block does not contain the Interface ID field. 
-Therefore, it must be assumed that all the Simple Packet Blocks have 
-been captured on the interface previously specified in the first 
+<p>The Simple Packet Block does not contain the Interface ID field.
+Therefore, it must be assumed that all the Simple Packet Blocks have
+been captured on the interface previously specified in the first
 Interface Description Block.
 </p>
 <p><a class="info" href="#formatpbs">Figure&nbsp;11<span> (</span><span class="info">Simple Packet Block format.</span><span>)</span></a> shows the format of the Simple Packet Block.
@@ -1160,28 +1160,28 @@ Interface Description Block.
 </li>
 <li>Block Total Length: total size of this block, as described in <a class="info" href="#sectionblock">Section&nbsp;2.1<span> (</span><span class="info">General Block Structure</span><span>)</span></a>.
 </li>
-<li>Packet Len: actual length of the packet when it was transmitted on 
-the network. Can be different from captured len if the packet has been 
+<li>Packet Len: actual length of the packet when it was transmitted on
+the network. Can be different from captured len if the packet has been
 truncated by the capture process.
 </li>
 <li>Packet Data: the data coming from the network, including link-layers
- headers. The length of this field can be derived from the field Block 
-Total Length, present in the Block Header, and it is the minimum value 
-among the SnapLen (present in the Interface Description Block) and the 
+ headers. The length of this field can be derived from the field Block
+Total Length, present in the Block Header, and it is the minimum value
+among the SnapLen (present in the Interface Description Block) and the
 Packet Len (present in this header).
 </li>
 </ul>
-<p>The Simple Packet Block does not contain the timestamp because this 
-is often one of the most costly operations on PCs. Additionally, there 
-are applications that do not require it; e.g. an Intrusion Detection 
+<p>The Simple Packet Block does not contain the timestamp because this
+is often one of the most costly operations on PCs. Additionally, there
+are applications that do not require it; e.g. an Intrusion Detection
 System is interested in packets, not in their timestamp.
 </p>
-<p>A Simple Packet Block cannot be present in a Section that has more 
-than one interface because of the impossibility to refer to the correct 
+<p>A Simple Packet Block cannot be present in a Section that has more
+than one interface because of the impossibility to refer to the correct
 one (it does not contain any Interface ID field).
 </p>
-<p>The Simple Packet Block is very efficient in term of disk space: a 
-snapshot whose length is 100 bytes requires only 16 bytes of overhead, 
+<p>The Simple Packet Block is very efficient in term of disk space: a
+snapshot whose length is 100 bytes requires only 16 bytes of overhead,
 which corresponds to an efficiency of more than 86%.
 </p>
 <a name="sectionpb"></a><br><hr>
@@ -1191,10 +1191,10 @@ Packet Block (obsolete!)</h3>
 
 <p>The Packet Block is marked obsolete, better use the Enhanced Packet Block instead!
 </p>
-<p>A Packet Block is the standard container for storing the packets 
-coming from the network. The Packet Block is optional because packets 
-can be stored either by means of this block or the Simple Packet Block, 
-which can be used to speed up dump generation. The format of a packet 
+<p>A Packet Block is the standard container for storing the packets
+coming from the network. The Packet Block is optional because packets
+can be stored either by means of this block or the Simple Packet Block,
+which can be used to speed up dump generation. The format of a packet
 block is shown in <a class="info" href="#formatpb">Figure&nbsp;12<span> (</span><span class="info">Packet Block format.</span><span>)</span></a>.
 </p><br><hr class="insert">
 <a name="formatpb"></a>
@@ -1236,32 +1236,32 @@ block is shown in <a class="info" href="#formatpb">Figure&nbsp;12<span> (</span>
 <li>Block Total Length: total size of this block, as described in <a class="info" href="#sectionblock">Section&nbsp;2.1<span> (</span><span class="info">General Block Structure</span><span>)</span></a>.
 </li>
 <li>Interface ID: it specifies the interface this packet comes from; the
- correct interface will be the one whose Interface Description Block 
-(within the current Section of the file) is identified by the same 
+ correct interface will be the one whose Interface Description Block
+(within the current Section of the file) is identified by the same
 number (see <a class="info" href="#sectionidb">Section&nbsp;3.2<span> (</span><span class="info">Interface Description Block (mandatory)</span><span>)</span></a>) of this field.
 </li>
-<li>Drops Count: a local drop counter. It specifies the number of 
-packets lost (by the interface and the operating system) between this 
-packet and the preceding one. The value xFFFF (in hexadecimal) is 
+<li>Drops Count: a local drop counter. It specifies the number of
+packets lost (by the interface and the operating system) between this
+packet and the preceding one. The value xFFFF (in hexadecimal) is
 reserved for those systems in which this information is not available.
 </li>
-<li>Timestamp (High) and Timestamp (Low): timestamp of the packet. The 
-format of the timestamp is the same already defined in the Enhanced 
+<li>Timestamp (High) and Timestamp (Low): timestamp of the packet. The
+format of the timestamp is the same already defined in the Enhanced
 Packet Block (<a class="info" href="#sectionepb">Section&nbsp;3.3<span> (</span><span class="info">Enhanced Packet Block (optional)</span><span>)</span></a>).
 </li>
-<li>Captured Len: number of bytes captured from the packet (i.e. the 
+<li>Captured Len: number of bytes captured from the packet (i.e. the
 length of the Packet Data field). It will be the minimum value among the
  actual Packet Length and the snapshot length (SnapLen defined in <a class="info" href="#formatidb">Figure&nbsp;9<span> (</span><span class="info">Interface Description Block format.</span><span>)</span></a>).
  The value of this field does not include the padding bytes added at the
  end of the Packet Data field to align the Packet Data Field to a 32-bit
- boundary 
+ boundary
 </li>
-<li>Packet Len: actual length of the packet when it was transmitted on 
+<li>Packet Len: actual length of the packet when it was transmitted on
 the network. Can be different from Captured Len if the user wants only a
  snapshot of the packet.
 </li>
-<li>Packet Data: the data coming from the network, including link-layer 
-headers. The format of the link-layer headers depends on the LinkType 
+<li>Packet Data: the data coming from the network, including link-layer
+headers. The format of the link-layer headers depends on the LinkType
 field specified in the Interface Description Block (see <a class="info" href="#sectionidb">Section&nbsp;3.2<span> (</span><span class="info">Interface Description Block (mandatory)</span><span>)</span></a>) and it is specified in <a class="info" href="#appendixLinkHeaders">Appendix&nbsp;D<span> (</span><span class="info">Link Layer Headers</span><span>)</span></a>. The actual length of this field is Captured Len.
 </li>
 <li>Options: optionally, a list of options (formatted according to the rules defined in <a class="info" href="#sectionopt">Section&nbsp;2.5<span> (</span><span class="info">Options</span><span>)</span></a>) can be present.
@@ -1296,20 +1296,20 @@ field specified in the Interface Description Block (see <a class="info" href="#s
 <a name="rfc.section.3.6"></a><h3>3.6.&nbsp;
 Name Resolution Block (optional)</h3>
 
-<p>The Name Resolution Block is used to support the correlation of 
-numeric addresses (present in the captured packets) and their 
-corresponding canonical names and it is optional. Having the literal 
+<p>The Name Resolution Block is used to support the correlation of
+numeric addresses (present in the captured packets) and their
+corresponding canonical names and it is optional. Having the literal
 names saved in the file, this prevents the need of a name resolution in a
- delayed time, when the association between names and addresses can be 
-different from the one in use at capture time. Moreover, the Name 
-Resolution Block avoids the need of issuing a lot of DNS requests every 
-time the trace capture is opened, and allows to have name resolution 
-also when reading the capture with a machine not connected to the 
+ delayed time, when the association between names and addresses can be
+different from the one in use at capture time. Moreover, the Name
+Resolution Block avoids the need of issuing a lot of DNS requests every
+time the trace capture is opened, and allows to have name resolution
+also when reading the capture with a machine not connected to the
 network.
 </p>
-<p>A Name Resolution Block is normally placed at the beginning of the 
-file, but no assumptions can be taken about its position. Name 
-Resolution Blocks can be added in a second time by tools that process 
+<p>A Name Resolution Block is normally placed at the beginning of the
+file, but no assumptions can be taken about its position. Name
+Resolution Blocks can be added in a second time by tools that process
 the file, like network analyzers.
 </p>
 <p>The format of the Name Resolution Block is shown in <a class="info" href="#formatnrb">Figure&nbsp;13<span> (</span><span class="info">Name Resolution Block format.</span><span>)</span></a>.
@@ -1349,7 +1349,7 @@ the file, like network analyzers.
 <li>Block Total Length: total size of this block, as described in <a class="info" href="#sectionblock">Section&nbsp;2.1<span> (</span><span class="info">General Block Structure</span><span>)</span></a>.
 </li>
 </ul>
-<p>This is followed by a zero-terminated list of records (in the TLV 
+<p>This is followed by a zero-terminated list of records (in the TLV
 format), each of which contains an association between a network address
  and a name. There are three possible types of records:
 </p><br><hr class="insert">
@@ -1361,8 +1361,8 @@ format), each of which contains an association between a network address
 <td align="left">nres_endofrecord</td>
 <td align="left">0</td>
 <td align="left">0</td>
-<td align="left">It delimits the end of name resolution records. This 
-record is needed to determine when the list of name resolution records 
+<td align="left">It delimits the end of name resolution records. This
+record is needed to determine when the list of name resolution records
 has ended and some options (if any) begin.</td>
 <td align="left">&nbsp;</td>
 </tr>
@@ -1370,8 +1370,8 @@ has ended and some options (if any) begin.</td>
 <td align="left">nres_ip4record</td>
 <td align="left">1</td>
 <td align="left">Variable</td>
-<td align="left">Specifies an IPv4 address (contained in the first 4 
-bytes), followed by one or more zero-terminated strings containing the 
+<td align="left">Specifies an IPv4 address (contained in the first 4
+bytes), followed by one or more zero-terminated strings containing the
 DNS entries for that address.</td>
 <td align="left">127 0 0 1 "localhost"</td>
 </tr>
@@ -1379,8 +1379,8 @@ DNS entries for that address.</td>
 <td align="left">nres_ip6record</td>
 <td align="left">2</td>
 <td align="left">Variable</td>
-<td align="left">Specifies an IPv6 address (contained in the first 16 
-bytes), followed by one or more zero-terminated strings containing the 
+<td align="left">Specifies an IPv6 address (contained in the first 16
+bytes), followed by one or more zero-terminated strings containing the
 DNS entries for that address.</td>
 <td align="left">TODO: give a good example</td>
 </tr>
@@ -1388,7 +1388,7 @@ DNS entries for that address.</td>
 <br clear="all">
 <table align="center" border="0" cellpadding="0" cellspacing="2"><tbody><tr><td align="center"><font face="monaco, MS Sans Serif" size="1"><b>&nbsp;Table 2&nbsp;</b></font><br></td></tr></tbody></table><hr class="insert">
 
-<p>Each Record Value is aligned to a 32-bit boundary. The corresponding 
+<p>Each Record Value is aligned to a 32-bit boundary. The corresponding
 Record Length reflects the actual length of the Record Value.
 </p>
 <p>After the list of Name Resolution Records, optionally, a list of options (formatted according to the rules defined in <a class="info" href="#sectionopt">Section&nbsp;2.5<span> (</span><span class="info">Options</span><span>)</span></a>) can be present.
@@ -1430,11 +1430,11 @@ Record Length reflects the actual length of the Record Value.
 <a name="rfc.section.3.7"></a><h3>3.7.&nbsp;
 Interface Statistics Block (optional)</h3>
 
-<p>The Interface Statistics Block contains the capture statistics for a 
-given interface and it is optional. The statistics are referred to the 
-interface defined in the current Section identified by the Interface ID 
-field. An Interface Statistics Block is normally placed at the end of 
-the file, but no assumptions can be taken about its position - it can 
+<p>The Interface Statistics Block contains the capture statistics for a
+given interface and it is optional. The statistics are referred to the
+interface defined in the current Section identified by the Interface ID
+field. An Interface Statistics Block is normally placed at the end of
+the file, but no assumptions can be taken about its position - it can
 even appear multiple times for the same interface.
 </p>
 <p>The format of the Interface Statistics Block is shown in <a class="info" href="#formatisb">Figure&nbsp;14<span> (</span><span class="info">Interface Statistics Block format.</span><span>)</span></a>.
@@ -1470,22 +1470,22 @@ even appear multiple times for the same interface.
 </li>
 <li>Interface ID: it specifies the interface these statistics refers to;
  the correct interface will be the one whose Interface Description Block
- (within the current Section of the file) is identified by same number 
+ (within the current Section of the file) is identified by same number
 (see <a class="info" href="#sectionidb">Section&nbsp;3.2<span> (</span><span class="info">Interface Description Block (mandatory)</span><span>)</span></a>)
- of this field. Please note: in former versions of this document, this 
-field was 16 bits only. As this differs from its usage in other places 
-of this doc and as this block was not used "in the wild" before (as to 
-the knowledge of the authors), it seems reasonable to change it to 32 
+ of this field. Please note: in former versions of this document, this
+field was 16 bits only. As this differs from its usage in other places
+of this doc and as this block was not used "in the wild" before (as to
+the knowledge of the authors), it seems reasonable to change it to 32
 bits!
 </li>
-<li>Timestamp: time this statistics refers to. The format of the 
+<li>Timestamp: time this statistics refers to. The format of the
 timestamp is the same already defined in the Enhanced Packet Block (<a class="info" href="#sectionepb">Section&nbsp;3.3<span> (</span><span class="info">Enhanced Packet Block (optional)</span><span>)</span></a>).
 </li>
 <li>Options: optionally, a list of options (formatted according to the rules defined in <a class="info" href="#sectionopt">Section&nbsp;2.5<span> (</span><span class="info">Options</span><span>)</span></a>) can be present.
 </li>
 </ul>
 <p>All the statistic fields are defined as options in order to deal with
- systems that do not have a complete set of statistics. Therefore, In 
+ systems that do not have a complete set of statistics. Therefore, In
 addiction to the options defined in <a class="info" href="#sectionopt">Section&nbsp;2.5<span> (</span><span class="info">Options</span><span>)</span></a>, the following options are valid within this block:
 </p><table class="full" align="center" border="0" cellpadding="2" cellspacing="2">
 <colgroup><col align="left"><col align="left"><col align="left"><col align="left"><col align="left">
@@ -1494,8 +1494,8 @@ addiction to the options defined in <a class="info" href="#sectionopt">Section&n
 <td align="left">isb_starttime</td>
 <td align="left">2</td>
 <td align="left">8</td>
-<td align="left">Time in which the capture started; time will be stored 
-in two blocks of four bytes each. The format of the timestamp is the 
+<td align="left">Time in which the capture started; time will be stored
+in two blocks of four bytes each. The format of the timestamp is the
 same already defined in the Enhanced Packet Block (<a class="info" href="#sectionepb">Section&nbsp;3.3<span> (</span><span class="info">Enhanced Packet Block (optional)</span><span>)</span></a>).</td>
 <td align="left">TODO: give a good example</td>
 </tr>
@@ -1503,8 +1503,8 @@ same already defined in the Enhanced Packet Block (<a class="info" href="#sectio
 <td align="left">isb_endtime</td>
 <td align="left">3</td>
 <td align="left">8</td>
-<td align="left">Time in which the capture ended; ; time will be stored 
-in two blocks of four bytes each. The format of the timestamp is the 
+<td align="left">Time in which the capture ended; ; time will be stored
+in two blocks of four bytes each. The format of the timestamp is the
 same already defined in the Enhanced Packet Block (<a class="info" href="#sectionepb">Section&nbsp;3.3<span> (</span><span class="info">Enhanced Packet Block (optional)</span><span>)</span></a>).</td>
 <td align="left">TODO: give a good example</td>
 </tr>
@@ -1540,19 +1540,19 @@ same already defined in the Enhanced Packet Block (<a class="info" href="#sectio
 <td align="left">isb_usrdeliv</td>
 <td align="left">8</td>
 <td align="left">8</td>
-<td align="left">Number of packets delivered to the user starting from 
-the beginning of the capture. The value contained in this field can be 
-different from the value 'isb_filteraccept - isb_osdrop' because some 
+<td align="left">Number of packets delivered to the user starting from
+the beginning of the capture. The value contained in this field can be
+different from the value 'isb_filteraccept - isb_osdrop' because some
 packets could still lay in the OS buffers when the capture ended.</td>
 <td align="left">0</td>
 </tr>
 </tbody></table>
 <br clear="all">
 
-<p>All the fields that refer to packet counters are 64-bit values, 
-represented with the byte order of the current section. Special care 
-must be taken in accessing these fields: since all the blocks are 
-aligned to a 32-bit boundary, such fields are not guaranteed to be 
+<p>All the fields that refer to packet counters are 64-bit values,
+represented with the byte order of the current section. Special care
+must be taken in accessing these fields: since all the blocks are
+aligned to a 32-bit boundary, such fields are not guaranteed to be
 aligned on a 64-bit boundary.
 </p>
 <a name="anchor8"></a><br><hr>
@@ -1572,8 +1572,8 @@ Alternative Packet Blocks (experimental)</h3>
 <a name="rfc.section.4.2"></a><h3>4.2.&nbsp;
 Compression Block (experimental)</h3>
 
-<p>The Compression Block is optional. A file can contain an arbitrary 
-number of these blocks. A Compression Block, as the name says, is used 
+<p>The Compression Block is optional. A file can contain an arbitrary
+number of these blocks. A Compression Block, as the name says, is used
 to store compressed data. Its format is shown in <a class="info" href="#formatcb">Figure&nbsp;15<span> (</span><span class="info">Compression Block format.</span><span>)</span></a>.
 </p><br><hr class="insert">
 <a name="formatcb"></a>
@@ -1603,9 +1603,9 @@ to store compressed data. Its format is shown in <a class="info" href="#formatcb
 </li>
 <li>Block Total Length: total size of this block, as described in <a class="info" href="#sectionblock">Section&nbsp;2.1<span> (</span><span class="info">General Block Structure</span><span>)</span></a>.
 </li>
-<li>Compression Type: specifies the compression algorithm. Possible 
-values for this field are 0 (uncompressed), 1 (Lempel Ziv), 2 (Gzip), 
-other?? Probably some kind of dumb and fast compression algorithm could 
+<li>Compression Type: specifies the compression algorithm. Possible
+values for this field are 0 (uncompressed), 1 (Lempel Ziv), 2 (Gzip),
+other?? Probably some kind of dumb and fast compression algorithm could
 be effective with some types of traffic (for example web), but which?
 </li>
 <li>Compressed Data: data of this block. Once decompressed, it is made of other blocks.
@@ -1616,8 +1616,8 @@ be effective with some types of traffic (for example web), but which?
 <a name="rfc.section.4.3"></a><h3>4.3.&nbsp;
 Encryption Block (experimental)</h3>
 
-<p>The Encryption Block is optional. A file can contain an arbitrary 
-number of these blocks. An Encryption Block is used to store encrypted 
+<p>The Encryption Block is optional. A file can contain an arbitrary
+number of these blocks. An Encryption Block is used to store encrypted
 data. Its format is shown in <a class="info" href="#formateb">Figure&nbsp;16<span> (</span><span class="info">Encryption Block format.</span><span>)</span></a>.
 </p><br><hr class="insert">
 <a name="formateb"></a>
@@ -1648,8 +1648,8 @@ data. Its format is shown in <a class="info" href="#formateb">Figure&nbsp;16<spa
 <li>Block Total Length: total size of this block, as described in <a class="info" href="#sectionblock">Section&nbsp;2.1<span> (</span><span class="info">General Block Structure</span><span>)</span></a>.
 </li>
 <li>Encryption Type: specifies the encryption algorithm. Possible values
- for this field are ??? (TODO) NOTE: this block should probably contain 
-other fields, depending on the encryption algorithm. To be defined 
+ for this field are ??? (TODO) NOTE: this block should probably contain
+other fields, depending on the encryption algorithm. To be defined
 precisely.
 </li>
 <li>Encrypted Data: data of this block. Once decripted, it originates other blocks.
@@ -1660,12 +1660,12 @@ precisely.
 <a name="rfc.section.4.4"></a><h3>4.4.&nbsp;
 Fixed Length Block (experimental)</h3>
 
-<p>The Fixed Length Block is optional. A file can contain an arbitrary 
+<p>The Fixed Length Block is optional. A file can contain an arbitrary
 number of these blocks. A Fixed Length Block can be used to optimize the
  access to the file. Its format is shown in <a class="info" href="#formatflm">Figure&nbsp;17<span> (</span><span class="info">Fixed Length Block format.</span><span>)</span></a>.
-A Fixed Length Block stores records with constant size. It contains a 
-set of Blocks (normally Packet Blocks or Simple Packet Blocks), of 
-wihich it specifies the size. Knowing this size a priori helps to scan 
+A Fixed Length Block stores records with constant size. It contains a
+set of Blocks (normally Packet Blocks or Simple Packet Blocks), of
+wihich it specifies the size. Knowing this size a priori helps to scan
 the file and to load some portions of it without truncating a block, and
  is particularly useful with cell-based networks like ATM.
 </p><br><hr class="insert">
@@ -1715,9 +1715,9 @@ Directory Block (experimental)</h3>
 <li>table with position and length of any indexed packet (N entries)
 </li>
 </ul>
-<p>A directory block must be followed by at least N packets, otherwise 
-it must be considered invalid. It can be used to efficiently load 
-portions of the file to memory and to support operations on memory 
+<p>A directory block must be followed by at least N packets, otherwise
+it must be considered invalid. It can be used to efficiently load
+portions of the file to memory and to support operations on memory
 mapped files. This block can be added by tools like network analyzers as
  a consequence of file processing.
 </p>
@@ -1726,9 +1726,9 @@ mapped files. This block can be added by tools like network analyzers as
 <a name="rfc.section.4.6"></a><h3>4.6.&nbsp;
 Traffic Statistics and Monitoring Blocks (experimental)</h3>
 
-<p>One or more blocks could be defined to contain network statistics or 
-traffic monitoring information. They could be use to store data 
-collected from RMON or Netflow probes, or from other network monitoring 
+<p>One or more blocks could be defined to contain network statistics or
+traffic monitoring information. They could be use to store data
+collected from RMON or Netflow probes, or from other network monitoring
 tools.
 </p>
 <a name="anchor15"></a><br><hr>
@@ -1736,8 +1736,8 @@ tools.
 <a name="rfc.section.4.7"></a><h3>4.7.&nbsp;
 Event/Security Block (experimental)</h3>
 
-<p>This block could be used to store events. Events could contain 
-generic information (for example network load over 50%, server down...) 
+<p>This block could be used to store events. Events could contain
+generic information (for example network load over 50%, server down...)
 or security alerts. An event could be:
 </p>
 <ul class="text">
@@ -1746,8 +1746,8 @@ or security alerts. An event could be:
 <li>processed independently by the packets. In other words, the applications skips the packets and processes only the alerts
 </li>
 <li>processed in relation to packets: for example, a security tool could
- load only the packets of the file that are near a security alert; a 
-monitoring tool could skip the packets captured while the server was 
+ load only the packets of the file that are near a security alert; a
+monitoring tool could skip the packets captured while the server was
 down.
 </li>
 </ul>
@@ -1758,17 +1758,17 @@ Recommended File Name Extension: .pcapng</h3>
 
 <p>The recommended file name extension for the "PCAP Next Generation Dump File Format" specified in this document is ".pcapng".
 </p>
-<p>At least in the "Windows world", files are distinguished by an 
-extension to their filename. Such an extension is technically not 
-actually required, as applications should be able to automatically 
+<p>At least in the "Windows world", files are distinguished by an
+extension to their filename. Such an extension is technically not
+actually required, as applications should be able to automatically
 detect the pcapng file format through the "magic bytes" at the beginning
- of the file. However, using name extensions makes it easier to work 
+ of the file. However, using name extensions makes it easier to work
 with files (e.g. visually distinguish file formats) so it is recommended
- - though not required - to use .pcapng as the name extension for files 
+ - though not required - to use .pcapng as the name extension for files
 following this specification.
 </p>
 <p>Please note: To avoid confusion (like the current usage of .cap for a
- pletora of different capture file formats) other file name extensions 
+ pletora of different capture file formats) other file name extensions
 than .pcapng should be avoided!
 </p>
 <a name="anchor17"></a><br><hr>
@@ -1783,15 +1783,15 @@ How to add Vendor / Domain specific extensions</h3>
 <a name="rfc.section.7"></a><h3>7.&nbsp;
 Conclusions</h3>
 
-<p>The file format proposed in this document should be very versatile 
+<p>The file format proposed in this document should be very versatile
 and satisfy a wide range of applications.
-In the simplest case, it can contain a raw dump of the network data, 
+In the simplest case, it can contain a raw dump of the network data,
 made of a series of Simple Packet Blocks.
-In the most complex case, it can be used as a repository for 
+In the most complex case, it can be used as a repository for
 heterogeneous information.
-In every case, the file remains easy to parse and an application can 
-always skip the data it is not interested in; at the same time, 
-different applications can share the file, and each of them can benefit 
+In every case, the file remains easy to parse and an application can
+always skip the data it is not interested in; at the same time,
+different applications can share the file, and each of them can benefit
 of the information produced by the others.
 Two or more files can be concatenated obtaining another valid file.
 </p>
@@ -1816,9 +1816,9 @@ Packet Block Flags Word</h3>
 </tr>
 <tr>
 <td align="left">5-8</td>
-<td align="left">FCS length, in bytes (0000 if this information is not 
-available). This value overrides the if_fcslen option of the Interface 
-Description Block, and is used with those link layers (e.g. PPP) where 
+<td align="left">FCS length, in bytes (0000 if this information is not
+available). This value overrides the if_fcslen option of the Interface
+Description Block, and is used with those link layers (e.g. PPP) where
 the length of the FCS can change during time.</td>
 </tr>
 <tr>
@@ -1828,9 +1828,9 @@ the length of the FCS can change during time.</td>
 <tr>
 <td align="left">16-31</td>
 <td align="left">link-layer-dependent errors (Bit 31 = symbol error, Bit
- 30 = preamble error, Bit 29 = Start Frame Delimiter error, Bit 28 = 
-unaligned frame error, Bit 27 = wrong Inter Frame Gap error, Bit 26 = 
-packet too short error, Bit 25 = packet too long error, Bit 24 = CRC 
+ 30 = preamble error, Bit 29 = Start Frame Delimiter error, Bit 28 =
+unaligned frame error, Bit 27 = wrong Inter Frame Gap error, Bit 26 =
+packet too short error, Bit 25 = packet too long error, Bit 24 = CRC
 error, other?? are 16 bit enough?).</td>
 </tr>
 </tbody></table>
@@ -1845,9 +1845,9 @@ Standardized Block Type Codes</h3>
 </p>
 <p>As pointed out in <a class="info" href="#sectionblock">Section&nbsp;2.1<span> (</span><span class="info">General Block Structure</span><span>)</span></a>, Block Types codes whose Most Significant Bit (bit 31) is set to 1 are reserved for local use by the application.
 </p>
-<p>All the remaining Block Type codes (0x00000000 to 0x7FFFFFFF) are 
-standardized by this document. A request should be sent to the authors 
-of this document to add a new Standard Block Type code to the 
+<p>All the remaining Block Type codes (0x00000000 to 0x7FFFFFFF) are
+standardized by this document. A request should be sent to the authors
+of this document to add a new Standard Block Type code to the
 specification.
 </p>
 <p>Here is a list of the Standardized Block Type Codes.
@@ -1920,13 +1920,13 @@ specification.
 <a name="rfc.section.C"></a><h3>Appendix C.&nbsp;
 Standardized Link Type Codes</h3>
 
-<p>NOTE: we should decide if we want to have this list here or in a 
-separate document. It may make sense to have this list in a separate 
+<p>NOTE: we should decide if we want to have this list here or in a
+separate document. It may make sense to have this list in a separate
 document and describe the format of a frame for each different linktype,
- or specify that the frame format is proprietary of a company and not 
+ or specify that the frame format is proprietary of a company and not
 public. There are a large number of encapsulations that are really vague
- and unspecified at all (even the name does not make any sense). 
-Moreover, we should decide if we want to have *all* the linktypes 
+ and unspecified at all (even the name does not make any sense).
+Moreover, we should decide if we want to have *all* the linktypes
 (LINKTYPE_XXX) defined by libpcap, or just a subset of them, thus trying
  to remove the big mess and confusion of similar headers.
 </p>
@@ -1939,7 +1939,7 @@ Moreover, we should decide if we want to have *all* the linktypes
 <tr>
 <td align="left">LINKTYPE_NULL</td>
 <td align="left">0</td>
-<td align="left">No link layer information. A packet saved with this 
+<td align="left">No link layer information. A packet saved with this
 link layer contains a raw L3 packet preceded by a 32-bit host-byte-order
  AF_ value indicating the specific L3 type.</td>
 </tr>
@@ -2157,7 +2157,7 @@ link layer contains a raw L3 packet preceded by a 32-bit host-byte-order
 <td align="left">Tazmen Sniffer Protocol - Reserved for the TZSP encapsulation, as per request from Chris Waters &lt;chris.waters@networkchemistry.com<script cf-hash="f9e31" type="text/javascript">
 /* <![CDATA[ */!function(){try{var t="currentScript"in document?document.currentScript:function(){for(var t=document.getElementsByTagName("script"),e=t.length;e--;)if(t[e].getAttribute("cf-hash"))return t[e]}();if(t&&t.previousSibling){var e,r,n,i,c=t.previousSibling,a=c.getAttribute("data-cfemail");if(a){for(e="",r=parseInt(a.substr(0,2),16),n=2;a.length-n;n+=2)i=parseInt(a.substr(n,2),16)^r,e+=String.fromCharCode(i);e=document.createTextNode(e),c.parentNode.replaceChild(e,c)}}}catch(u){}}();/* ]]> */</script>&gt;
  TZSP is a generic encapsulation for any other link type, which includes
- a means to include meta-information with the packet, e.g. signal 
+ a means to include meta-information with the packet, e.g. signal
 strength and channel for 802.11 packets.</td>
 </tr>
 <tr>
@@ -2266,8 +2266,8 @@ strength and channel for 802.11 packets.</td>
 <a name="rfc.section.D"></a><h3>Appendix D.&nbsp;
 Link Layer Headers</h3>
 
-<p>The Packet Data field of the Packet Blocks won't start with the 
-actual network data captured, but with some link type specific "meta 
+<p>The Packet Data field of the Packet Blocks won't start with the
+actual network data captured, but with some link type specific "meta
 data". The format of this meta data depends on the link type used. TODO:
  mention example code in libpcap that lists these link headers.
 </p>
