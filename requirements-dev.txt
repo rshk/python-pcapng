@@ -1,6 +1,0 @@
-pytest
-pytest-cov
-pytest-pep8
-flake8
-sphinx
-sphinx-rtd-theme

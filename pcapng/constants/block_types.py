@@ -17,7 +17,7 @@ BLK_IRIG_TIMESTAMP = 0x00000007
 # CACE Technologies LLC)
 BLK_ARINC429 = 0x00000008
 
-BLK_SECTION_HEADER = 0x0a0d0d0a  # Section Header Block
+BLK_SECTION_HEADER = 0x0A0D0D0A  # Section Header Block
 
 # Ranges of reserved blocks used to indicate corrupted file.
 # Reserved. Used to detect trace files corrupted because

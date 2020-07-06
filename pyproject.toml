@@ -1,0 +1,20 @@
+[build-system]
+requires = [
+  'setuptools >= 42',
+  'wheel',
+  'setuptools_scm[toml]>=3.4',
+]
+
+[tool.setuptools_scm]
+
+[tool.black]
+target-version = ['py35']
+
+[tool.isort]
+# These settings ensure that black and isort don't disagree on the imports.
+line_length = 88
+multi_line_output = 3
+include_trailing_comma = true
+
+known_first_party = ['pcapng']
+known_third_party = ['pytest', 'scapy', 'six']

@@ -34,12 +34,12 @@ install_dev:
 	python setup.py develop
 
 check:
-	py.test -vvv --pep8 --cov=$(BASE_PACKAGE) --cov-report=term-missing ./tests
+	py.test -vvv --pycodestyle --cov=$(BASE_PACKAGE) --cov-report=term-missing ./tests
 
 test: check
 
 setup_tests:
-	pip install pytest pytest-pep8 pytest-cov
+	pip install pytest pytest-pycodestyle pytest-cov
 
 docs:
 	$(MAKE) -C docs html

@@ -25,15 +25,15 @@ curl -XPUT localhost:9200/net-traffic -d '{"packet": {
 curl -XPUT localhost:9200/net-traffic/_bulk --data-binary @capture.json
 """
 
-from __future__ import print_function, division
+from __future__ import division, print_function
 
+import hashlib
+import json
 import logging
 import sys
-import json
-import hashlib
 
-from scapy.layers.l2 import Ether
 from scapy.layers.all import *  # Needed for decode!  # noqa
+from scapy.layers.l2 import Ether
 from scapy.packet import Raw
 
 from pcapng import PcapngReader
@@ -47,7 +47,8 @@ class SaferJsonEncoder(json.JSONEncoder):
         except TypeError:
             return repr(obj)
 
-pcapng_logger = logging.getLogger('pcapng')
+
+pcapng_logger = logging.getLogger("pcapng")
 pcapng_logger.setLevel(logging.INFO)
 
 logger = logging.getLogger(__name__)
@@ -55,15 +56,17 @@ logger.setLevel(logging.INFO)
 
 handler = logging.StreamHandler(sys.stderr)
 formatter = logging.Formatter(
-    '\033[1;37;40m  %(levelname)s  \033[0m \033[0;32m%(message)s\033[0m')
+    "\033[1;37;40m  %(levelname)s  \033[0m \033[0;32m%(message)s\033[0m"
+)
 handler.setFormatter(formatter)
 
 pcapng_logger.addHandler(handler)
 logger.addHandler(handler)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     import sys
+
     rdr = PcapngReader(sys.stdin)
 
     def _find_layers(pkt):
@@ -88,16 +91,17 @@ if __name__ == '__main__':
             # Hopefully, this will be unique..
             packet_id = hashlib.sha1(
                 str(block.timestamp) + block.packet_data
-                ).hexdigest()
+            ).hexdigest()
 
             packet = Ether(block.packet_data)  # Decode packet data
 
-            logger.info("Processing packet {0}: {1}"
-                        .format(packet_id, repr(packet)[:200]))
+            logger.info(
+                "Processing packet {0}: {1}".format(packet_id, repr(packet)[:200])
+            )
 
             packet_record = {
-                '@timestamp': block.timestamp * 1000,  # in milliseconds
-                'packet_size': block.packet_len,
+                "@timestamp": block.timestamp * 1000,  # in milliseconds
+                "packet_size": block.packet_len,
                 # todo: add information about interface, etc?
             }
 
@@ -110,11 +114,9 @@ if __name__ == '__main__':
             try:
                 _pkt_json = json.dumps(packet_record, cls=SaferJsonEncoder)
 
-            except:
+            except Exception:
                 logger.exception("Unable to serialize json packet")
 
             else:
-                print(json.dumps({'index': {
-                    '_type': 'packet',
-                    '_id': packet_id}}))
+                print(json.dumps({"index": {"_type": "packet", "_id": packet_id}}))
                 print(_pkt_json)
