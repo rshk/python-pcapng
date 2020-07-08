@@ -9,7 +9,7 @@ from pcapng.blocks import SectionHeader
 
 def test_get_nonexistent_block_attribute():
     shb = SectionHeader(
-        b"\x00\x01\x00\x00" b"\xff\xff\xff\xff\xff\xff\xff\xff" b"\x00\x00\x00\x00",
+        raw=b"\x00\x01\x00\x00" b"\xff\xff\xff\xff\xff\xff\xff\xff" b"\x00\x00\x00\x00",
         endianness=">",
     )
 

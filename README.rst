@@ -141,27 +141,41 @@ Hacking
 
 Format specification is here:
 
-http://www.winpcap.org/ntar/draft/PCAP-DumpFileFormat.html
+https://github.com/pcapng/pcapng/
 
 Contributions are welcome, please contact me if you're planning to do
 some big change, so that we can sort out the best way to integrate it.
 
-Or even better, open an issue so the whole world can partecipate in
+Or even better, open an issue so the whole world can participate in
 the discussion :)
 
 
 Pcap-ng write support
 =====================
 
-Support for writing pcap-ng files is "planned"; that means: I have
-some ideas on how to write that part and which would be the required
-changes to the library.
+Write support exists as of version x.y.z. See the file
+``examples/generate_pcapng.py`` for an example of the minimum code
+needed to generate a pcapng file.
 
-I didn't add that part (yet) as I currently don't need it, and I'm
-wondering whether anybody might (possible use cases are if you're
-writing some packet capture tool in Python, or some other kind of
-capture-file manipulation thing).
+In most cases, this library will prevent you from creating broken
+data. If you want to create marginal pcapng files, e.g. as test cases
+for other software, you can do that by adjusting the "strictness" of
+the library, as in:
 
-If you need this feature, I'd like to hear from you (otherwise, I
-don't really think I'm going to invest much time in something that no
-one needs..).
+.. code-block:: python
+
+    import pcapng.strictness as strictness
+    strictness.strictness = strictness.STRICTNESS_FIX
+
+Recognized values are ``STRICTNESS_FORBID`` (the default),
+``STRICTNESS_FIX`` (warn about problems, fix *if possible*),
+``STRICTNESS_WARN`` (warn only), and ``STRICTNESS_NONE`` (no warnings).
+Circumstances that will result in strictness warnings include:
+
+    * Adding multiples of a non-repeatable option to a block
+
+    * Adding a SPB to a file with more than one interface
+
+    * Writing a PB (PBs are obsolete and not to be used in new files)
+
+    * Writing EPB/SPB/PB/ISB before writing any IDBs

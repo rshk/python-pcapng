@@ -1,12 +1,20 @@
 import socket
 import struct
+from collections import namedtuple as _namedtuple
 
-import six
-from six import byte2int
+# These are here for export, hence ignoring F401 warning
+try:
+    from collections.abc import Iterable, Mapping  # NOQA:F401
+except ImportError:
+    from collections import Iterable, Mapping  # NOQA:F401
+
+
+def pack_ipv4(data):
+    return socket.inet_aton(data)
 
 
 def unpack_ipv4(data):
-    return socket.inet_ntoa(six.b(data))
+    return socket.inet_ntoa(data)
 
 
 def _get_pairs(data):
@@ -25,16 +33,26 @@ def _get_pairs(data):
     return list(zip(*((iter(data),) * 2)))
 
 
+def pack_ipv6(data):
+    return socket.inet_pton(socket.AF_INET6, data)
+
+
 def unpack_ipv6(data):
-    data = six.b(data)
-    return ":".join(
-        "{0:02x}{1:02x}".format(x, y) for (x, y) in _get_pairs(six.iterbytes(data))
-    )
+    return socket.inet_ntop(socket.AF_INET6, data)
+
+
+def pack_macaddr(data):
+    a = [int(x, 16) for x in data.split(":")]
+    return struct.pack("!6B", *a)
 
 
 def unpack_macaddr(data):
-    data = six.b(data)
-    return ":".join(format(x, "02x") for x in six.iterbytes(data))
+    return ":".join(format(x, "02x") for x in data)
+
+
+def pack_euiaddr(data):
+    a = [int(x, 16) for x in data.split(":")]
+    return struct.pack("!8B", *a)
 
 
 def unpack_euiaddr(data):
@@ -50,7 +68,7 @@ def unpack_timestamp_resolution(data):
     """
     if len(data) != 1:
         raise ValueError("Data must be exactly one byte")
-    num = byte2int(data)
+    num = data[0]
     base = 2 if (num >> 7 & 1) else 10
     exponent = num & 0b01111111
     return base ** (-exponent)
@@ -69,3 +87,23 @@ def pack_timestamp_resolution(base, exponent):
     if base == 10:
         return struct.pack("B", exponent)
     raise ValueError("Supported bases are: 2, 10")
+
+
+# version-portable namedtuple with defaults, adapted from
+# https://stackoverflow.com/a/18348004/6692652
+def namedtuple(typename, field_names, defaults=None):
+    if not defaults:
+        # No defaults given or needed
+        return _namedtuple(typename, field_names)
+    try:
+        # Python 3.7+
+        return _namedtuple(typename, field_names, defaults=defaults)
+    except TypeError:
+        T = _namedtuple(typename, field_names)
+        try:
+            # Python 2.7, up to 3.6
+            T.__new__.__defaults__ = defaults
+        except AttributeError:
+            # Older Python 2.x
+            T.__new__.func_defaults = defaults
+        return T

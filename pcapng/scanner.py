@@ -33,6 +33,8 @@ class FileScanner(object):
         just wrap it in a :py:class:`io.BytesIO` object.
     """
 
+    __slots__ = ["stream", "current_section", "endianness"]
+
     def __init__(self, stream):
         self.stream = stream
         self.current_section = None
@@ -59,12 +61,6 @@ class FileScanner(object):
 
         block = self._read_block(block_type)
 
-        if isinstance(block, blocks.InterfaceDescription):
-            self.current_section.register_interface(block)
-
-        elif isinstance(block, blocks.InterfaceStatistics):
-            self.current_section.add_interface_stats(block)
-
         return block
 
     def _read_section_header(self):
@@ -90,7 +86,9 @@ class FileScanner(object):
 
         if block_type in blocks.KNOWN_BLOCKS:
             # This is a known block -- instantiate it
-            return blocks.KNOWN_BLOCKS[block_type].from_context(data, self)
+            return self.current_section.new_member(
+                blocks.KNOWN_BLOCKS[block_type], raw=data
+            )
 
         if block_type in BLK_RESERVED_CORRUPTED:
             raise CorruptedFile(

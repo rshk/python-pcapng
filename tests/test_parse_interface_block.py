@@ -47,7 +47,7 @@ def test_read_block_interface_bigendian():
     assert blocks[1].options["if_tsresol"] == b"\x06"
     assert blocks[1].timestamp_resolution == 1e-6
     assert blocks[1].options["if_os"] == "Linux 3.2.0-4-amd64"
-    assert blocks[1].reserved == b"\x00\x00"
+    assert blocks[1].reserved == 0
 
     assert repr(blocks[1]) == (
         "<InterfaceDescription link_type=1 reserved={reserved} "
