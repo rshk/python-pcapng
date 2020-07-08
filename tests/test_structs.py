@@ -13,11 +13,11 @@ from pcapng.structs import (
     IntField,
     ListField,
     NameResolutionRecordField,
+    Option,
     Options,
     OptionsField,
-    PacketDataField,
+    PacketBytes,
     RawBytes,
-    SimplePacketDataField,
     read_block_data,
     read_bytes,
     read_bytes_padded,
@@ -212,11 +212,11 @@ def test_read_bytes_padded():
 
 def test_decode_simple_struct():
     schema = [
-        ("rawbytes", RawBytes(12)),
-        ("int32s", IntField(32, True)),
-        ("int32u", IntField(32, False)),
-        ("int16s", IntField(16, True)),
-        ("int16u", IntField(16, False)),
+        ("rawbytes", RawBytes(12), b""),
+        ("int32s", IntField(32, True), 0),
+        ("int32u", IntField(32, False), 0),
+        ("int16s", IntField(16, True), 0),
+        ("int16u", IntField(16, False), 0),
     ]
 
     stream = io.BytesIO()
@@ -276,10 +276,10 @@ def test_read_options_2():
 
 def test_options_object():
     schema = [
-        (2, "spam"),
-        (3, "eggs", "u32"),
-        (4, "bacon", "string"),
-        (5, "missing"),
+        Option(2, "spam", "bytes"),
+        Option(3, "eggs", "u32"),
+        Option(4, "bacon", "string"),
+        Option(5, "missing"),
     ]
 
     raw_options = [
@@ -343,13 +343,16 @@ def test_options_object():
 
 def test_unpack_dummy_packet():
     schema = [
-        ("a_string", RawBytes(8)),
-        ("a_number", IntField(32, False)),
-        ("options", OptionsField([])),
-        ("packet_data", PacketDataField()),
-        ("simple_packet_data", SimplePacketDataField()),
-        ("name_res", ListField(NameResolutionRecordField())),
-        ("another_number", IntField(32, False)),
+        ("a_string", RawBytes(8), ""),
+        ("a_number", IntField(32, False), 0),
+        ("options", OptionsField([]), None),
+        ("pb_captured_len", IntField(32, False), 0),
+        ("pb_orig_len", IntField(32, False), 0),
+        ("packet_data", PacketBytes("pb_captured_len"), b""),
+        ("spb_orig_len", IntField(32, False), 0),
+        ("simple_packet_data", PacketBytes("spb_orig_len"), b""),
+        ("name_res", ListField(NameResolutionRecordField()), []),
+        ("another_number", IntField(32, False), 0),
     ]
 
     # Note: NULLs are for padding!
@@ -394,17 +397,19 @@ def test_unpack_dummy_packet():
     assert unpacked["options"]["opt_comment"] == "Hello world!"
     assert unpacked["options"][2] == b"Some other text"
 
-    assert unpacked["packet_data"] == (0x12, 0x10000, b"These are 18 bytes")
+    assert unpacked["pb_captured_len"] == 0x12
+    assert unpacked["pb_orig_len"] == 0x10000
+    assert unpacked["packet_data"] == b"These are 18 bytes"
 
-    assert unpacked["simple_packet_data"] == (13, b"Simple packet")
+    assert unpacked["spb_orig_len"] == 13
+    assert unpacked["simple_packet_data"] == b"Simple packet"
 
     assert unpacked["name_res"] == [
-        {"address": b"\x0a\x22\x33\x44", "name": b"www.example.com", "type": 1},
-        {"address": b"\xc0\xa8\x14\x01", "name": b"www.example.org", "type": 1},
+        {"address": "10.34.51.68", "names": ["www.example.com"], "type": 1},
+        {"address": "192.168.20.1", "names": ["www.example.org"], "type": 1},
         {
             "type": 2,
-            "address": b"\x00\x11\x22\x33\x44\x55\x66\x77"
-            b"\x88\x99\xaa\xbb\xcc\xdd\xee\xff",
-            "name": b"v6.example.net",
+            "address": "11:2233:4455:6677:8899:aabb:ccdd:eeff",
+            "names": ["v6.example.net"],
         },
     ]

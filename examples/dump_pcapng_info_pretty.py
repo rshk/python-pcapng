@@ -7,6 +7,7 @@ from datetime import datetime
 # To make sure all packet types are available
 import scapy.all  # noqa
 import scapy.packet
+import six
 from scapy.layers.l2 import Ether
 
 import pcapng
@@ -120,6 +121,16 @@ def pprint_enhanced_packet(block):
             fg="455",
         ),
     ]
+    try:
+        text.extend(
+            [
+                col256("NIC:", bold=True),
+                col256(six.u(block.interface_id), fg="145"),
+                col256(six.u(block.interface.options["if_name"]), fg="140"),
+            ]
+        )
+    except KeyError:
+        pass
 
     text.extend(
         [
@@ -196,7 +207,7 @@ def format_scapy_packet(packet):
 
 
 def make_printable(data):  # todo: preserve unicode
-    stream = io.BytesIO(data)
+    stream = six.StringIO()
     for ch in data:
         if ch == "\\":
             stream.write("\\\\")
@@ -208,7 +219,7 @@ def make_printable(data):  # todo: preserve unicode
 
 
 def format_binary_data(data):
-    stream = io.BytesIO(data)
+    stream = six.BytesIO(data)
     row_offset = 0
     row_size = 16  # bytes
 
@@ -217,8 +228,8 @@ def format_binary_data(data):
         if not data:
             return
 
-        hexrow = io.BytesIO()
-        asciirow = io.BytesIO()
+        hexrow = six.BytesIO()
+        asciirow = six.BytesIO()
         for i, byte in enumerate(data):
             if 32 <= ord(byte) <= 126:
                 asciirow.write(byte)
