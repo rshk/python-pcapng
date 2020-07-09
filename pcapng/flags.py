@@ -3,8 +3,9 @@ Module to wrap an integer in bitwise flag/field accessors.
 """
 
 from collections import OrderedDict
+from collections.abc import Iterable
 
-from pcapng.utils import Iterable, namedtuple
+from pcapng._compat import namedtuple
 
 
 class FlagBase(object):
@@ -193,39 +194,3 @@ class FlagWord(object):
         except KeyError:
             raise AttributeError(name)
         return v.set(val)
-
-
-if __name__ == "__main__":
-    f = FlagWord(
-        [
-            FlagField("inout", FlagEnum, 2, ("NA", "inbound", "outbound")),
-            FlagField(
-                "casttype",
-                FlagEnum,
-                3,
-                ("NA", "unicast", "multicast", "broadcast", "promiscuous"),
-            ),
-            FlagField("fcslen", FlagUInt, 4),
-            FlagField("reserved", FlagUInt, 7),
-            FlagField("err_16", FlagBool),
-            FlagField("err_17", FlagBool),
-            FlagField("err_18", FlagBool),
-            FlagField("err_19", FlagBool),
-            FlagField("err_20", FlagBool),
-            FlagField("err_21", FlagBool),
-            FlagField("err_22", FlagBool),
-            FlagField("err_23", FlagBool),
-            FlagField("err_crc", FlagBool),
-            FlagField("err_long", FlagBool),
-            FlagField("err_short", FlagBool),
-            FlagField("err_frame_gap", FlagBool),
-            FlagField("err_frame_align", FlagBool),
-            FlagField("err_frame_delim", FlagBool),
-            FlagField("err_preamble", FlagBool),
-            FlagField("err_symbol", FlagBool),
-        ]
-    )
-
-    f.fcslen = 12
-    print(f)
-    print(int(f))
