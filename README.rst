@@ -164,12 +164,12 @@ the library, as in:
 
 .. code-block:: python
 
-    import pcapng.strictness as strictness
-    strictness.strictness = strictness.STRICTNESS_FIX
+    from pcapng.strictness import Strictness, set_strictness
+    set_strictness(Strictness.FIX)
 
-Recognized values are ``STRICTNESS_FORBID`` (the default),
-``STRICTNESS_FIX`` (warn about problems, fix *if possible*),
-``STRICTNESS_WARN`` (warn only), and ``STRICTNESS_NONE`` (no warnings).
+Recognized values are ``Strictness.FORBID`` (the default),
+``Strictness.FIX`` (warn about problems, fix *if possible*),
+``Strictness.WARN`` (warn only), and ``Strictness.NONE`` (no warnings).
 Circumstances that will result in strictness warnings include:
 
     * Adding multiples of a non-repeatable option to a block

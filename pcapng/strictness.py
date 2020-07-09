@@ -4,31 +4,41 @@ aren't strictly valid.
 """
 
 import warnings
+from enum import Enum
 
 from pcapng.exceptions import PcapngStrictnessError, PcapngStrictnessWarning
 
-STRICTNESS_NONE = 0  # No warnings, do what you want
-STRICTNESS_WARN = 1  # Do what you want, but warn of potential issues
-STRICTNESS_FIX = 2  # Warn of potential issues, fix *if possible*
-STRICTNESS_FORBID = 3  # raise exception on potential issues
 
-strictness = STRICTNESS_FORBID
+class Strictness(Enum):
+    NONE = 0  # No warnings, do what you want
+    WARN = 1  # Do what you want, but warn of potential issues
+    FIX = 2  # Warn of potential issues, fix *if possible*
+    FORBID = 3  # raise exception on potential issues
+
+
+strict_level = Strictness.FORBID
+
+
+def set_strictness(level):
+    assert type(level) is Strictness
+    global strict_level
+    strict_level = level
 
 
 def problem(msg):
     "Warn or raise an exception with the given message."
-    if strictness == STRICTNESS_FORBID:
+    if strict_level == Strictness.FORBID:
         raise PcapngStrictnessError(msg)
-    elif strictness in (STRICTNESS_WARN, STRICTNESS_FIX):
+    elif strict_level in (Strictness.WARN, Strictness.FIX):
         warnings.warn(PcapngStrictnessWarning(msg))
 
 
 def warn(msg):
     "Show a warning with the given message."
-    if strictness > STRICTNESS_NONE:
+    if strict_level > Strictness.NONE:
         warnings.warn(PcapngStrictnessWarning(msg))
 
 
 def should_fix():
     "Helper function for showing code used to fix questionable pcapng data."
-    return strictness == STRICTNESS_FIX
+    return strict_level == Strictness.FIX

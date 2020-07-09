@@ -5,8 +5,10 @@ Module providing facilities for handling struct-like data.
 import abc
 import struct
 import warnings
+from collections.abc import Iterable, Mapping
 
 from pcapng import strictness as strictness
+from pcapng._compat import namedtuple
 from pcapng.exceptions import (
     BadMagic,
     CorruptedFile,
@@ -16,9 +18,6 @@ from pcapng.exceptions import (
 )
 from pcapng.flags import FlagBool, FlagEnum, FlagField, FlagUInt, FlagWord
 from pcapng.utils import (
-    Iterable,
-    Mapping,
-    namedtuple,
     pack_euiaddr,
     pack_ipv4,
     pack_ipv6,
@@ -689,7 +688,7 @@ class Options(Mapping):
           section 3.5.1)
 
     :param data:
-        Initial data for the options. A list of two-tuples: ``(code, value)``.
+        Initial data for the options. A dict of ``code: value`` items.
         Items with the same code may be repeated; only the first one will be
         accessible using subscript ``options[code]``; the others can be
         accessed using :py:meth:`get_all` and related methods
@@ -709,7 +708,7 @@ class Options(Mapping):
     def __init__(self, schema, data, endianness):
         self.schema = {}  # Schema of option fields: {<code>: Option(...)}
         self._field_names = {}  # Map names to codes
-        self.data = {}  # List of (code, value) tuples
+        self.data = {}  # option data, with numeric option IDs as keys
         self.endianness = endianness  # one of '<>!='
 
         # This is the default schema, common to all objects
