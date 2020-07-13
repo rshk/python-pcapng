@@ -5,3 +5,4 @@
 # ----------------------------------------------------------------------
 
 from .scanner import FileScanner  # noqa
+from .writer import FileWriter  # noqa
