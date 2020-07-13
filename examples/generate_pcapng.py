@@ -3,6 +3,7 @@
 import argparse
 
 import pcapng.blocks as blocks
+from pcapng import FileWriter
 
 parser = argparse.ArgumentParser()
 parser.add_argument("outfile", type=argparse.FileType("wb"))
@@ -15,14 +16,14 @@ shb = blocks.SectionHeader(
         "shb_userappl": "python-pcapng",
     }
 )
-shb.write(args.outfile)
 idb = shb.new_member(
     blocks.InterfaceDescription,
     link_type=1,
     options={"if_description": "Hand-rolled", "if_os": "Python"},
 )
-idb.write(args.outfile)
 
+# FileWriter() immediately writes the SHB and any IDBs you've added to it
+writer = FileWriter(args.outfile, shb)
 
 # fmt: off
 test_pl = (
@@ -44,4 +45,4 @@ test_pl = (
 
 spb = shb.new_member(blocks.SimplePacket)
 spb.packet_data = bytes(test_pl)
-spb.write(args.outfile)
+writer.write_block(spb)

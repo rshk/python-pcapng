@@ -72,12 +72,14 @@ class Block(object):
         self._decoded = block_decode(self, stream)
         del self._raw
 
-    def write(self, outstream):
+    def _write(self, outstream):
         """Writes this block into the given output stream"""
         encoded_block = io.BytesIO()
         self._encode(encoded_block)
         encoded_block = encoded_block.getvalue()
         subblock_length = len(encoded_block)
+        if subblock_length == 0:
+            return
         block_length = 12 + subblock_length
         if subblock_length % 4 != 0:
             block_length += 4 - (subblock_length % 4)
@@ -266,7 +268,7 @@ class InterfaceDescription(SectionMemberBlock):
     """
 
     magic_number = 0x00000001
-    __slots__ = []
+    __slots__ = ["interface_id"]
     schema = [
         ("link_type", IntField(16, False), 0),  # todo: enc/decode
         ("reserved", IntField(16, False), 0),
@@ -364,7 +366,7 @@ class BlockWithInterfaceMixin(object):
         # by looking up the interface_id
         return self.section.interfaces[self.interface_id]
 
-    def write(self, outstream):
+    def _encode(self, outstream):
         if len(self.section.interfaces) < 1:
             strictness.problem(
                 "writing {cls} for section with no interfaces".format(
@@ -374,7 +376,7 @@ class BlockWithInterfaceMixin(object):
             if strictness.should_fix():
                 # Only way to "fix" is to not write the block
                 return
-        super(BlockWithInterfaceMixin, self).write(outstream)
+        super(BlockWithInterfaceMixin, self)._encode(outstream)
 
 
 class BasePacketBlock(SectionMemberBlock, BlockWithInterfaceMixin):
@@ -579,12 +581,14 @@ class ObsoletePacket(BasePacketBlock, BlockWithTimestampMixin):
             options=opts_dict,
         )
 
-    def write(self, outstream):
+    # Do this check in _write() instead of _encode() to ensure the block gets written
+    # with the correct magic number.
+    def _write(self, outstream):
         strictness.problem("Packet Block is obsolete and must not be used")
         if strictness.should_fix():
-            self.enhanced().write(outstream)
+            self.enhanced()._write(outstream)
         else:
-            super(ObsoletePacket, self).write(outstream)
+            super(ObsoletePacket, self)._write(outstream)
 
 
 @register_block
