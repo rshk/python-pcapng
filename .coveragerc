@@ -1,5 +1,6 @@
 [run]
 parallel = False
+source = pcapng
 
 [report]
 exclude_lines =

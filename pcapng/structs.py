@@ -316,7 +316,7 @@ class RawBytes(StructField):
     def __init__(self, size):
         self.size = size  # in bytes!
 
-    def load(self, stream, endianness, seen=None):
+    def load(self, stream, endianness=None, seen=None):
         return read_bytes_padded(stream, self.size)
 
     def encode(self, value, stream, endianness=None):
@@ -499,36 +499,35 @@ class NameResolutionRecordField(StructField):
             return {
                 "type": record_type,
                 "address": unpack_ipv4(data[:4]),
-                "names": [x.decode() for x in data[4:].split(b"\x00")],
+                "names": [x.decode() for x in data[4:].split(b"\x00") if x != b""],
             }
 
         if record_type == NRB_RECORD_IPv6:
             return {
                 "type": record_type,
                 "address": unpack_ipv6(data[:16]),
-                "names": [x.decode() for x in data[16:].split(b"\x00")],
+                "names": [x.decode() for x in data[16:].split(b"\x00") if x != b""],
             }
 
         return {"type": record_type, "raw": data}
 
     def encode(self, d, stream, endianness):
-        write_int(d["type"], stream, 16, endianness=endianness)
-
         if d["type"] == NRB_RECORD_END:
-            write_int(0, stream, 16, endianness=endianness)
+            # Don't let the user add records of this type.
+            # We take care of it in `encode_finish()` below
+            return
 
-        elif d["type"] == NRB_RECORD_IPv4:
+        write_int(d["type"], stream, 16, endianness=endianness)
+        if d["type"] == NRB_RECORD_IPv4:
             raw = pack_ipv4(d["address"])
             raw += (b"\x00".join([s.encode() for s in d["names"]])) + b"\x00"
             write_int(len(raw), stream, 16, endianness=endianness)
             write_bytes_padded(stream, raw)
-
         elif d["type"] == NRB_RECORD_IPv6:
             raw = pack_ipv6(d["address"])
             raw += (b"\x00".join([s.encode() for s in d["names"]])) + b"\x00"
             write_int(len(raw), stream, 16, endianness=endianness)
             write_bytes_padded(stream, raw)
-
         else:
             write_int(len(d["raw"]), stream, 16, endianness=endianness)
             write_bytes_padded(stream, d["raw"])
@@ -731,6 +730,9 @@ class Options(Mapping):
         self._update_data(data)
 
     # -------------------- Nice interface :) --------------------
+
+    def __eq__(self, other):
+        return self.data == other.data
 
     def __getitem__(self, name):
         code = self._resolve_name(name)

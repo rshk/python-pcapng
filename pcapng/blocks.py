@@ -24,7 +24,6 @@ from pcapng.structs import (
     OptionsField,
     PacketBytes,
     RawBytes,
-    block_decode,
     struct_decode,
     write_bytes_padded,
     write_int,
@@ -42,14 +41,14 @@ class Block(object):
     __slots__ = [
         # These are in addition to the above two properties
         "magic_number",
-        "_raw",
         "_decoded",
     ]
 
     def __init__(self, **kwargs):
         if "raw" in kwargs:
-            self._raw = kwargs["raw"]
-            self._decoded = None
+            self._decoded = struct_decode(
+                self.schema, io.BytesIO(kwargs["raw"]), kwargs["endianness"]
+            )
         else:
             self._decoded = {}
             for key, packed_type, default in self.schema:
@@ -57,20 +56,21 @@ class Block(object):
                     self._decoded[key] = Options(
                         schema=packed_type.options_schema, data={}, endianness="="
                     )
+                    if "options" in kwargs:
+                        for oky, ovl in kwargs["options"].items():
+                            self.options[oky] = ovl
                 else:
-                    self._decoded[key] = default
-            for aky, avl in kwargs.items():
-                if aky == "options":
-                    for oky, ovl in avl.items():
-                        self.options[oky] = ovl
-                else:
-                    self.__setattr__(aky, avl)
+                    try:
+                        self._decoded[key] = kwargs[key]
+                    except KeyError:
+                        self._decoded[key] = default
 
-    def _decode(self):
-        """Decodes the raw data of this block into its fields"""
-        stream = io.BytesIO(self._raw)
-        self._decoded = block_decode(self, stream)
-        del self._raw
+    def __eq__(self, other):
+        if self.__class__ != other.__class__:
+            return False
+        keys = [x[0] for x in self.schema]
+        # Use `getattr()` so eg. @property calls are used
+        return [getattr(self, k) for k in keys] == [getattr(other, k) for k in keys]
 
     def _write(self, outstream):
         """Writes this block into the given output stream"""
@@ -99,11 +99,9 @@ class Block(object):
         # __getattr__ is only called when getting an attribute that
         # this object doesn't have.
         try:
-            if self._decoded is None:
-                self._decode()
             return self._decoded[name]
-        except KeyError:
-            raise AttributeError(name)
+        except KeyError as e:
+            raise AttributeError(name) from e
 
     def __setattr__(self, name, value):
         # __setattr__ is called for *any* attribute, real or not.
@@ -191,17 +189,11 @@ class SectionHeader(Block):
     ]
 
     def __init__(self, endianness="<", **kwargs):
-        super(SectionHeader, self).__init__(**kwargs)
         self.endianness = endianness
         self._interfaces_id = itertools.count(0)
         self.interfaces = {}
         self.interface_stats = {}
-
-    def _decode(self):
-        self._decoded = struct_decode(
-            self.schema, io.BytesIO(self._raw), endianness=self.endianness
-        )
-        del self._raw
+        super(SectionHeader, self).__init__(endianness=endianness, **kwargs)
 
     def _encode(self, outstream):
         write_int(0x1A2B3C4D, outstream, 32, endianness=self.endianness)
@@ -210,7 +202,7 @@ class SectionHeader(Block):
     def new_member(self, cls, **kwargs):
         """Helper method to create a block that's a member of this section"""
         assert issubclass(cls, SectionMemberBlock)
-        blk = cls(section=self, **kwargs)
+        blk = cls(section=self, endianness=self.endianness, **kwargs)
         # Some blocks (eg. SPB) don't have options
         if any([x[0] == "options" for x in blk.schema]):
             blk.options.endianness = self.endianness
@@ -459,21 +451,21 @@ class SimplePacket(BasePacketBlock):
         ("packet_data", PacketBytes("captured_len"), b""),
     ]
 
-    def __init__(self, **kwargs):
-        super(SimplePacket, self).__init__(**kwargs)
-        self.readonly_fields.add("interface_id")
+    def __init__(self, section, **kwargs):
+        self.section = section
+        if "raw" in kwargs:
+            # Since we can't be sure of the packet length without the snap length,
+            # we have to do a bit of work here
+            stream = io.BytesIO(kwargs["raw"])
+            self._decoded = struct_decode(self.schema[:1], stream, kwargs["endianness"])
+            # Now we can get our ``captured_len`` property which is required
+            # to really know how much data we can load
+            rb = RawBytes(self.captured_len)
+            self._decoded["packet_data"] = rb.load(stream)
+        else:
+            super(SimplePacket, self).__init__(section, **kwargs)
 
     readonly_fields = set(("captured_len", "interface_id"))
-
-    def _decode(self):
-        """Decodes the raw data of this block into its fields"""
-        stream = io.BytesIO(self._raw)
-        self._decoded = struct_decode(self.schema[:1], stream, self.section.endianness)
-        # Now we can get our ``captured_len`` property which is required
-        # to really know how much data we can load
-        rb = RawBytes(self.captured_len)
-        self._decoded["packet_data"] = rb.load(stream, self.section.endianness)
-        del self._raw
 
     @property
     def interface_id(self):
