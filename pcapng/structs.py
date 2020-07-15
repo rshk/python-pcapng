@@ -5,6 +5,7 @@ Module providing facilities for handling struct-like data.
 import abc
 import struct
 import warnings
+from collections import defaultdict
 from collections.abc import Iterable, Mapping
 
 from pcapng import strictness as strictness
@@ -707,7 +708,7 @@ class Options(Mapping):
     def __init__(self, schema, data, endianness):
         self.schema = {}  # Schema of option fields: {<code>: Option(...)}
         self._field_names = {}  # Map names to codes
-        self.data = {}  # option data, with numeric option IDs as keys
+        self.data = defaultdict(list)  # option data, with numeric option IDs as keys
         self.endianness = endianness  # one of '<>!='
 
         # This is the default schema, common to all objects
@@ -736,6 +737,10 @@ class Options(Mapping):
 
     def __getitem__(self, name):
         code = self._resolve_name(name)
+        if code not in self.data:
+            # The defaultdict would create an empty entry if we just let this slide.
+            # `tests/test_structs.py` expects a KeyError to be raised here instead.
+            raise KeyError(name)
         return self.data[code][0]
 
     def __len__(self):
@@ -791,8 +796,6 @@ class Options(Mapping):
     def add(self, name, value):
         """Add a value to the given-named option"""
         code = self._resolve_name(name)
-        if code not in self.data:
-            self.data[code] = []
         self.data[code].append(value)
         self._check_multiples(code)
 
@@ -808,8 +811,6 @@ class Options(Mapping):
             return
 
         for code, value in data:
-            if code not in self.data:
-                self.data[code] = []
             self.data[code].append(self._decode(code, value))
             if len(self.data[code]) > 1 and not self.schema[code].multiple:
                 try:
