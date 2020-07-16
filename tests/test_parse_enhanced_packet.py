@@ -2,7 +2,6 @@ import io
 import struct
 
 import pytest
-import six
 
 from pcapng.blocks import EnhancedPacket, InterfaceDescription, SectionHeader
 from pcapng.scanner import FileScanner
@@ -12,48 +11,46 @@ from pcapng.utils import pack_timestamp_resolution
 def test_read_block_enhanced_packet_bigendian():
     scanner = FileScanner(
         io.BytesIO(
-            six.b(
-                # ---------- Section header
-                "\x0a\x0d\x0d\x0a"  # Magic number
-                "\x00\x00\x00\x20"  # Block size (32 bytes)
-                "\x1a\x2b\x3c\x4d"  # Magic number
-                "\x00\x01\x00\x00"  # Version
-                "\xff\xff\xff\xff\xff\xff\xff\xff"  # Undefined section length
-                "\x00\x00\x00\x00"  # Empty options
-                "\x00\x00\x00\x20"  # Block size (32 bytes)
-                # ---------- Interface description
-                "\x00\x00\x00\x01"  # block magic
-                "\x00\x00\x00\x40"  # block syze (64 bytes)
-                "\x00\x01"  # link type
-                "\x00\x00"  # reserved block
-                "\x00\x00\xff\xff"  # size limit
-                "\x00\x02\x00\x04"
-                "eth0"  # if_name
-                "\x00\x09\x00\x01"
-                "\x06\x00\x00\x00"  # if_tsresol (+padding)
-                "\x00\x0c\x00\x13"
-                "Linux 3.2.0-4-amd64\x00"  # if_os
-                "\x00\x00\x00\x00"  # end of options
-                "\x00\x00\x00\x40"  # block syze (64 bytes)
-                # ---------- Enhanced packet
-                "\x00\x00\x00\x06"  # block magic
-                "\x00\x00\x00\x78"  # block syze (120 bytes)
-                "\x00\x00\x00\x00"  # interface id (first one, eth0)
-                "\x00\x04\xf8\x1e"
-                "\x3c\x3e\xd5\xa9"  # timestamp (microseconds)
-                "\x00\x00\x00\x51"  # Captured length
-                "\x00\x00\x00\x51"  # Original length
-                # Packet data (81 bytes)
-                "\x00\x02\x157\xa2D\x00\xae\xf3R\xaa\xd1\x08\x00"  # Ethernet
-                "E\x00\x00C\x00\x01\x00\x00@\x06x<\xc0\xa8\x05\x15B#\xfa\x97"  # IP
-                "\x00\x14\x00P\x00\x00\x00\x00\x00\x00\x00\x00P\x02 "  # TCP
-                "\x00\xbb9\x00\x00"  # TCP(cont)
-                "GET /index.html HTTP/1.0 \n\n"  # HTTP
-                "\x00\x00\x00"  # Padding
-                # todo: add options?
-                "\x00\x00\x00\x00"  # Empty options
-                "\x00\x00\x00\x78"  # block syze (120 bytes)
-            )
+            # ---------- Section header
+            b"\x0a\x0d\x0d\x0a"  # Magic number
+            b"\x00\x00\x00\x20"  # Block size (32 bytes)
+            b"\x1a\x2b\x3c\x4d"  # Magic number
+            b"\x00\x01\x00\x00"  # Version
+            b"\xff\xff\xff\xff\xff\xff\xff\xff"  # Undefined section length
+            b"\x00\x00\x00\x00"  # Empty options
+            b"\x00\x00\x00\x20"  # Block size (32 bytes)
+            # ---------- Interface description
+            b"\x00\x00\x00\x01"  # block magic
+            b"\x00\x00\x00\x40"  # block syze (64 bytes)
+            b"\x00\x01"  # link type
+            b"\x00\x00"  # reserved block
+            b"\x00\x00\xff\xff"  # size limit
+            b"\x00\x02\x00\x04"
+            b"eth0"  # if_name
+            b"\x00\x09\x00\x01"
+            b"\x06\x00\x00\x00"  # if_tsresol (+padding)
+            b"\x00\x0c\x00\x13"
+            b"Linux 3.2.0-4-amd64\x00"  # if_os
+            b"\x00\x00\x00\x00"  # end of options
+            b"\x00\x00\x00\x40"  # block syze (64 bytes)
+            # ---------- Enhanced packet
+            b"\x00\x00\x00\x06"  # block magic
+            b"\x00\x00\x00\x78"  # block syze (120 bytes)
+            b"\x00\x00\x00\x00"  # interface id (first one, eth0)
+            b"\x00\x04\xf8\x1e"
+            b"\x3c\x3e\xd5\xa9"  # timestamp (microseconds)
+            b"\x00\x00\x00\x51"  # Captured length
+            b"\x00\x00\x00\x51"  # Original length
+            # Packet data (81 bytes)
+            b"\x00\x02\x157\xa2D\x00\xae\xf3R\xaa\xd1\x08\x00"  # Ethernet
+            b"E\x00\x00C\x00\x01\x00\x00@\x06x<\xc0\xa8\x05\x15B#\xfa\x97"  # IP
+            b"\x00\x14\x00P\x00\x00\x00\x00\x00\x00\x00\x00P\x02 "  # TCP
+            b"\x00\xbb9\x00\x00"  # TCP(cont)
+            b"GET /index.html HTTP/1.0 \n\n"  # HTTP
+            b"\x00\x00\x00"  # Padding
+            # todo: add options?
+            b"\x00\x00\x00\x00"  # Empty options
+            b"\x00\x00\x00\x78"  # block syze (120 bytes)
         )
     )
 

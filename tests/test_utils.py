@@ -1,5 +1,3 @@
-from six import int2byte
-
 from pcapng.utils import (
     pack_timestamp_resolution,
     unpack_euiaddr,
@@ -34,24 +32,24 @@ def test_unpack_euiaddr():
 
 
 def test_unpack_tsresol():
-    assert unpack_timestamp_resolution(int2byte(0)) == 1
-    assert unpack_timestamp_resolution(int2byte(1)) == 1e-1
-    assert unpack_timestamp_resolution(int2byte(6)) == 1e-6
-    assert unpack_timestamp_resolution(int2byte(100)) == 1e-100
+    assert unpack_timestamp_resolution(bytes((0,))) == 1
+    assert unpack_timestamp_resolution(bytes((1,))) == 1e-1
+    assert unpack_timestamp_resolution(bytes((6,))) == 1e-6
+    assert unpack_timestamp_resolution(bytes((100,))) == 1e-100
 
-    assert unpack_timestamp_resolution(int2byte(0 | 0b10000000)) == 1
-    assert unpack_timestamp_resolution(int2byte(1 | 0b10000000)) == 2 ** -1
-    assert unpack_timestamp_resolution(int2byte(6 | 0b10000000)) == 2 ** -6
-    assert unpack_timestamp_resolution(int2byte(100 | 0b10000000)) == 2 ** -100
+    assert unpack_timestamp_resolution(bytes((0 | 0b10000000,))) == 1
+    assert unpack_timestamp_resolution(bytes((1 | 0b10000000,))) == 2 ** -1
+    assert unpack_timestamp_resolution(bytes((6 | 0b10000000,))) == 2 ** -6
+    assert unpack_timestamp_resolution(bytes((100 | 0b10000000,))) == 2 ** -100
 
 
 def test_pack_tsresol():
-    assert pack_timestamp_resolution(10, 0b00000000) == int2byte(0b00000000)
-    assert pack_timestamp_resolution(10, 0b00000011) == int2byte(0b00000011)
-    assert pack_timestamp_resolution(10, 0b00000100) == int2byte(0b00000100)
-    assert pack_timestamp_resolution(10, 0b00111100) == int2byte(0b00111100)
+    assert pack_timestamp_resolution(10, 0b00000000) == bytes((0b00000000,))
+    assert pack_timestamp_resolution(10, 0b00000011) == bytes((0b00000011,))
+    assert pack_timestamp_resolution(10, 0b00000100) == bytes((0b00000100,))
+    assert pack_timestamp_resolution(10, 0b00111100) == bytes((0b00111100,))
 
-    assert pack_timestamp_resolution(2, 0b00000000) == int2byte(0b10000000)
-    assert pack_timestamp_resolution(2, 0b00000011) == int2byte(0b10000011)
-    assert pack_timestamp_resolution(2, 0b00000100) == int2byte(0b10000100)
-    assert pack_timestamp_resolution(2, 0b00111100) == int2byte(0b10111100)
+    assert pack_timestamp_resolution(2, 0b00000000) == bytes((0b10000000,))
+    assert pack_timestamp_resolution(2, 0b00000011) == bytes((0b10000011,))
+    assert pack_timestamp_resolution(2, 0b00000100) == bytes((0b10000100,))
+    assert pack_timestamp_resolution(2, 0b00111100) == bytes((0b10111100,))
