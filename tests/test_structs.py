@@ -6,7 +6,6 @@ import io
 import struct
 
 import pytest
-import six
 
 from pcapng.exceptions import BadMagic, CorruptedFile, StreamEmpty, TruncatedFile
 from pcapng.structs import (
@@ -296,16 +295,16 @@ def test_options_object():
     assert options["opt_comment"] == "Comment #1"
     assert options[1] == "Comment #1"
     assert options.get_all("opt_comment") == ["Comment #1", "Comment #2"]
-    assert isinstance(options["opt_comment"], six.text_type)
+    assert isinstance(options["opt_comment"], str)
 
     assert options["spam"] == b"I love spam spam spam!"
-    assert isinstance(options["spam"], six.binary_type)
+    assert isinstance(options["spam"], bytes)
 
     assert options["eggs"] == 0x100
-    assert isinstance(options["eggs"], six.integer_types)
+    assert isinstance(options["eggs"], int)
 
     assert options["bacon"] == "Bacon is delicious!"
-    assert isinstance(options["bacon"], six.text_type)
+    assert isinstance(options["bacon"], str)
 
     with pytest.raises(KeyError):
         options["missing"]

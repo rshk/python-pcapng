@@ -17,4 +17,4 @@ multi_line_output = 3
 include_trailing_comma = true
 
 known_first_party = ['pcapng']
-known_third_party = ['pytest', 'scapy', 'six']
+known_third_party = ['pytest', 'scapy']

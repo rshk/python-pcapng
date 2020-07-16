@@ -4,7 +4,6 @@ import setuptools_scm  # noqa: F401
 
 setup(
     packages=find_packages(),
-    install_requires=["six"],
     extras_require={
         "dev": [
             "isort",
