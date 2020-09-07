@@ -12,6 +12,7 @@ better access to decoded information, ...
 
 import io
 import itertools
+from typing import Tuple
 
 from pcapng import strictness as strictness
 from pcapng.constants import link_types
@@ -73,6 +74,7 @@ class Block(object):
         return [getattr(self, k) for k in keys] == [getattr(other, k) for k in keys]
 
     def _write(self, outstream):
+        # type: (io.BytesIO) -> None
         """Writes this block into the given output stream"""
         encoded_block = io.BytesIO()
         self._encode(encoded_block)
@@ -125,6 +127,7 @@ class Block(object):
         self._decoded[name] = value
 
     def __repr__(self):
+        # type: () -> str
         args = []
         for item in self.schema:
             name = item[0]
@@ -226,18 +229,22 @@ class SectionHeader(Block):
 
     @property
     def version(self):
+        # type: () -> Tuple[IntField, IntField]
         return (self.version_major, self.version_minor)
 
     @property
     def length(self):
+        # type: () -> IntField
         return self.section_length
 
     # Block.decode() assumes all blocks have sections -- technically true...
     @property
     def section(self):
+        # type: () -> SectionHeader
         return self
 
     def __repr__(self):
+        # type: () -> str
         return (
             "<{name} version={version} endianness={endianness} "
             "length={length} options={options}>"
@@ -291,18 +298,19 @@ class InterfaceDescription(SectionMemberBlock):
 
     @property  # todo: cache this property
     def timestamp_resolution(self):
-        # ------------------------------------------------------------
-        # Resolution of timestamps. If the Most Significant Bit is
-        # equal to zero, the remaining bits indicates the resolution
-        # of the timestamp as as a negative power of 10 (e.g. 6 means
-        # microsecond resolution, timestamps are the number of
-        # microseconds since 1/1/1970). If the Most Significant Bit is
-        # equal to one, the remaining bits indicates the resolution as
-        # as negative power of 2 (e.g. 10 means 1/1024 of second). If
-        # this option is not present, a resolution of 10^-6 is assumed
-        # (i.e. timestamps have the same resolution of the standard
-        # 'libpcap' timestamps).
-        # ------------------------------------------------------------
+        # type: () -> float
+        """
+        Resolution of timestamps. If the Most Significant Bit is
+        equal to zero, the remaining bits indicates the resolution
+        of the timestamp as as a negative power of 10 (e.g. 6 means
+        microsecond resolution, timestamps are the number of
+        microseconds since 1/1/1970). If the Most Significant Bit is
+        equal to one, the remaining bits indicates the resolution as
+        as negative power of 2 (e.g. 10 means 1/1024 of second). If
+        this option is not present, a resolution of 10^-6 is assumed
+        (i.e. timestamps have the same resolution of the standard
+        'libpcap' timestamps).
+        """
 
         if "if_tsresol" in self.options:
             return unpack_timestamp_resolution(self.options["if_tsresol"])
@@ -316,6 +324,7 @@ class InterfaceDescription(SectionMemberBlock):
 
     @property
     def link_type_description(self):
+        # type: () -> str
         try:
             return link_types.LINKTYPE_DESCRIPTIONS[self.link_type]
         except KeyError:
@@ -332,6 +341,7 @@ class BlockWithTimestampMixin(object):
 
     @property
     def timestamp(self):
+        # type: () -> float
         # First, get the accuracy from the ts_resol option
         return (
             (self.timestamp_high << 32) + self.timestamp_low
@@ -339,6 +349,7 @@ class BlockWithTimestampMixin(object):
 
     @property
     def timestamp_resolution(self):
+        # type: () -> float
         return self.interface.timestamp_resolution
 
     # todo: add some property returning a datetime() with timezone..
@@ -389,6 +400,7 @@ class BasePacketBlock(SectionMemberBlock, BlockWithInterfaceMixin):
 
     @property
     def captured_len(self):
+        # type: () -> int
         return len(self.packet_data)
 
     # Helper function. If the user hasn't explicitly set an original packet
@@ -397,6 +409,7 @@ class BasePacketBlock(SectionMemberBlock, BlockWithInterfaceMixin):
     # the captured data length.
     @property
     def packet_len(self):
+        # type: () -> int
         plen = self.__getattr__("packet_len") or 0  # this call prevents recursion
         return plen or len(self.packet_data)
 
@@ -469,6 +482,7 @@ class SimplePacket(BasePacketBlock):
 
     @property
     def interface_id(self):
+        # type: () -> int
         """
         "The Simple Packet Block does not contain the Interface ID field.
         Therefore, it MUST be assumed that all the Simple Packet Blocks have
@@ -479,6 +493,7 @@ class SimplePacket(BasePacketBlock):
 
     @property
     def captured_len(self):
+        # type: () -> int
         """
         "...the SnapLen value MUST be used to determine the size of the Packet
         Data field length."
@@ -661,8 +676,10 @@ class UnknownBlock(Block):
     __slots__ = ["block_type", "data"]
 
     def __init__(self, block_type, data):
+        # type: (int, bytes) -> None
         self.block_type = block_type
         self.data = data
 
     def __repr__(self):
+        # type: () -> str
         return "UnknownBlock(0x{0:08X}, {1!r})".format(self.block_type, self.data)

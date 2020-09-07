@@ -80,6 +80,7 @@ NRB_RECORD_IPv6 = 2
 
 
 def read_int(stream, size, signed=False, endianness="="):
+    # type: (BytesIO, int, bool, str) -> int
     """
     Read (and decode) an integer number from a binary stream.
 
@@ -296,9 +297,11 @@ class StructField(object):
         pass
 
     def __repr__(self):
+        # type: () -> str
         return "{0}()".format(self.__class__.__name__)
 
     def __unicode__(self):
+        # type: () -> str
         return self.__repr__().encode("UTF-8")
 
     def encode_finish(self, stream, endianness):
@@ -324,6 +327,7 @@ class RawBytes(StructField):
         write_bytes_padded(stream, value)
 
     def __repr__(self):
+        # type: () -> str
         return "{0}(size={1!r})".format(self.__class__.__name__, self.size)
 
 
@@ -353,6 +357,7 @@ class IntField(StructField):
         write_int(number, stream, self.size, signed=self.signed, endianness=endianness)
 
     def __repr__(self):
+        # type: () -> str
         return "{0}(size={1!r}, signed={2!r})".format(
             self.__class__.__name__, self.size, self.signed
         )
@@ -380,6 +385,7 @@ class OptionsField(StructField):
         write_options(stream, options)
 
     def __repr__(self):
+        # type: () -> str
         return "{0}({1!r})".format(self.__class__.__name__, self.options_schema)
 
 
@@ -461,6 +467,7 @@ class ListField(StructField):
         self.subfield.encode_finish(stream, endianness)
 
     def __repr__(self):
+        # type: () -> str
         return "{0}({1!r})".format(self.__class__.__name__, self.subfield)
 
 
@@ -744,6 +751,7 @@ class Options(Mapping):
         return self.data[code][0]
 
     def __len__(self):
+        # type: () -> int
         return len(self.data)
 
     def __iter__(self):
@@ -800,6 +808,7 @@ class Options(Mapping):
         self._check_multiples(code)
 
     def __repr__(self):
+        # type: () -> str
         args = dict(self.iter_all_items())
         name = self.__class__.__name__
         return "{0}({1!r})".format(name, args)

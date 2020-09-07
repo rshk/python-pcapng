@@ -1,12 +1,18 @@
 import socket
 import struct
+from typing import (
+    Iterable,
+    Tuple
+)
 
 
 def pack_ipv4(data):
+    # type: (str) -> bytes
     return socket.inet_aton(data)
 
 
 def unpack_ipv4(data):
+    # type: (bytes) -> str
     return socket.inet_ntoa(data)
 
 
@@ -27,32 +33,39 @@ def _get_pairs(data):
 
 
 def pack_ipv6(data):
+    # type: (str) -> bytes
     return socket.inet_pton(socket.AF_INET6, data)
 
 
 def unpack_ipv6(data):
+    # type: (bytes) -> str
     return socket.inet_ntop(socket.AF_INET6, data)
 
 
 def pack_macaddr(data):
+    # type: (str) -> bytes
     a = [int(x, 16) for x in data.split(":")]
     return struct.pack("!6B", *a)
 
 
 def unpack_macaddr(data):
+    # type: (bytes) -> str
     return ":".join(format(x, "02x") for x in data)
 
 
 def pack_euiaddr(data):
+    # type: (str) -> bytes
     a = [int(x, 16) for x in data.split(":")]
     return struct.pack("!8B", *a)
 
 
 def unpack_euiaddr(data):
+    # type: (bytes) -> str
     return unpack_macaddr(data)
 
 
 def unpack_timestamp_resolution(data):
+    # type: (bytes) -> float
     """
     Unpack a timestamp resolution.
 
@@ -64,10 +77,11 @@ def unpack_timestamp_resolution(data):
     num = data[0]
     base = 2 if (num >> 7 & 1) else 10
     exponent = num & 0b01111111
-    return base ** (-exponent)
+    return float(base ** (-exponent))
 
 
 def pack_timestamp_resolution(base, exponent):
+    # type: (int, int) -> bytes
     """
     Pack a timestamp resolution.
 
