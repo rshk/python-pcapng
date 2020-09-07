@@ -17,4 +17,4 @@ install:
   - pip install .[dev]
 
 script:
-  - py.test -vvv --pycodestyle --cov=pcapng --cov-report=term-missing tests
+  - py.test -vvv --cov=pcapng --cov-report=term-missing tests
