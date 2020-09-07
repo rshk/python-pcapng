@@ -87,7 +87,7 @@ class FlagEnum(FlagBase):
         if len(extra) > 2 ** size:
             raise TypeError(
                 "{cls} iterable has too many values (got {got}, "
-                + "{size} bits only address {max})".format(
+                "{size} bits only address {max})".format(
                     cls=self.__class__.__name__,
                     got=len(extra),
                     size=size,
@@ -156,7 +156,7 @@ class FlagWord(object):
         if tot_bits > nbits:
             raise TypeError(
                 "Too many fields for {nbits}-bit field "
-                + "(schema defines {tot} bits)".format(nbits=nbits, tot=tot_bits)
+                "(schema defines {tot} bits)".format(nbits=nbits, tot=tot_bits)
             )
 
         bitn = 0
