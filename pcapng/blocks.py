@@ -12,7 +12,7 @@ better access to decoded information, ...
 
 import io
 import itertools
-from typing import Tuple
+from typing import Any, Tuple, Type
 
 from pcapng import strictness as strictness
 from pcapng.constants import link_types
@@ -67,6 +67,7 @@ class Block(object):
                         self._decoded[key] = default
 
     def __eq__(self, other):
+        # type: (Any) -> bool
         if self.__class__ != other.__class__:
             return False
         keys = [x[0] for x in self.schema]
@@ -199,6 +200,7 @@ class SectionHeader(Block):
         super(SectionHeader, self).__init__(endianness=endianness, **kwargs)
 
     def _encode(self, outstream):
+        # type: (io.BytesIO) -> None
         write_int(0x1A2B3C4D, outstream, 32, endianness=self.endianness)
         super(SectionHeader, self)._encode(outstream)
 
@@ -216,6 +218,7 @@ class SectionHeader(Block):
         return blk
 
     def register_interface(self, interface):
+        # type: (Block) -> None
         """Helper method to register an interface within this section"""
         assert isinstance(interface, InterfaceDescription)
         interface_id = next(self._interfaces_id)
@@ -223,6 +226,7 @@ class SectionHeader(Block):
         self.interfaces[interface_id] = interface
 
     def add_interface_stats(self, interface_stats):
+        # type: (Block) -> None
         """Helper method to register interface stats within this section"""
         assert isinstance(interface_stats, InterfaceStatistics)
         self.interface_stats[interface_stats.interface_id] = interface_stats
@@ -370,6 +374,7 @@ class BlockWithInterfaceMixin(object):
         return self.section.interfaces[self.interface_id]
 
     def _encode(self, outstream):
+        # type: (io.BytesIO) -> None
         if len(self.section.interfaces) < 1:
             strictness.problem(
                 "writing {cls} for section with no interfaces".format(
@@ -505,6 +510,7 @@ class SimplePacket(BasePacketBlock):
             return min(snap_len, self.packet_len)
 
     def _encode(self, outstream):
+        # type: (io.BytesIO) -> None
         fld_size = IntField(32, False)
         fld_data = RawBytes(0)
         if len(self.section.interfaces) > 1:
@@ -570,6 +576,7 @@ class ObsoletePacket(BasePacketBlock, BlockWithTimestampMixin):
     ]
 
     def enhanced(self):
+        # type: () -> SectionMemberBlock
         """Return an EnhancedPacket with this block's attributes."""
         opts_dict = dict(self.options)
         opts_dict["epb_dropcount"] = self.drops_count
@@ -591,6 +598,7 @@ class ObsoletePacket(BasePacketBlock, BlockWithTimestampMixin):
     # Do this check in _write() instead of _encode() to ensure the block gets written
     # with the correct magic number.
     def _write(self, outstream):
+        # type: (io.BytesIO) -> None
         strictness.problem("Packet Block is obsolete and must not be used")
         if strictness.should_fix():
             self.enhanced()._write(outstream)

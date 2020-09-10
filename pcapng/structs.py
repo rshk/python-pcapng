@@ -3,10 +3,12 @@ Module providing facilities for handling struct-like data.
 """
 
 import abc
+from io import BytesIO
 import struct
 import warnings
 from collections import defaultdict
 from collections.abc import Iterable, Mapping
+from typing import List
 
 from pcapng import strictness as strictness
 from pcapng._compat import namedtuple
@@ -105,6 +107,7 @@ def read_int(stream, size, signed=False, endianness="="):
 
 
 def write_int(number, stream, size, signed=False, endianness="="):
+    # type: (int, BytesIO, int, bool, str) -> None
     """
     Write (and encode) an integer number to a binary stream.
 
@@ -183,6 +186,7 @@ def read_section_header(stream):
 
 
 def read_block_data(stream, endianness):
+    # type: (BytesIO, str) -> bytes
     """
     Read block data from a stream.
 
@@ -208,6 +212,7 @@ def read_block_data(stream, endianness):
 
 
 def read_bytes(stream, size):
+    # type: (BytesIO, int) -> bytes
     """
     Read the given amount of raw bytes from a stream.
 
@@ -233,6 +238,7 @@ def read_bytes(stream, size):
 
 
 def write_bytes(stream, data):
+    # type: (BytesIO, bytes) -> None
     """
     Write the given amount of raw bytes to a stream.
 
@@ -243,6 +249,7 @@ def write_bytes(stream, data):
 
 
 def read_bytes_padded(stream, size, pad_block_size=4):
+    # type: (BytesIO, int, int) -> bytes
     """
     Read the given amount of bytes from a stream, plus read and discard
     any necessary extra byte to align up to the pad_block_size-sized
@@ -267,6 +274,7 @@ def read_bytes_padded(stream, size, pad_block_size=4):
 
 
 def write_bytes_padded(stream, data, pad_block_size=4):
+    # type: (BytesIO, bytes, int) -> None
     """
     Read the given amount of bytes from a stream, plus read and discard
     any necessary extra byte to align up to the pad_block_size-sized
@@ -321,9 +329,11 @@ class RawBytes(StructField):
         self.size = size  # in bytes!
 
     def load(self, stream, endianness=None, seen=None):
+        # type: (BytesIO, None, None) -> bytes
         return read_bytes_padded(stream, self.size)
 
     def encode(self, value, stream, endianness=None):
+        # type: (bytes, BytesIO, str) -> None
         write_bytes_padded(stream, value)
 
     def __repr__(self):
@@ -344,14 +354,17 @@ class IntField(StructField):
     __slots__ = ["size", "signed"]
 
     def __init__(self, size, signed=False):
+        # type: (int, bool) -> None
         self.size = size  # in bits!
         self.signed = signed
 
     def load(self, stream, endianness, seen=None):
+        # type: (BytesIO, str, None) -> int
         number = read_int(stream, self.size, signed=self.signed, endianness=endianness)
         return number
 
     def encode(self, number, stream, endianness):
+        # type: (int, BytesIO, str) -> None
         if not isinstance(number, int):
             raise TypeError("'{}' is not numeric".format(number))
         write_int(number, stream, self.size, signed=self.signed, endianness=endianness)
@@ -382,6 +395,7 @@ class OptionsField(StructField):
         return Options(schema=self.options_schema, data=options, endianness=endianness)
 
     def encode(self, options, stream, endianness):
+        # type: (Options, BytesIO, str) -> None
         write_options(stream, options)
 
     def __repr__(self):
@@ -404,9 +418,11 @@ class PacketBytes(StructField):
     __slots__ = ["dependency"]
 
     def __init__(self, len_field):
+        # type: (int) -> None
         self.dependency = len_field
 
     def load(self, stream, endianness, seen=[]):
+        # type: (BytesIO, str, List[int]) -> bytes
         try:
             length = seen[self.dependency]
         except TypeError:
@@ -424,6 +440,7 @@ class PacketBytes(StructField):
         return read_bytes_padded(stream, length)
 
     def encode(self, packet, stream, endianness=None):
+        # type: (bytes, BytesIO, str) -> None
         if not packet:
             raise ValueError("Packet invalid")
         write_bytes_padded(stream, packet)
@@ -541,6 +558,7 @@ class NameResolutionRecordField(StructField):
             write_bytes_padded(stream, d["raw"])
 
     def encode_finish(self, stream, endianness):
+        # type: (BytesIO, str) -> None
         write_int(NRB_RECORD_END, stream, 16, endianness=endianness)
         write_int(0, stream, 16, endianness=endianness)
 
@@ -618,6 +636,7 @@ class EPBFlags(FlagWord):
     __slots__ = []
 
     def __init__(self, val=0):
+        # type: (int) -> None
         super(EPBFlags, self).__init__(
             [
                 FlagField("inout", FlagEnum, 2, ("NA", "inbound", "outbound")),
