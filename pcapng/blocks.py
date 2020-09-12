@@ -12,7 +12,7 @@ better access to decoded information, ...
 
 import io
 import itertools
-from typing import Any, Tuple, Type
+from typing import Any, List, Tuple, Type
 
 from pcapng import strictness as strictness
 from pcapng.constants import link_types
@@ -43,7 +43,7 @@ class Block(object):
         # These are in addition to the above two properties
         "magic_number",
         "_decoded",
-    ]
+    ]  # type: List[str]
 
     def __init__(self, **kwargs):
         if "raw" in kwargs:
@@ -144,7 +144,7 @@ class Block(object):
 class SectionMemberBlock(Block):
     """Block which must be a member of a section"""
 
-    __slots__ = ["section"]
+    __slots__ = ["section"]  # type: List[str]
 
     def __init__(self, section, **kwargs):
         super(SectionMemberBlock, self).__init__(**kwargs)
@@ -174,7 +174,8 @@ class SectionHeader(Block):
         "_interfaces_id",
         "interfaces",
         "interface_stats",
-    ]
+    ]  # type: List[str]
+
     schema = [
         ("version_major", IntField(16, False), 1),
         ("version_minor", IntField(16, False), 0),
@@ -271,7 +272,7 @@ class InterfaceDescription(SectionMemberBlock):
     """
 
     magic_number = 0x00000001
-    __slots__ = ["interface_id"]
+    __slots__ = ["interface_id"]  # type: List[str]
     schema = [
         ("link_type", IntField(16, False), 0),  # todo: enc/decode
         ("reserved", IntField(16, False), 0),
@@ -341,7 +342,7 @@ class BlockWithTimestampMixin(object):
     of blocks that provide one.
     """
 
-    __slots__ = []
+    __slots__ = []  # type: List[str]
 
     @property
     def timestamp(self):
@@ -365,7 +366,7 @@ class BlockWithInterfaceMixin(object):
     This includes all packet blocks as well as InterfaceStatistics.
     """
 
-    __slots__ = []
+    __slots__ = []  # type: List[str]
 
     @property
     def interface(self):
@@ -400,7 +401,7 @@ class BasePacketBlock(SectionMemberBlock, BlockWithInterfaceMixin):
     the current length of the packet data.
     """
 
-    __slots__ = []
+    __slots__ = []  # type: List[str]
     readonly_fields = set(("captured_len",))
 
     @property
@@ -429,7 +430,7 @@ class EnhancedPacket(BasePacketBlock, BlockWithTimestampMixin):
     """
 
     magic_number = 0x00000006
-    __slots__ = []
+    __slots__ = []  # type: List[str]
     schema = [
         ("interface_id", IntField(32, False), 0),
         ("timestamp_high", IntField(32, False), 0),
@@ -461,7 +462,7 @@ class SimplePacket(BasePacketBlock):
     """
 
     magic_number = 0x00000003
-    __slots__ = []
+    __slots__ = []  # type: List[str]
     schema = [
         # packet_len is NOT the captured length
         ("packet_len", IntField(32, False), 0),
@@ -553,7 +554,7 @@ class ObsoletePacket(BasePacketBlock, BlockWithTimestampMixin):
     """
 
     magic_number = 0x00000002
-    __slots__ = []
+    __slots__ = []  # type: List[str]
     schema = [
         ("interface_id", IntField(16, False), 0),
         ("drops_count", IntField(16, False), 0),
@@ -620,7 +621,7 @@ class NameResolution(SectionMemberBlock):
     """
 
     magic_number = 0x00000004
-    __slots__ = []
+    __slots__ = []  # type: List[str]
     schema = [
         ("records", ListField(NameResolutionRecordField()), []),
         (
@@ -650,7 +651,7 @@ class InterfaceStatistics(
     """
 
     magic_number = 0x00000005
-    __slots__ = []
+    __slots__ = []  # type: List[str]
     schema = [
         ("interface_id", IntField(32, False), 0),
         ("timestamp_high", IntField(32, False), 0),
@@ -681,7 +682,7 @@ class UnknownBlock(Block):
     processing.
     """
 
-    __slots__ = ["block_type", "data"]
+    __slots__ = ["block_type", "data"]  # type: List[str]
 
     def __init__(self, block_type, data):
         # type: (int, bytes) -> None

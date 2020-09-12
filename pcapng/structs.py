@@ -298,7 +298,7 @@ class StructField(object):
     """Abstract base class for struct fields"""
 
     __metaclass__ = abc.ABCMeta
-    __slots__ = []
+    __slots__ = []  # type: List[str]
 
     @abc.abstractmethod
     def load(self, stream, endianness, seen=None):
@@ -323,7 +323,7 @@ class RawBytes(StructField):
     :param size: field size, in bytes
     """
 
-    __slots__ = ["size"]
+    __slots__ = ["size"]  # type: List[str]
 
     def __init__(self, size):
         self.size = size  # in bytes!
@@ -351,7 +351,7 @@ class IntField(StructField):
         integer. Defaults to False (unsigned)
     """
 
-    __slots__ = ["size", "signed"]
+    __slots__ = ["size", "signed"]  # type: List[str]
 
     def __init__(self, size, signed=False):
         # type: (int, bool) -> None
@@ -385,7 +385,7 @@ class OptionsField(StructField):
         constructor.
     """
 
-    __slots__ = ["options_schema"]
+    __slots__ = ["options_schema"]  # type: List[str]
 
     def __init__(self, options_schema):
         self.options_schema = options_schema
@@ -415,7 +415,7 @@ class PacketBytes(StructField):
     - packet data (captured_len-sized binary data)
     """
 
-    __slots__ = ["dependency"]
+    __slots__ = ["dependency"]  # type: List[str]
 
     def __init__(self, len_field):
         # type: (int) -> None
@@ -463,7 +463,7 @@ class ListField(StructField):
         used to read values from the stream.
     """
 
-    __slots__ = ["subfield"]
+    __slots__ = ["subfield"]  # type: List[str]
 
     def __init__(self, subfield):
         self.subfield = subfield
@@ -509,7 +509,7 @@ class NameResolutionRecordField(StructField):
     selected IP version, followed by null-separated/terminated domain names.
     """
 
-    __slots__ = []
+    __slots__ = []  # type: List[str]
 
     def load(self, stream, endianness, seen=None):
         record_type = read_int(stream, 16, False, endianness)
@@ -633,7 +633,7 @@ def write_options(stream, options):
 class EPBFlags(FlagWord):
     """Class representing the epb_flags option on an EPB"""
 
-    __slots__ = []
+    __slots__ = []  # type: List[str]
 
     def __init__(self, val=0):
         # type: (int) -> None
@@ -729,7 +729,7 @@ class Options(Mapping):
         "_field_names",
         "data",
         "endianness",
-    ]
+    ]  # type: List[str]
 
     def __init__(self, schema, data, endianness):
         self.schema = {}  # Schema of option fields: {<code>: Option(...)}

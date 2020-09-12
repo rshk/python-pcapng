@@ -1,4 +1,5 @@
 from io import BytesIO
+from typing import List
 
 import pcapng.blocks as blocks
 from pcapng.exceptions import PcapngDumpError
@@ -13,7 +14,7 @@ class FileWriter(object):
         "stream",
         "interfaces",
         "current_section",
-    ]
+    ]  # type: List[str]
 
     def __init__(self, stream, shb):
         # type: (BytesIO, blocks.SectionHeader) -> None

@@ -1,6 +1,7 @@
 from io import BytesIO
 from typing import (
     Iterator,
+    List,
     Optional
 )
 
@@ -39,7 +40,7 @@ class FileScanner(object):
         just wrap it in a :py:class:`io.BytesIO` object.
     """
 
-    __slots__ = ["stream", "current_section", "endianness"]
+    __slots__ = ["stream", "current_section", "endianness"]  # type: List[str]
 
     def __init__(self, stream):
         # type: (BytesIO) -> None

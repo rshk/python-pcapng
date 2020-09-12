@@ -24,7 +24,7 @@ class FlagBase(object):
         "size",
         "extra",
         "mask",
-    ]
+    ]  # type: List[str]
 
     def __init__(self, owner, offset, size, extra=None):
         if size < 1:
@@ -146,7 +146,7 @@ class FlagWord(object):
         "_nbits",
         "_value",
         "_schema",
-    ]
+    ]  # type: List[str]
 
     def __init__(self, schema, nbits=32, initial=0):
         """
