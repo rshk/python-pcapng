@@ -8,10 +8,11 @@ import struct
 import warnings
 from collections import defaultdict
 from collections.abc import Iterable, Mapping
-from typing import List
+from typing import Dict, List, Tuple, Union
 
 from pcapng import strictness as strictness
 from pcapng._compat import namedtuple
+from pcapng.blocks import Block
 from pcapng.exceptions import (
     BadMagic,
     CorruptedFile,
@@ -131,6 +132,7 @@ def write_int(number, stream, size, signed=False, endianness="="):
 
 
 def read_section_header(stream):
+    # type: (BytesIO) -> Dict[str, Union[str, bytes]]
     """
     Read a section header block from a stream.
 
@@ -326,6 +328,7 @@ class RawBytes(StructField):
     __slots__ = ["size"]  # type: List[str]
 
     def __init__(self, size):
+        # type: (int) -> None
         self.size = size  # in bytes!
 
     def load(self, stream, endianness=None, seen=None):
@@ -388,6 +391,7 @@ class OptionsField(StructField):
     __slots__ = ["options_schema"]  # type: List[str]
 
     def __init__(self, options_schema):
+        # type: (Mapping) -> None
         self.options_schema = options_schema
 
     def load(self, stream, endianness, seen=None):
@@ -564,6 +568,7 @@ class NameResolutionRecordField(StructField):
 
 
 def read_options(stream, endianness):
+    # type: (BytesIO, str) -> List[Tuple[int, bytes]]
     """
     Read "options" from an "options block" in a stream, until a
     ``StreamEmpty`` exception is caught, or an end marker is reached.
@@ -1034,6 +1039,7 @@ class Options(Mapping):
 
 
 def struct_decode(schema, stream, endianness="="):
+    # type: (List[Tuple[str, StructField, object]], BytesIO, str) -> bytes
     """
     Decode structured data from a stream, following a schema.
 
@@ -1063,6 +1069,7 @@ def struct_decode(schema, stream, endianness="="):
 
 
 def block_decode(block, stream):
+    # type: (Block, BytesIO) -> bytes
     return struct_decode(block.schema, stream, block.section.endianness)
 
 

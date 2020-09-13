@@ -2,6 +2,7 @@ import socket
 import struct
 from typing import (
     Iterable,
+    List,
     Tuple
 )
 
@@ -17,6 +18,7 @@ def unpack_ipv4(data):
 
 
 def _get_pairs(data):
+    # type: (List[object]) -> List[Tuple[object, object]]
     """Return data in pairs
 
     This uses a clever hack, based on the fact that zip will consume
@@ -29,7 +31,7 @@ def _get_pairs(data):
         [(1, 2), (3, 4)]
 
     """
-    return list(zip(*((iter(data),) * 2)))
+    return list(zip(*((iter(data),) * 2)))  # type: ignore
 
 
 def pack_ipv6(data):

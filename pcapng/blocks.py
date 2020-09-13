@@ -16,6 +16,7 @@ from typing import Any, List, Tuple, Type
 
 from pcapng import strictness as strictness
 from pcapng.constants import link_types
+from pcapng.flags import FlagField
 from pcapng.structs import (
     IntField,
     ListField,
@@ -92,6 +93,7 @@ class Block(object):
         write_int(block_length, outstream, 32)
 
     def _encode(self, outstream):
+        # type: (io.BytesIO) -> None
         """Encodes the fields of this block into raw data"""
         for name, field, default in self.schema:
             field.encode(
@@ -147,14 +149,16 @@ class SectionMemberBlock(Block):
     __slots__ = ["section"]  # type: List[str]
 
     def __init__(self, section, **kwargs):
+        # type: (SectionMemberBlock, str) -> None
         super(SectionMemberBlock, self).__init__(**kwargs)
         self.section = section
 
 
 def register_block(block):
+    # type: (Any) -> Block
     """Handy decorator to register a new known block type"""
     KNOWN_BLOCKS[block.magic_number] = block
-    return block
+    return block  # type: ignore
 
 
 @register_block
@@ -324,6 +328,7 @@ class InterfaceDescription(SectionMemberBlock):
 
     @property
     def statistics(self):
+        # type: () -> object
         # todo: ensure we always have an interface id -> how??
         return self.section.interface_stats.get(self.interface_id)
 
@@ -370,6 +375,7 @@ class BlockWithInterfaceMixin(object):
 
     @property
     def interface(self):
+        # type: () -> FlagField
         # We need to get the correct interface from the section
         # by looking up the interface_id
         return self.section.interfaces[self.interface_id]
@@ -635,7 +641,7 @@ class NameResolution(SectionMemberBlock):
             ),
             None,
         ),
-    ]
+    ]  # type: List[Tuple[str, FlagField, object]]
 
 
 @register_block

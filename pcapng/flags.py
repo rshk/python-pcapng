@@ -97,7 +97,7 @@ class FlagEnum(FlagBase):
         if len(extra) > 2 ** size:
             raise TypeError(
                 "{cls} iterable has too many values (got {got}, "
-                + "{size} bits only address {max})".format(
+                "{size} bits only address {max})".format(
                     cls=self.__class__.__name__,
                     got=len(extra),
                     size=size,
@@ -134,7 +134,7 @@ class FlagEnum(FlagBase):
 
 FlagField = namedtuple(
     "FlagField", ("name", "ftype", "nbits", "extra"), defaults=(1, None)
-)
+) # type: Type[namedtuple]
 
 
 class FlagWord(object):
@@ -149,6 +149,7 @@ class FlagWord(object):
     ]  # type: List[str]
 
     def __init__(self, schema, nbits=32, initial=0):
+        # type: (FlagField, int, int) -> None
         """
         :param schema:
             A list of FlagField objects representing the values to be packed
@@ -169,7 +170,7 @@ class FlagWord(object):
         if tot_bits > nbits:
             raise TypeError(
                 "Too many fields for {nbits}-bit field "
-                + "(schema defines {tot} bits)".format(nbits=nbits, tot=tot_bits)
+                "(schema defines {tot} bits)".format(nbits=nbits, tot=tot_bits)
             )
 
         bitn = 0
