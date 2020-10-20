@@ -221,6 +221,9 @@ LINKTYPE_USB_LINUX = 189
 # Linux source tree. All 64 bytes of the header are present.
 LINKTYPE_USB_LINUX_MMAPPED = 220
 
+# DOCSIS with Excentis XRA pseudo-header
+LINKTYPE_DOCSIS31_XRA31 = 273
+
 
 LINKTYPE_DESCRIPTIONS = {
     LINKTYPE_NULL: "No link layer information.",
@@ -286,4 +289,5 @@ LINKTYPE_DESCRIPTIONS = {
     LINKTYPE_IBM_SN: "Reserved for IBM SP switch and IBM Next Federation switch.",  # noqa
     LINKTYPE_USB_LINUX: "USB packets, beginning with a 48-bytes Linux USB header.",  # noqa
     LINKTYPE_USB_LINUX_MMAPPED: "USB packets, beginning with a 64-bytes Linux USB header.",  # noqa
+    LINKTYPE_DOCSIS31_XRA31: "DOCSIS with Excentis XRA pseudo-header",
 }
