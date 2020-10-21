@@ -988,7 +988,7 @@ class Options(Mapping):
             return pack_euiaddr(value)
 
         if ftype == TYPE_TYPE_BYTES:
-            return value[0] + value[1]
+            return struct.pack("B", value[0]) + value[1]
 
         if ftype == TYPE_EPBFLAGS:
             fmt = self.endianness + _numeric_types[TYPE_U32]
