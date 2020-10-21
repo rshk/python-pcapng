@@ -40,6 +40,7 @@ def test_write_read_all_blocks():
             "if_description": "Test interface",
             "if_os": "python",
             "if_hardware": "whatever",
+            "if_filter": b"\x00tcp port 23 and host 192.0.2.5",
         },
     )
     out_blocks.append(o_idb)
