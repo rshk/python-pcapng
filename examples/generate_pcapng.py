@@ -19,7 +19,8 @@ shb = blocks.SectionHeader(
 idb = shb.new_member(
     blocks.InterfaceDescription,
     link_type=1,
-    options={"if_description": "Hand-rolled", "if_os": "Python"},
+    options={"if_description": "Hand-rolled", "if_os": "Python",
+             "if_filter": [(0, b"tcp port 23 and host 192.0.2.5")]},
 )
 
 # FileWriter() immediately writes the SHB and any IDBs you've added to it
