@@ -17,6 +17,7 @@ from pcapng import strictness as strictness
 from pcapng.constants import link_types
 from pcapng.structs import (
     IntField,
+    JournalEntryField,
     ListField,
     NameResolutionRecordField,
     Option,
@@ -47,7 +48,10 @@ class Block(object):
     def __init__(self, **kwargs):
         if "raw" in kwargs:
             self._decoded = struct_decode(
-                self.schema, io.BytesIO(kwargs["raw"]), kwargs["endianness"]
+                self.schema,
+                io.BytesIO(kwargs["raw"]),
+                kwargs["endianness"],
+                len(kwargs["raw"]),
             )
         else:
             self._decoded = {}
@@ -647,6 +651,24 @@ class InterfaceStatistics(
             ),
             None,
         ),
+    ]
+
+
+@register_block
+class SystemdJournalExport(SectionMemberBlock):
+    """
+    "The systemd Journal Export Block is a lightweight container for systemd
+    Journal Export Format entry data. [...] Although the primary use of this
+    block is intended for importing data from systemd, it could potentially
+    be used to include arbitrary key-value data in a capture file."
+    - pcapng spec, section 4.7. Other quoted citations are from this section
+    unless otherwise noted.
+    """
+
+    magic_number = 0x00000009
+    __slots__ = []
+    schema = [
+        ("journal_entry", JournalEntryField(), b""),
     ]
 
 

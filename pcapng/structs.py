@@ -292,7 +292,7 @@ class StructField(object):
     __slots__ = []
 
     @abc.abstractmethod
-    def load(self, stream, endianness, seen=None):
+    def load(self, stream, endianness, max_size=None, seen=None):
         pass
 
     def __repr__(self):
@@ -317,7 +317,7 @@ class RawBytes(StructField):
     def __init__(self, size):
         self.size = size  # in bytes!
 
-    def load(self, stream, endianness=None, seen=None):
+    def load(self, stream, endianness=None, max_size=None, seen=None):
         return read_bytes_padded(stream, self.size)
 
     def encode(self, value, stream, endianness=None):
@@ -343,7 +343,7 @@ class IntField(StructField):
         self.size = size  # in bits!
         self.signed = signed
 
-    def load(self, stream, endianness, seen=None):
+    def load(self, stream, endianness, max_size=None, seen=None):
         number = read_int(stream, self.size, signed=self.signed, endianness=endianness)
         return number
 
@@ -372,7 +372,7 @@ class OptionsField(StructField):
     def __init__(self, options_schema):
         self.options_schema = options_schema
 
-    def load(self, stream, endianness, seen=None):
+    def load(self, stream, endianness, max_size=None, seen=None):
         options = read_options(stream, endianness)
         return Options(schema=self.options_schema, data=options, endianness=endianness)
 
@@ -400,7 +400,7 @@ class PacketBytes(StructField):
     def __init__(self, len_field):
         self.dependency = len_field
 
-    def load(self, stream, endianness, seen=[]):
+    def load(self, stream, endianness, max_size=None, seen=[]):
         try:
             length = seen[self.dependency]
         except TypeError:
@@ -445,7 +445,7 @@ class ListField(StructField):
     def __init__(self, subfield):
         self.subfield = subfield
 
-    def load(self, stream, endianness, seen=None):
+    def load(self, stream, endianness, max_size=None, seen=None):
         return list(self._iter_load(stream, endianness))
 
     def _iter_load(self, stream, endianness):
@@ -487,7 +487,7 @@ class NameResolutionRecordField(StructField):
 
     __slots__ = []
 
-    def load(self, stream, endianness, seen=None):
+    def load(self, stream, endianness, max_size=None, seen=None):
         record_type = read_int(stream, 16, False, endianness)
         record_length = read_int(stream, 16, False, endianness)
 
@@ -536,6 +536,26 @@ class NameResolutionRecordField(StructField):
     def encode_finish(self, stream, endianness):
         write_int(NRB_RECORD_END, stream, 16, endianness=endianness)
         write_int(0, stream, 16, endianness=endianness)
+
+
+class JournalEntryField(StructField):
+    """
+    Field containing a "journal entry", used in the SystemdJournalExport block.
+    """
+
+    def load(self, stream, endianness, max_size, seen=None):
+        # Slurp all remaining bytes.
+        data = read_bytes_padded(stream, max_size)
+
+        # Drop all trailing padding bytes.
+        data = data.rstrip(b"\x00")
+
+        return data
+
+    def encode(self, data, stream, endianness=None):
+        if not data:
+            raise ValueError("Journal entry invalid")
+        write_bytes_padded(stream, data)
 
 
 def read_options(stream, endianness):
@@ -1005,7 +1025,7 @@ class Options(Mapping):
         raise ValueError("Unsupported field type: {0}".format(ftype))
 
 
-def struct_decode(schema, stream, endianness="="):
+def struct_decode(schema, stream, endianness="=", max_size=None):
     """
     Decode structured data from a stream, following a schema.
 
@@ -1024,18 +1044,27 @@ def struct_decode(schema, stream, endianness="="):
         endianness specifier, as accepted by Python struct module
         (one of ``<>!=``, defaults to ``=``).
 
+    :param max_size:
+        maximum number of bytes to read, None for infinity.
+
     :return:
         a dictionary mapping the field names to decoded data
     """
 
     decoded = {}
+    prev_stream_pos = stream.tell()
     for name, field, default in schema:
-        decoded[name] = field.load(stream, endianness=endianness, seen=decoded)
+        decoded[name] = field.load(
+            stream, endianness=endianness, max_size=max_size, seen=decoded
+        )
+
+        if max_size is not None:
+            # Update max remaining number of bytes.
+            current_stream_pos = stream.tell()
+            max_size -= current_stream_pos - prev_stream_pos
+            prev_stream_pos = current_stream_pos
+
     return decoded
-
-
-def block_decode(block, stream):
-    return struct_decode(block.schema, stream, block.section.endianness)
 
 
 def struct_encode(schema, obj, outstream, endianness="="):
