@@ -283,6 +283,8 @@ class InterfaceDescription(SectionMemberBlock):
                     Option(13, "if_fcslen", "u8"),
                     Option(14, "if_tsoffset", "i64"),
                     Option(15, "if_hardware", "string"),
+                    Option(16, "if_txspeed", "u64"),
+                    Option(17, "if_rxspeed", "u64"),
                 ]
             ),
             None,
@@ -426,6 +428,11 @@ class EnhancedPacket(BasePacketBlock, BlockWithTimestampMixin):
                     Option(2, "epb_flags", "epb_flags"),
                     Option(3, "epb_hash", "type+bytes", multiple=True),  # todo: process
                     Option(4, "epb_dropcount", "u64"),
+                    Option(5, "epb_packetid", "u64"),
+                    Option(6, "epb_queue", "u32"),
+                    Option(
+                        7, "epb_verdict", "type+bytes", multiple=True
+                    ),  # todo: process
                 ]
             ),
             None,
