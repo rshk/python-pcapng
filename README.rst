@@ -153,7 +153,7 @@ the discussion :)
 Pcap-ng write support
 =====================
 
-Write support exists as of version x.y.z. See the file
+Write support exists as of version 2.0.0. See the file
 ``examples/generate_pcapng.py`` for an example of the minimum code
 needed to generate a pcapng file.
 
