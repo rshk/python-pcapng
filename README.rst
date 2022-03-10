@@ -179,3 +179,25 @@ Circumstances that will result in strictness warnings include:
     * Writing a PB (PBs are obsolete and not to be used in new files)
 
     * Writing EPB/SPB/PB/ISB before writing any IDBs
+
+
+Creating a release
+==================
+
+1. Create a tag for the new version::
+
+     git tag v2.0.0 -m 'Version 2.0.0'
+
+2. Install build dependencies in a virtualenv::
+
+     python -m venv ./.build-venv
+     ./.build-venv/bin/python -m pip install build twine
+
+3. Build source and wheel distributions::
+
+     rm -rf ./dist *.egg-info
+     ./.build-venv/bin/python -m build
+
+4. Use Twine to upload to pypi::
+
+     twine upload dist/*
