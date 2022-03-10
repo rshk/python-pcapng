@@ -9,3 +9,4 @@
 .coverage.*
 /.cache
 *.pcapng
+/.build-venv/
