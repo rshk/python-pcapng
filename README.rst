@@ -201,3 +201,15 @@ Creating a release
 4. Use Twine to upload to pypi::
 
      twine upload dist/*
+
+
+Troubleshooting
+---------------
+
+If you get some crazy version number like
+``2.0.1.dev0+g7bd8575.d20220310`` instead of what you expect (eg
+``2.0.0``), it's because you have uncommitted or untracked files in
+your local working copy, or you created more commits after creating
+the tag. Such a version number will be refused by pypi (and it's not a
+good version number anyways), so make sure you have a clean working
+copy before building.
