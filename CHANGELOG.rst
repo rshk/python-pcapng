@@ -1,6 +1,11 @@
 History
 #######
 
+Unreleased
+==========
+
+- Use the explicit endianness everywhere when writing.
+
 v0.1
 ====
 
