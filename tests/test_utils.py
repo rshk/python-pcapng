@@ -38,9 +38,9 @@ def test_unpack_tsresol():
     assert unpack_timestamp_resolution(bytes((100,))) == 1e-100
 
     assert unpack_timestamp_resolution(bytes((0 | 0b10000000,))) == 1
-    assert unpack_timestamp_resolution(bytes((1 | 0b10000000,))) == 2 ** -1
-    assert unpack_timestamp_resolution(bytes((6 | 0b10000000,))) == 2 ** -6
-    assert unpack_timestamp_resolution(bytes((100 | 0b10000000,))) == 2 ** -100
+    assert unpack_timestamp_resolution(bytes((1 | 0b10000000,))) == 2**-1
+    assert unpack_timestamp_resolution(bytes((6 | 0b10000000,))) == 2**-6
+    assert unpack_timestamp_resolution(bytes((100 | 0b10000000,))) == 2**-100
 
 
 def test_pack_tsresol():

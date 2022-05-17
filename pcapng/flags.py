@@ -84,14 +84,14 @@ class FlagEnum(FlagBase):
                 "{cls} needs an iterable of values".format(cls=self.__class__.__name__)
             )
         extra = list(extra)
-        if len(extra) > 2 ** size:
+        if len(extra) > 2**size:
             raise TypeError(
                 "{cls} iterable has too many values (got {got}, "
                 "{size} bits only address {max})".format(
                     cls=self.__class__.__name__,
                     got=len(extra),
                     size=size,
-                    max=2 ** size,
+                    max=2**size,
                 )
             )
 

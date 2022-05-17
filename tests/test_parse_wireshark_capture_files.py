@@ -105,7 +105,7 @@ def test_sample_test005_ntar():
             blocks[1].options.get_raw("if_speed") == b"\x00\xe4\x0b\x54\x02\x00\x00\x00"
         )  # noqa
         assert blocks[1].options["if_speed"] == 0x00000002540BE400
-        assert blocks[1].options["if_speed"] == (10 ** 10)  # 10Gbit
+        assert blocks[1].options["if_speed"] == (10**10)  # 10Gbit
 
         assert blocks[1].options["if_description"] == "Stupid ethernet interface\x00"
 
@@ -143,7 +143,7 @@ def test_sample_test006_ntar(filename):
         assert blocks[1].snaplen == 96
         assert len(blocks[1].options) == 2
 
-        assert blocks[1].options["if_speed"] == (10 ** 8)  # 100Mbit
+        assert blocks[1].options["if_speed"] == (10**8)  # 100Mbit
 
         assert blocks[1].options["if_description"] == "Stupid ethernet interface\x00"
 
