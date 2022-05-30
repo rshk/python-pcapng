@@ -1,10 +1,15 @@
 History
 #######
 
-Unreleased
-==========
+2.1.0
+=====
 
 - Use the explicit endianness everywhere when writing.
+
+2.0.0
+=====
+
+- Write support
 
 v0.1
 ====
