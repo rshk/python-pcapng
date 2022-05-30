@@ -54,7 +54,9 @@ class Block(object):
             for key, packed_type, default in self.schema:
                 if key == "options":
                     self._decoded[key] = Options(
-                        schema=packed_type.options_schema, data={}, endianness="="
+                        schema=packed_type.options_schema,
+                        data={},
+                        endianness=kwargs["endianness"],
                     )
                     if "options" in kwargs:
                         for oky, ovl in kwargs["options"].items():
@@ -83,10 +85,10 @@ class Block(object):
         block_length = 12 + subblock_length
         if subblock_length % 4 != 0:
             block_length += 4 - (subblock_length % 4)
-        write_int(self.magic_number, outstream, 32)
-        write_int(block_length, outstream, 32)
+        write_int(self.magic_number, outstream, 32, endianness=self.section.endianness)
+        write_int(block_length, outstream, 32, endianness=self.section.endianness)
         write_bytes_padded(outstream, encoded_block)
-        write_int(block_length, outstream, 32)
+        write_int(block_length, outstream, 32, endianness=self.section.endianness)
 
     def _encode(self, outstream):
         """Encodes the fields of this block into raw data"""

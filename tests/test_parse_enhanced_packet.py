@@ -93,7 +93,7 @@ def test_read_block_enhanced_packet_bigendian():
 def _generate_file_with_tsresol(base, exponent):
     tsresol = pack_timestamp_resolution(base, exponent)
     base_timestamp = 1420070400.0  # 2015-01-01 00:00 UTC
-    timestamp = base_timestamp / (base ** exponent)
+    timestamp = base_timestamp / (base**exponent)
 
     stream = io.BytesIO()
 
@@ -167,6 +167,6 @@ def test_read_block_enhanced_packet_tsresol_bigendian(tsr_base, tsr_exp):
     assert blocks[2].interface_id == 0
     assert blocks[2].interface == blocks[1]
 
-    resol = tsr_base ** tsr_exp
+    resol = tsr_base**tsr_exp
     assert blocks[2].timestamp_resolution == resol
     assert blocks[2].timestamp == 1420070400.0

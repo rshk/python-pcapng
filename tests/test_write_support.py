@@ -17,17 +17,19 @@ def compare_blocklists(list1, list2):
         assert list1[i] == list2[i], "block #{} mismatch".format(i)
 
 
-def test_write_read_all_blocks():
+@pytest.mark.parametrize("endianness", ["<", ">"])
+def test_write_read_all_blocks(endianness):
     # Track the blocks we're writing
     out_blocks = []
 
     # Build our original/output session
     o_shb = blocks.SectionHeader(
+        endianness=endianness,
         options={
             "shb_hardware": "pytest",
             "shb_os": "python",
             "shb_userappl": "python-pcapng",
-        }
+        },
     )
     out_blocks.append(o_shb)
 
@@ -129,7 +131,8 @@ def test_write_read_all_blocks():
     compare_blocklists(in_blocks, out_blocks)
 
 
-def test_spb_snap_lengths():
+@pytest.mark.parametrize("endianness", ["<", ">"])
+def test_spb_snap_lengths(endianness):
     """
     Simple Packet Blocks present a unique challenge in parsing. The packet does not
     contain an explicit "captured length" indicator, only the original observed
@@ -147,7 +150,7 @@ def test_spb_snap_lengths():
     data = bytes(range(0, 256))
 
     # First session: no snap length
-    o_shb = blocks.SectionHeader()
+    o_shb = blocks.SectionHeader(endianness=endianness)
     o_idb = o_shb.new_member(blocks.InterfaceDescription)  # noqa: F841
     o_blk1 = o_shb.new_member(blocks.SimplePacket, packet_data=data)
 
@@ -162,7 +165,7 @@ def test_spb_snap_lengths():
     assert i_blk1.packet_data == data
 
     # Second session: with snap length
-    o_shb = blocks.SectionHeader()
+    o_shb = blocks.SectionHeader(endianness=endianness)
     o_idb = o_shb.new_member(blocks.InterfaceDescription, snaplen=32)  # noqa: F841
     o_blk1 = o_shb.new_member(blocks.SimplePacket, packet_data=data[:16])
     o_blk2 = o_shb.new_member(blocks.SimplePacket, packet_data=data[:32])

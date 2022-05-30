@@ -34,7 +34,7 @@ def human_number(num, k=1000):
     assert isinstance(num, int)
     for i, suffix in enumerate(powers):
         if (num < (k ** (i + 1))) or (i == len(powers) - 1):
-            return "{0:d}{1}".format(int(round(num / (k ** i))), suffix)
+            return "{0:d}{1}".format(int(round(num / (k**i))), suffix)
     raise AssertionError("Should never reach this")
 
 
