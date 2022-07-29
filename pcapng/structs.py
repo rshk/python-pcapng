@@ -925,11 +925,11 @@ class Options(Mapping):
 
         if ftype == TYPE_OPT_CUSTOM_STR:
             fmt = self.endianness + _numeric_types[TYPE_U32]
-            return (struct.unpack(fmt, value[0:4]), value[4:].decode("utf-8"))
+            return (struct.unpack(fmt, value[0:4])[0], value[4:].decode("utf-8"))
 
         if ftype == TYPE_OPT_CUSTOM_BYTES:
             fmt = self.endianness + _numeric_types[TYPE_U32]
-            return (struct.unpack(fmt, value[0:4]), value[4:])
+            return (struct.unpack(fmt, value[0:4])[0], value[4:])
 
         raise ValueError("Unsupported field type: {0}".format(ftype))
 
