@@ -288,6 +288,8 @@ def test_options_object():
         (3, b"\x00\x00\x01\x00"),
         (4, b"Bacon is delicious!"),
         (20, b"Something different"),
+        (2988, b"\x00\x00\x00\x01Some Custom Data"),
+        (2989, b"\x00\x00\x00\x01\x01\x02"),
     ]
 
     options = Options(schema=schema, data=raw_options, endianness=">")
@@ -306,11 +308,19 @@ def test_options_object():
     assert options["bacon"] == "Bacon is delicious!"
     assert isinstance(options["bacon"], str)
 
+    assert options["custom_str_safe"] == (1, "Some Custom Data")
+    assert isinstance(options["custom_str_safe"][0], int)
+    assert isinstance(options["custom_str_safe"][1], str)
+
+    assert options["custom_bytes_safe"] == (1, b"\x01\x02")
+    assert isinstance(options["custom_bytes_safe"][0], int)
+    assert isinstance(options["custom_bytes_safe"][1], bytes)
+
     with pytest.raises(KeyError):
         options["missing"]
 
     with pytest.raises(KeyError):
-        options[5]
+        options[8]
 
     with pytest.raises(KeyError):
         options["Something completely missing"]
@@ -321,14 +331,27 @@ def test_options_object():
     assert options[20] == b"Something different"
 
     # Check length / keys
-    assert len(options) == 5
-    assert set(options.keys()) == set(["opt_comment", "spam", "eggs", "bacon", 20])
+    assert len(options) == 7
+    assert set(options.keys()) == set(
+        [
+            "opt_comment",
+            "spam",
+            "eggs",
+            "bacon",
+            "custom_str_safe",
+            "custom_bytes_safe",
+            20,
+        ]
+    )
 
     # Check "in" and "not in"
     assert "opt_comment" in options
     assert "spam" in options
     assert "eggs" in options
     assert "bacon" in options
+    assert "custom_str_safe" in options
+    assert "custom_bytes_safe" in options
+    assert 20 in options
     assert "missing" not in options
     assert "something different" not in options
 
@@ -336,6 +359,8 @@ def test_options_object():
     assert 2 in options
     assert 3 in options
     assert 4 in options
+    assert 2988 in options
+    assert 2989 in options
     assert 5 not in options
     assert 12345 not in options
 
