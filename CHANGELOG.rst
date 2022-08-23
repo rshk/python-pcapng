@@ -1,6 +1,11 @@
 History
 #######
 
+2.1.1
+=====
+
+- Fix deserialization of custom options
+
 2.1.0
 =====
 
