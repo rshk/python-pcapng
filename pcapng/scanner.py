@@ -33,19 +33,49 @@ class FileScanner(object):
         just wrap it in a :py:class:`io.BytesIO` object.
     """
 
-    __slots__ = ["stream", "current_section", "endianness"]
+    __slots__ = [
+        "stream",
+        "current_section",
+        "endianness",
+        "_stashed_header",
+        "_last_header_offset",
+    ]
 
     def __init__(self, stream):
         self.stream = stream
         self.current_section = None
         self.endianness = "="
 
+        self._last_header_offset = 0
+        self._stashed_header = None
+
     def __iter__(self):
         while True:
             try:
+                if self._stashed_header:
+                    yield self._stashed_header
+                    self._stashed_header = None
                 yield self._read_next_block()
             except StreamEmpty:
                 return
+
+    def skip_section(self):
+        """
+        Skip the current section.
+        """
+        if (
+            self.stream.seekable()
+            and self.current_section
+            and self.current_section.length != -1
+        ):
+            # seek
+            self.stream.seek(self._last_header_offset + self.current_section.length)
+        else:
+            # iterate till next section
+            for block in self:
+                if isinstance(block, blocks.SectionHeader):
+                    self._stashed_header = block
+                    break
 
     def _read_next_block(self):
         block_type = self._read_int(32, False)
@@ -54,6 +84,7 @@ class FileScanner(object):
             block = self._read_section_header()
             self.current_section = block
             self.endianness = block.endianness
+            self._last_header_offset = self.stream.tell()
             return block
 
         if self.current_section is None:
