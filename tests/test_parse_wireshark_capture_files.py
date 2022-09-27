@@ -317,3 +317,28 @@ def test_skip_section_implicit_length():
         block = next(iter_scanner)
         assert isinstance(block, SectionHeader)
         assert block.length == 144
+
+
+def test_skip_section_non_seekable():
+    """
+    Test section skipping with non-seekable streams
+    """
+
+    def throw_err():
+        raise NotImplementedError
+
+    with open("test_data/explicit_shb_sec_length.ntar", "rb") as fp:
+        fp.seekable = lambda: False
+        fp.tell = throw_err
+        fp.seek = throw_err
+
+        scanner = FileScanner(fp)
+        iter_scanner = iter(scanner)
+        first_shb = next(iter_scanner)
+        assert first_shb.length == 144
+        # Read another block so we're in the middle of the section
+        next(iter_scanner)
+        scanner.skip_section()
+        block = next(iter_scanner)
+        assert isinstance(block, SectionHeader)
+        assert block.length == -1
