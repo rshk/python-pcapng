@@ -84,7 +84,8 @@ class FileScanner(object):
             block = self._read_section_header()
             self.current_section = block
             self.endianness = block.endianness
-            self._last_header_offset = self.stream.tell()
+            if self.stream.seekable():
+                self._last_header_offset = self.stream.tell()
             return block
 
         if self.current_section is None:
