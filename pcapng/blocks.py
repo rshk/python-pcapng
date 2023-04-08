@@ -105,6 +105,9 @@ class Block(object):
         except KeyError as e:
             raise AttributeError(name) from e
 
+    def __dir__(self):
+        return [*super().__dir__(), *self._decoded]
+
     def __setattr__(self, name, value):
         # __setattr__ is called for *any* attribute, real or not.
         try:
