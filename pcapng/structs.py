@@ -906,7 +906,7 @@ class Options(Mapping):
         if ftype == TYPE_IPV6_PREFIX:
             return (
                 unpack_ipv6(value[:16]),
-                struct.unpack(self.endianness + "B", value[16]),
+                struct.unpack(self.endianness + "B", value[16:17]),
             )
 
         if ftype == TYPE_MACADDR:
