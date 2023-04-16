@@ -255,7 +255,7 @@ def read_bytes_padded(stream, size, pad_block_size=4):
         were read
     """
 
-    if stream.tell() % pad_block_size != 0:
+    if stream.seekable() and (stream.tell() % pad_block_size != 0):
         raise RuntimeError("Stream is misaligned!")
 
     data = read_bytes(stream, size)

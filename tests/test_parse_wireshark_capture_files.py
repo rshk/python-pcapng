@@ -260,3 +260,84 @@ def test_sample_test010_ntar():
         scanner = FileScanner(fp)
         for entry in scanner:
             pass
+
+
+def test_skip_section_explicit_length():
+    """
+    Test section skipping when the section is explicitly sized.
+
+    The pcapng used here is laid out as follows:
+        SectionHeader with explicit length of 144
+        InterfaceDescription
+        EnhancedPacket
+        SectionHeader with implicit length
+        InterfaceDescription
+        EnhancedPacket
+
+    Note that the only difference between the two sections
+    is the explicit sizing in the first section.
+    """
+    with open("test_data/explicit_shb_sec_length.ntar", "rb") as fp:
+        scanner = FileScanner(fp)
+        iter_scanner = iter(scanner)
+        first_shb = next(iter_scanner)
+        assert first_shb.length == 144
+        # Read another block so we're in the middle of the section
+        next(iter_scanner)
+        scanner.skip_section()
+        block = next(iter_scanner)
+        assert isinstance(block, SectionHeader)
+        assert block.length == -1
+
+
+def test_skip_section_implicit_length():
+    """
+    Test section skipping when the section is implicitly sized.
+
+    The pcapng used here is laid out as follows:
+        SectionHeader with implicit length
+        InterfaceDescription
+        EnhancedPacket
+        SectionHeader with explicit length of 144
+        InterfaceDescription
+        EnhancedPacket
+
+    Note that the only difference between the two sections
+    is the implicit sizing in the first section.
+    """
+    with open("test_data/implicit_shb_sec_length.ntar", "rb") as fp:
+        scanner = FileScanner(fp)
+        iter_scanner = iter(scanner)
+        first_shb = next(iter_scanner)
+        assert first_shb.length == -1
+        # Read another block so we're in the middle of the section
+        next(iter_scanner)
+        scanner.skip_section()
+        block = next(iter_scanner)
+        assert isinstance(block, SectionHeader)
+        assert block.length == 144
+
+
+def test_skip_section_non_seekable():
+    """
+    Test section skipping with non-seekable streams
+    """
+
+    def throw_err():
+        raise NotImplementedError
+
+    with open("test_data/explicit_shb_sec_length.ntar", "rb") as fp:
+        fp.seekable = lambda: False
+        fp.tell = throw_err
+        fp.seek = throw_err
+
+        scanner = FileScanner(fp)
+        iter_scanner = iter(scanner)
+        first_shb = next(iter_scanner)
+        assert first_shb.length == 144
+        # Read another block so we're in the middle of the section
+        next(iter_scanner)
+        scanner.skip_section()
+        block = next(iter_scanner)
+        assert isinstance(block, SectionHeader)
+        assert block.length == -1
