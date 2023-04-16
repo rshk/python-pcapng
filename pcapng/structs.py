@@ -934,7 +934,6 @@ class Options(Mapping):
         raise ValueError("Unsupported field type: {0}".format(ftype))
 
     def _encode_value(self, value, ftype):
-
         if ftype is None:
             warnings.warn(
                 DeprecationWarning(

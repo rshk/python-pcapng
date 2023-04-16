@@ -118,7 +118,6 @@ def test_sample_test005_ntar():
     ],
 )
 def test_sample_test006_ntar(filename):
-
     # Note: See the comment below this function
     # test006.ntar is reporting an incorrect size, which causes the
     # test to fail. Is this the expected behavior?

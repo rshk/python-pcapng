@@ -44,7 +44,6 @@ if __name__ == "__main__":
             _pksize = block.packet_len
 
             if IP in packet:
-
                 if TCP in packet:
                     # TCP packet
                     _tcp_com = (
