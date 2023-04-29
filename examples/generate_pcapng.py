@@ -50,3 +50,7 @@ test_pl = (
 spb = shb.new_member(blocks.SimplePacket)
 spb.packet_data = bytes(test_pl)
 writer.write_block(spb)
+
+jeb = shb.new_member(blocks.SystemdJournalExport)
+spb.journal_entry = bytes("__REALTIME_TIMESTAMP=0\nMESSAGE=Hello!\n", "utf-8")
+writer.write_block(jeb)

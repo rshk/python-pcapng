@@ -123,6 +123,16 @@ def test_write_read_all_blocks(endianness):
     writer.write_block(blk)
     out_blocks.append(blk)
 
+    # systemd Journal Export Block.
+    blk = o_shb.new_member(
+        blocks.SystemdJournalExport,
+        journal_entry=bytes(
+            "__REALTIME_TIMESTAMP=0\nMESSAGE=Hello!\nPRIORITY=6\n", "utf-8"
+        ),
+    )
+    writer.write_block(blk)
+    out_blocks.append(blk)
+
     # Done writing blocks.
     # Now get back what we wrote and see if things line up.
     fake_file.seek(0)
