@@ -3,13 +3,16 @@ Module providing facilities for handling struct-like data.
 """
 
 import abc
+from io import BytesIO
 import struct
 import warnings
 from collections import defaultdict
 from collections.abc import Iterable, Mapping
+from typing import Dict, List, Tuple, Union
 
 from pcapng import strictness as strictness
 from pcapng._compat import namedtuple
+from pcapng.blocks import Block
 from pcapng.exceptions import (
     BadMagic,
     CorruptedFile,
@@ -80,6 +83,7 @@ NRB_RECORD_IPv6 = 2
 
 
 def read_int(stream, size, signed=False, endianness="="):
+    # type: (BytesIO, int, bool, str) -> int
     """
     Read (and decode) an integer number from a binary stream.
 
@@ -104,6 +108,7 @@ def read_int(stream, size, signed=False, endianness="="):
 
 
 def write_int(number, stream, size, signed=False, endianness="="):
+    # type: (int, BytesIO, int, bool, str) -> None
     """
     Write (and encode) an integer number to a binary stream.
 
@@ -127,6 +132,7 @@ def write_int(number, stream, size, signed=False, endianness="="):
 
 
 def read_section_header(stream):
+    # type: (BytesIO) -> Dict[str, Union[str, bytes]]
     """
     Read a section header block from a stream.
 
@@ -182,6 +188,7 @@ def read_section_header(stream):
 
 
 def read_block_data(stream, endianness):
+    # type: (BytesIO, str) -> bytes
     """
     Read block data from a stream.
 
@@ -207,6 +214,7 @@ def read_block_data(stream, endianness):
 
 
 def read_bytes(stream, size):
+    # type: (BytesIO, int) -> bytes
     """
     Read the given amount of raw bytes from a stream.
 
@@ -232,6 +240,7 @@ def read_bytes(stream, size):
 
 
 def write_bytes(stream, data):
+    # type: (BytesIO, bytes) -> None
     """
     Write the given amount of raw bytes to a stream.
 
@@ -242,6 +251,7 @@ def write_bytes(stream, data):
 
 
 def read_bytes_padded(stream, size, pad_block_size=4):
+    # type: (BytesIO, int, int) -> bytes
     """
     Read the given amount of bytes from a stream, plus read and discard
     any necessary extra byte to align up to the pad_block_size-sized
@@ -266,6 +276,7 @@ def read_bytes_padded(stream, size, pad_block_size=4):
 
 
 def write_bytes_padded(stream, data, pad_block_size=4):
+    # type: (BytesIO, bytes, int) -> None
     """
     Read the given amount of bytes from a stream, plus read and discard
     any necessary extra byte to align up to the pad_block_size-sized
@@ -289,16 +300,18 @@ class StructField(object):
     """Abstract base class for struct fields"""
 
     __metaclass__ = abc.ABCMeta
-    __slots__ = []
+    __slots__ = []  # type: List[str]
 
     @abc.abstractmethod
     def load(self, stream, endianness, seen=None):
         pass
 
     def __repr__(self):
+        # type: () -> str
         return "{0}()".format(self.__class__.__name__)
 
     def __unicode__(self):
+        # type: () -> str
         return self.__repr__().encode("UTF-8")
 
     def encode_finish(self, stream, endianness):
@@ -312,18 +325,22 @@ class RawBytes(StructField):
     :param size: field size, in bytes
     """
 
-    __slots__ = ["size"]
+    __slots__ = ["size"]  # type: List[str]
 
     def __init__(self, size):
+        # type: (int) -> None
         self.size = size  # in bytes!
 
     def load(self, stream, endianness=None, seen=None):
+        # type: (BytesIO, None, None) -> bytes
         return read_bytes_padded(stream, self.size)
 
     def encode(self, value, stream, endianness=None):
+        # type: (bytes, BytesIO, str) -> None
         write_bytes_padded(stream, value)
 
     def __repr__(self):
+        # type: () -> str
         return "{0}(size={1!r})".format(self.__class__.__name__, self.size)
 
 
@@ -337,22 +354,26 @@ class IntField(StructField):
         integer. Defaults to False (unsigned)
     """
 
-    __slots__ = ["size", "signed"]
+    __slots__ = ["size", "signed"]  # type: List[str]
 
     def __init__(self, size, signed=False):
+        # type: (int, bool) -> None
         self.size = size  # in bits!
         self.signed = signed
 
     def load(self, stream, endianness, seen=None):
+        # type: (BytesIO, str, None) -> int
         number = read_int(stream, self.size, signed=self.signed, endianness=endianness)
         return number
 
     def encode(self, number, stream, endianness):
+        # type: (int, BytesIO, str) -> None
         if not isinstance(number, int):
             raise TypeError("'{}' is not numeric".format(number))
         write_int(number, stream, self.size, signed=self.signed, endianness=endianness)
 
     def __repr__(self):
+        # type: () -> str
         return "{0}(size={1!r}, signed={2!r})".format(
             self.__class__.__name__, self.size, self.signed
         )
@@ -367,9 +388,10 @@ class OptionsField(StructField):
         constructor.
     """
 
-    __slots__ = ["options_schema"]
+    __slots__ = ["options_schema"]  # type: List[str]
 
     def __init__(self, options_schema):
+        # type: (Mapping) -> None
         self.options_schema = options_schema
 
     def load(self, stream, endianness, seen=None):
@@ -377,9 +399,11 @@ class OptionsField(StructField):
         return Options(schema=self.options_schema, data=options, endianness=endianness)
 
     def encode(self, options, stream, endianness):
+        # type: (Options, BytesIO, str) -> None
         write_options(stream, options)
 
     def __repr__(self):
+        # type: () -> str
         return "{0}({1!r})".format(self.__class__.__name__, self.options_schema)
 
 
@@ -395,12 +419,14 @@ class PacketBytes(StructField):
     - packet data (captured_len-sized binary data)
     """
 
-    __slots__ = ["dependency"]
+    __slots__ = ["dependency"]  # type: List[str]
 
     def __init__(self, len_field):
+        # type: (int) -> None
         self.dependency = len_field
 
     def load(self, stream, endianness, seen=[]):
+        # type: (BytesIO, str, List[int]) -> bytes
         try:
             length = seen[self.dependency]
         except TypeError:
@@ -418,6 +444,7 @@ class PacketBytes(StructField):
         return read_bytes_padded(stream, length)
 
     def encode(self, packet, stream, endianness=None):
+        # type: (bytes, BytesIO, str) -> None
         if not packet:
             raise ValueError("Packet invalid")
         write_bytes_padded(stream, packet)
@@ -440,7 +467,7 @@ class ListField(StructField):
         used to read values from the stream.
     """
 
-    __slots__ = ["subfield"]
+    __slots__ = ["subfield"]  # type: List[str]
 
     def __init__(self, subfield):
         self.subfield = subfield
@@ -461,6 +488,7 @@ class ListField(StructField):
         self.subfield.encode_finish(stream, endianness)
 
     def __repr__(self):
+        # type: () -> str
         return "{0}({1!r})".format(self.__class__.__name__, self.subfield)
 
 
@@ -485,7 +513,7 @@ class NameResolutionRecordField(StructField):
     selected IP version, followed by null-separated/terminated domain names.
     """
 
-    __slots__ = []
+    __slots__ = []  # type: List[str]
 
     def load(self, stream, endianness, seen=None):
         record_type = read_int(stream, 16, False, endianness)
@@ -534,11 +562,13 @@ class NameResolutionRecordField(StructField):
             write_bytes_padded(stream, d["raw"])
 
     def encode_finish(self, stream, endianness):
+        # type: (BytesIO, str) -> None
         write_int(NRB_RECORD_END, stream, 16, endianness=endianness)
         write_int(0, stream, 16, endianness=endianness)
 
 
 def read_options(stream, endianness):
+    # type: (BytesIO, str) -> List[Tuple[int, bytes]]
     """
     Read "options" from an "options block" in a stream, until a
     ``StreamEmpty`` exception is caught, or an end marker is reached.
@@ -608,9 +638,10 @@ def write_options(stream, options):
 class EPBFlags(FlagWord):
     """Class representing the epb_flags option on an EPB"""
 
-    __slots__ = []
+    __slots__ = []  # type: List[str]
 
     def __init__(self, val=0):
+        # type: (int) -> None
         super(EPBFlags, self).__init__(
             [
                 FlagField("inout", FlagEnum, 2, ("NA", "inbound", "outbound")),
@@ -703,7 +734,7 @@ class Options(Mapping):
         "_field_names",
         "data",
         "endianness",
-    ]
+    ]  # type: List[str]
 
     def __init__(self, schema, data, endianness):
         self.schema = {}  # Schema of option fields: {<code>: Option(...)}
@@ -744,6 +775,7 @@ class Options(Mapping):
         return self.data[code][0]
 
     def __len__(self):
+        # type: () -> int
         return len(self.data)
 
     def __iter__(self):
@@ -800,6 +832,7 @@ class Options(Mapping):
         self._check_multiples(code)
 
     def __repr__(self):
+        # type: () -> str
         args = dict(self.iter_all_items())
         name = self.__class__.__name__
         return "{0}({1!r})".format(name, args)
@@ -1005,6 +1038,7 @@ class Options(Mapping):
 
 
 def struct_decode(schema, stream, endianness="="):
+    # type: (List[Tuple[str, StructField, object]], BytesIO, str) -> bytes
     """
     Decode structured data from a stream, following a schema.
 
@@ -1034,6 +1068,7 @@ def struct_decode(schema, stream, endianness="="):
 
 
 def block_decode(block, stream):
+    # type: (Block, BytesIO) -> bytes
     return struct_decode(block.schema, stream, block.section.endianness)
 
 

@@ -1,3 +1,10 @@
+from io import BytesIO
+from typing import (
+    Iterator,
+    List,
+    Optional
+)
+
 import pcapng.blocks as blocks
 from pcapng.constants.block_types import BLK_RESERVED, BLK_RESERVED_CORRUPTED
 from pcapng.exceptions import CorruptedFile, StreamEmpty
@@ -33,14 +40,16 @@ class FileScanner(object):
         just wrap it in a :py:class:`io.BytesIO` object.
     """
 
-    __slots__ = ["stream", "current_section", "endianness"]
+    __slots__ = ["stream", "current_section", "endianness"]  # type: List[str]
 
     def __init__(self, stream):
+        # type: (BytesIO) -> None
         self.stream = stream
-        self.current_section = None
+        self.current_section = None  # type: Optional[blocks.SectionHeader]
         self.endianness = "="
 
     def __iter__(self):
+        # type: () -> Iterator[blocks.Block]
         while True:
             try:
                 yield self._read_next_block()
@@ -48,6 +57,7 @@ class FileScanner(object):
                 return
 
     def _read_next_block(self):
+        # type: () -> blocks.Block
         block_type = self._read_int(32, False)
 
         if block_type == SECTION_HEADER_MAGIC:
@@ -59,11 +69,10 @@ class FileScanner(object):
         if self.current_section is None:
             raise ValueError("File not starting with a proper section header")
 
-        block = self._read_block(block_type)
-
-        return block
+        return self._read_block(block_type)
 
     def _read_section_header(self):
+        # type: () -> blocks.SectionHeader
         """
         Section information headers are special blocks in that they
         modify the state of the FileScanner instance (to change current
@@ -79,6 +88,7 @@ class FileScanner(object):
         )
 
     def _read_block(self, block_type):
+        # type: (int) -> blocks.Block
         """
         Read the block payload and pass to the appropriate block constructor
         """
@@ -86,7 +96,7 @@ class FileScanner(object):
 
         if block_type in blocks.KNOWN_BLOCKS:
             # This is a known block -- instantiate it
-            return self.current_section.new_member(
+            return self.current_section.new_member(  # type: ignore
                 blocks.KNOWN_BLOCKS[block_type], raw=data
             )
 
@@ -106,6 +116,7 @@ class FileScanner(object):
         return blocks.UnknownBlock(block_type, data)
 
     def _read_int(self, size, signed=False):
+        # type: (int, bool) -> int
         """
         Read an integer from the stream, using current endianness
         """

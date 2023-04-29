@@ -4,6 +4,10 @@ Module to wrap an integer in bitwise flag/field accessors.
 
 from collections import OrderedDict
 from collections.abc import Iterable
+from typing import (
+    Any,
+    List
+)
 
 from pcapng._compat import namedtuple
 
@@ -20,7 +24,7 @@ class FlagBase(object):
         "size",
         "extra",
         "mask",
-    ]
+    ]  # type: List[str]
 
     def __init__(self, owner, offset, size, extra=None):
         if size < 1:
@@ -34,9 +38,11 @@ class FlagBase(object):
         self.mask = ((1 << self.size) - 1) << self.offset
 
     def get_bits(self):
+        # type: () -> int
         return (self.owner._value & self.mask) >> self.offset
 
     def set_bits(self, val):
+        # type: (int) -> None
         val &= (1 << self.size) - 1
         self.owner._value &= ~self.mask
         self.owner._value |= val << self.offset
@@ -53,9 +59,11 @@ class FlagBool(FlagBase):
         super(FlagBool, self).__init__(owner, offset, size)
 
     def get(self):
+        # type: () -> bool
         return bool(self.get_bits())
 
     def set(self, val):
+        # type: (Any) -> None
         self.set_bits(int(bool(val)))
 
 
@@ -66,9 +74,11 @@ class FlagUInt(FlagBase):
     """
 
     def get(self):
+        # type: () -> int
         return self.get_bits()
 
     def set(self, val):
+        # type: (int) -> None
         self.set_bits(val)
 
 
@@ -98,6 +108,7 @@ class FlagEnum(FlagBase):
         super(FlagEnum, self).__init__(owner, offset, size, extra)
 
     def get(self):
+        # type: () -> str
         val = self.get_bits()
         try:
             return self.extra[val]
@@ -105,6 +116,7 @@ class FlagEnum(FlagBase):
             return "[invalid value]"
 
     def set(self, val):
+        # type: (int) -> None
         if val in self.extra:
             self.set_bits(self.extra.index(val))
         elif isinstance(val, int):
@@ -119,9 +131,10 @@ class FlagEnum(FlagBase):
 
 # Class representing a single flag schema for FlagWord.
 # 'nbits' defaults to 1, and 'extra' defaults to None.
+
 FlagField = namedtuple(
     "FlagField", ("name", "ftype", "nbits", "extra"), defaults=(1, None)
-)
+) # type: Type[namedtuple]
 
 
 class FlagWord(object):
@@ -133,9 +146,10 @@ class FlagWord(object):
         "_nbits",
         "_value",
         "_schema",
-    ]
+    ]  # type: List[str]
 
     def __init__(self, schema, nbits=32, initial=0):
+        # type: (FlagField, int, int) -> None
         """
         :param schema:
             A list of FlagField objects representing the values to be packed
@@ -169,9 +183,11 @@ class FlagWord(object):
             bitn += item.nbits
 
     def __int__(self):
+        # type: () -> int
         return self._value
 
     def __repr__(self):
+        # type: () -> str
         rv = "<{0} (value={1})".format(self.__class__.__name__, self._value)
         for k, v in self._schema.items():
             rv += " {0}={1}".format(k, v.get())

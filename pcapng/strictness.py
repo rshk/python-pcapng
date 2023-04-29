@@ -20,12 +20,14 @@ strict_level = Strictness.FORBID
 
 
 def set_strictness(level):
+    # type: (Strictness) -> None
     assert type(level) is Strictness
     global strict_level
     strict_level = level
 
 
 def problem(msg):
+    # type: (str) -> None
     "Warn or raise an exception with the given message."
     if strict_level == Strictness.FORBID:
         raise PcapngStrictnessError(msg)
@@ -34,11 +36,13 @@ def problem(msg):
 
 
 def warn(msg):
+    # type: (str) -> None
     "Show a warning with the given message."
     if strict_level > Strictness.NONE:
         warnings.warn(PcapngStrictnessWarning(msg))
 
 
 def should_fix():
+    # type: () -> bool
     "Helper function for showing code used to fix questionable pcapng data."
     return strict_level == Strictness.FIX

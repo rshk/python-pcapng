@@ -12,9 +12,11 @@ better access to decoded information, ...
 
 import io
 import itertools
+from typing import Any, List, Tuple, Type
 
 from pcapng import strictness as strictness
 from pcapng.constants import link_types
+from pcapng.flags import FlagField
 from pcapng.structs import (
     IntField,
     ListField,
@@ -42,7 +44,7 @@ class Block(object):
         # These are in addition to the above two properties
         "magic_number",
         "_decoded",
-    ]
+    ]  # type: List[str]
 
     def __init__(self, **kwargs):
         if "raw" in kwargs:
@@ -68,6 +70,7 @@ class Block(object):
                         self._decoded[key] = default
 
     def __eq__(self, other):
+        # type: (Any) -> bool
         if self.__class__ != other.__class__:
             return False
         keys = [x[0] for x in self.schema]
@@ -75,6 +78,7 @@ class Block(object):
         return [getattr(self, k) for k in keys] == [getattr(other, k) for k in keys]
 
     def _write(self, outstream):
+        # type: (io.BytesIO) -> None
         """Writes this block into the given output stream"""
         encoded_block = io.BytesIO()
         self._encode(encoded_block)
@@ -91,6 +95,7 @@ class Block(object):
         write_int(block_length, outstream, 32, endianness=self.section.endianness)
 
     def _encode(self, outstream):
+        # type: (io.BytesIO) -> None
         """Encodes the fields of this block into raw data"""
         for name, field, default in self.schema:
             field.encode(
@@ -127,6 +132,7 @@ class Block(object):
         self._decoded[name] = value
 
     def __repr__(self):
+        # type: () -> str
         args = []
         for item in self.schema:
             name = item[0]
@@ -142,17 +148,19 @@ class Block(object):
 class SectionMemberBlock(Block):
     """Block which must be a member of a section"""
 
-    __slots__ = ["section"]
+    __slots__ = ["section"]  # type: List[str]
 
     def __init__(self, section, **kwargs):
+        # type: (SectionMemberBlock, str) -> None
         super(SectionMemberBlock, self).__init__(**kwargs)
         self.section = section
 
 
 def register_block(block):
+    # type: (Any) -> Block
     """Handy decorator to register a new known block type"""
     KNOWN_BLOCKS[block.magic_number] = block
-    return block
+    return block  # type: ignore
 
 
 @register_block
@@ -172,7 +180,8 @@ class SectionHeader(Block):
         "_interfaces_id",
         "interfaces",
         "interface_stats",
-    ]
+    ]  # type: List[str]
+
     schema = [
         ("version_major", IntField(16, False), 1),
         ("version_minor", IntField(16, False), 0),
@@ -198,6 +207,7 @@ class SectionHeader(Block):
         super(SectionHeader, self).__init__(endianness=endianness, **kwargs)
 
     def _encode(self, outstream):
+        # type: (io.BytesIO) -> None
         write_int(0x1A2B3C4D, outstream, 32, endianness=self.endianness)
         super(SectionHeader, self)._encode(outstream)
 
@@ -215,6 +225,7 @@ class SectionHeader(Block):
         return blk
 
     def register_interface(self, interface):
+        # type: (Block) -> None
         """Helper method to register an interface within this section"""
         assert isinstance(interface, InterfaceDescription)
         interface_id = next(self._interfaces_id)
@@ -222,24 +233,29 @@ class SectionHeader(Block):
         self.interfaces[interface_id] = interface
 
     def add_interface_stats(self, interface_stats):
+        # type: (Block) -> None
         """Helper method to register interface stats within this section"""
         assert isinstance(interface_stats, InterfaceStatistics)
         self.interface_stats[interface_stats.interface_id] = interface_stats
 
     @property
     def version(self):
+        # type: () -> Tuple[IntField, IntField]
         return (self.version_major, self.version_minor)
 
     @property
     def length(self):
+        # type: () -> IntField
         return self.section_length
 
     # Block.decode() assumes all blocks have sections -- technically true...
     @property
     def section(self):
+        # type: () -> SectionHeader
         return self
 
     def __repr__(self):
+        # type: () -> str
         return (
             "<{name} version={version} endianness={endianness} "
             "length={length} options={options}>"
@@ -262,7 +278,7 @@ class InterfaceDescription(SectionMemberBlock):
     """
 
     magic_number = 0x00000001
-    __slots__ = ["interface_id"]
+    __slots__ = ["interface_id"]  # type: List[str]
     schema = [
         ("link_type", IntField(16, False), 0),  # todo: enc/decode
         ("reserved", IntField(16, False), 0),
@@ -295,18 +311,19 @@ class InterfaceDescription(SectionMemberBlock):
 
     @property  # todo: cache this property
     def timestamp_resolution(self):
-        # ------------------------------------------------------------
-        # Resolution of timestamps. If the Most Significant Bit is
-        # equal to zero, the remaining bits indicates the resolution
-        # of the timestamp as as a negative power of 10 (e.g. 6 means
-        # microsecond resolution, timestamps are the number of
-        # microseconds since 1/1/1970). If the Most Significant Bit is
-        # equal to one, the remaining bits indicates the resolution as
-        # as negative power of 2 (e.g. 10 means 1/1024 of second). If
-        # this option is not present, a resolution of 10^-6 is assumed
-        # (i.e. timestamps have the same resolution of the standard
-        # 'libpcap' timestamps).
-        # ------------------------------------------------------------
+        # type: () -> float
+        """
+        Resolution of timestamps. If the Most Significant Bit is
+        equal to zero, the remaining bits indicates the resolution
+        of the timestamp as as a negative power of 10 (e.g. 6 means
+        microsecond resolution, timestamps are the number of
+        microseconds since 1/1/1970). If the Most Significant Bit is
+        equal to one, the remaining bits indicates the resolution as
+        as negative power of 2 (e.g. 10 means 1/1024 of second). If
+        this option is not present, a resolution of 10^-6 is assumed
+        (i.e. timestamps have the same resolution of the standard
+        'libpcap' timestamps).
+        """
 
         if "if_tsresol" in self.options:
             return unpack_timestamp_resolution(self.options["if_tsresol"])
@@ -315,11 +332,13 @@ class InterfaceDescription(SectionMemberBlock):
 
     @property
     def statistics(self):
+        # type: () -> object
         # todo: ensure we always have an interface id -> how??
         return self.section.interface_stats.get(self.interface_id)
 
     @property
     def link_type_description(self):
+        # type: () -> str
         try:
             return link_types.LINKTYPE_DESCRIPTIONS[self.link_type]
         except KeyError:
@@ -332,10 +351,11 @@ class BlockWithTimestampMixin(object):
     of blocks that provide one.
     """
 
-    __slots__ = []
+    __slots__ = []  # type: List[str]
 
     @property
     def timestamp(self):
+        # type: () -> float
         # First, get the accuracy from the ts_resol option
         return (
             (self.timestamp_high << 32) + self.timestamp_low
@@ -343,6 +363,7 @@ class BlockWithTimestampMixin(object):
 
     @property
     def timestamp_resolution(self):
+        # type: () -> float
         return self.interface.timestamp_resolution
 
     # todo: add some property returning a datetime() with timezone..
@@ -354,15 +375,17 @@ class BlockWithInterfaceMixin(object):
     This includes all packet blocks as well as InterfaceStatistics.
     """
 
-    __slots__ = []
+    __slots__ = []  # type: List[str]
 
     @property
     def interface(self):
+        # type: () -> FlagField
         # We need to get the correct interface from the section
         # by looking up the interface_id
         return self.section.interfaces[self.interface_id]
 
     def _encode(self, outstream):
+        # type: (io.BytesIO) -> None
         if len(self.section.interfaces) < 1:
             strictness.problem(
                 "writing {cls} for section with no interfaces".format(
@@ -388,11 +411,12 @@ class BasePacketBlock(SectionMemberBlock, BlockWithInterfaceMixin):
     the current length of the packet data.
     """
 
-    __slots__ = []
+    __slots__ = []  # type: List[str]
     readonly_fields = set(("captured_len",))
 
     @property
     def captured_len(self):
+        # type: () -> int
         return len(self.packet_data)
 
     # Helper function. If the user hasn't explicitly set an original packet
@@ -401,6 +425,7 @@ class BasePacketBlock(SectionMemberBlock, BlockWithInterfaceMixin):
     # the captured data length.
     @property
     def packet_len(self):
+        # type: () -> int
         plen = self.__getattr__("packet_len") or 0  # this call prevents recursion
         return plen or len(self.packet_data)
 
@@ -415,7 +440,7 @@ class EnhancedPacket(BasePacketBlock, BlockWithTimestampMixin):
     """
 
     magic_number = 0x00000006
-    __slots__ = []
+    __slots__ = []  # type: List[str]
     schema = [
         ("interface_id", IntField(32, False), 0),
         ("timestamp_high", IntField(32, False), 0),
@@ -452,7 +477,7 @@ class SimplePacket(BasePacketBlock):
     """
 
     magic_number = 0x00000003
-    __slots__ = []
+    __slots__ = []  # type: List[str]
     schema = [
         # packet_len is NOT the captured length
         ("packet_len", IntField(32, False), 0),
@@ -478,6 +503,7 @@ class SimplePacket(BasePacketBlock):
 
     @property
     def interface_id(self):
+        # type: () -> int
         """
         "The Simple Packet Block does not contain the Interface ID field.
         Therefore, it MUST be assumed that all the Simple Packet Blocks have
@@ -488,6 +514,7 @@ class SimplePacket(BasePacketBlock):
 
     @property
     def captured_len(self):
+        # type: () -> int
         """
         "...the SnapLen value MUST be used to determine the size of the Packet
         Data field length."
@@ -499,6 +526,7 @@ class SimplePacket(BasePacketBlock):
             return min(snap_len, self.packet_len)
 
     def _encode(self, outstream):
+        # type: (io.BytesIO) -> None
         fld_size = IntField(32, False)
         fld_data = RawBytes(0)
         if len(self.section.interfaces) > 1:
@@ -541,7 +569,7 @@ class ObsoletePacket(BasePacketBlock, BlockWithTimestampMixin):
     """
 
     magic_number = 0x00000002
-    __slots__ = []
+    __slots__ = []  # type: List[str]
     schema = [
         ("interface_id", IntField(16, False), 0),
         ("drops_count", IntField(16, False), 0),
@@ -564,6 +592,7 @@ class ObsoletePacket(BasePacketBlock, BlockWithTimestampMixin):
     ]
 
     def enhanced(self):
+        # type: () -> SectionMemberBlock
         """Return an EnhancedPacket with this block's attributes."""
         opts_dict = dict(self.options)
         opts_dict["epb_dropcount"] = self.drops_count
@@ -585,6 +614,7 @@ class ObsoletePacket(BasePacketBlock, BlockWithTimestampMixin):
     # Do this check in _write() instead of _encode() to ensure the block gets written
     # with the correct magic number.
     def _write(self, outstream):
+        # type: (io.BytesIO) -> None
         strictness.problem("Packet Block is obsolete and must not be used")
         if strictness.should_fix():
             self.enhanced()._write(outstream)
@@ -606,7 +636,7 @@ class NameResolution(SectionMemberBlock):
     """
 
     magic_number = 0x00000004
-    __slots__ = []
+    __slots__ = []  # type: List[str]
     schema = [
         ("records", ListField(NameResolutionRecordField()), []),
         (
@@ -620,7 +650,7 @@ class NameResolution(SectionMemberBlock):
             ),
             None,
         ),
-    ]
+    ]  # type: List[Tuple[str, FlagField, object]]
 
 
 @register_block
@@ -636,7 +666,7 @@ class InterfaceStatistics(
     """
 
     magic_number = 0x00000005
-    __slots__ = []
+    __slots__ = []  # type: List[str]
     schema = [
         ("interface_id", IntField(32, False), 0),
         ("timestamp_high", IntField(32, False), 0),
@@ -667,11 +697,13 @@ class UnknownBlock(Block):
     processing.
     """
 
-    __slots__ = ["block_type", "data"]
+    __slots__ = ["block_type", "data"]  # type: List[str]
 
     def __init__(self, block_type, data):
+        # type: (int, bytes) -> None
         self.block_type = block_type
         self.data = data
 
     def __repr__(self):
+        # type: () -> str
         return "UnknownBlock(0x{0:08X}, {1!r})".format(self.block_type, self.data)

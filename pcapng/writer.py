@@ -1,3 +1,6 @@
+from io import BytesIO
+from typing import List
+
 import pcapng.blocks as blocks
 from pcapng.exceptions import PcapngDumpError
 
@@ -11,9 +14,10 @@ class FileWriter(object):
         "stream",
         "interfaces",
         "current_section",
-    ]
+    ]  # type: List[str]
 
     def __init__(self, stream, shb):
+        # type: (BytesIO, blocks.SectionHeader) -> None
         """
         Start writing a new pcap-ng section to the given stream. Writes the
         :py:class:`SectionHeader` immediately. Also writes any
@@ -37,6 +41,7 @@ class FileWriter(object):
             shb.interfaces[iface]._write(stream)
 
     def write_block(self, blk):
+        # type: (blocks.Block) -> None
         """
         Write the given block to this stream.
 
