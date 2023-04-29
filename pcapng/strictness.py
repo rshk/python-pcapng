@@ -4,12 +4,12 @@ aren't strictly valid.
 """
 
 import warnings
-from enum import Enum
+from enum import IntEnum
 
 from pcapng.exceptions import PcapngStrictnessError, PcapngStrictnessWarning
 
 
-class Strictness(Enum):
+class Strictness(IntEnum):
     NONE = 0  # No warnings, do what you want
     WARN = 1  # Do what you want, but warn of potential issues
     FIX = 2  # Warn of potential issues, fix *if possible*
