@@ -341,6 +341,13 @@ class BlockWithTimestampMixin(object):
             (self.timestamp_high << 32) + self.timestamp_low
         ) * self.timestamp_resolution
 
+    @timestamp.setter
+    def timestamp(self, timestamp: float | int):
+        its = int(round(timestamp / self.timestamp_resolution))
+        self.timestamp_high = (its >> 32) & 0xFFFF_FFFF
+        self.timestamp_low = its & 0xFFFF_FFFF
+
+
     @property
     def timestamp_resolution(self):
         return self.interface.timestamp_resolution
