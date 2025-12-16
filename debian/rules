@@ -1,0 +1,5 @@
+#!/usr/bin/make -f
+UPSTREAM_GIT := https://github.com/rshk/python-pcapng
+
+%:
+	dh $@ --buildsystem=pybuild

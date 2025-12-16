@@ -1,0 +1,4 @@
+.debhelper
+debhelper-build-stamp
+files
+python3-pcapng*
