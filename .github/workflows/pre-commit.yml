@@ -5,9 +5,10 @@
 name: pre-commit
 
 on:
-  pull_request:
   push:
-    branches: [master]
+    branches: [$default-branch]
+  pull_request:
+    branches: [$default-branch]
 
 jobs:
   pre-commit:
